@@ -26,37 +26,50 @@ escape_for_json() {
     printf '%s' "$s"
 }
 
-# Only inject .planning/ content on resume/clear/compact (same session interrupted)
-catchup_message=""
-if [ "$EVENT_TYPE" = "resume" ] && [ -f ".planning/task_plan.md" ]; then
-    plan_head=$(head -30 .planning/task_plan.md 2>/dev/null || true)
-    progress_tail=$(tail -20 .planning/progress.md 2>/dev/null || true)
-    findings_head=$(head -20 .planning/findings.md 2>/dev/null || true)
+# Build conditional context based on .planning/ state
+planning_message=""
+if [ -f ".planning/task_plan.md" ]; then
+    # .planning/ exists — inject recovery content
+    if [ "$EVENT_TYPE" = "resume" ]; then
+        plan_head=$(head -30 .planning/task_plan.md 2>/dev/null || true)
+        progress_tail=$(tail -20 .planning/progress.md 2>/dev/null || true)
+        findings_head=$(head -20 .planning/findings.md 2>/dev/null || true)
 
-    catchup_message="\\n\\n<PLANNING_SESSION_RECOVERY>\\n"
-    catchup_message+="**Session interrupted — recovering .planning/ context.**\\n\\n"
-    catchup_message+="### Plan (.planning/task_plan.md):\\n\`\`\`\\n${plan_head}\\n\`\`\`\\n\\n"
+        planning_message="\\n\\n<PLANNING_SESSION_RECOVERY>\\n"
+        planning_message+="**Session interrupted — recovering .planning/ context.**\\n\\n"
+        planning_message+="### Plan (.planning/task_plan.md):\\n\`\`\`\\n${plan_head}\\n\`\`\`\\n\\n"
 
-    if [ -n "$findings_head" ]; then
-        catchup_message+="### Findings (.planning/findings.md):\\n\`\`\`\\n${findings_head}\\n\`\`\`\\n\\n"
+        if [ -n "$findings_head" ]; then
+            planning_message+="### Findings (.planning/findings.md):\\n\`\`\`\\n${findings_head}\\n\`\`\`\\n\\n"
+        fi
+
+        if [ -n "$progress_tail" ]; then
+            planning_message+="### Recent Progress (.planning/progress.md):\\n\`\`\`\\n${progress_tail}\\n\`\`\`\\n\\n"
+        fi
+
+        planning_message+="**Read full .planning/ files and run \`git diff --stat\` to fully recover context.**\\n"
+        planning_message+="</PLANNING_SESSION_RECOVERY>"
     fi
-
-    if [ -n "$progress_tail" ]; then
-        catchup_message+="### Recent Progress (.planning/progress.md):\\n\`\`\`\\n${progress_tail}\\n\`\`\`\\n\\n"
-    fi
-
-    catchup_message+="**Read full .planning/ files and run \`git diff --stat\` to fully recover context.**\\n"
-    catchup_message+="</PLANNING_SESSION_RECOVERY>"
+else
+    # .planning/ does NOT exist — inject strong initialization reminder
+    planning_message="\\n\\n<PLANNING_INIT_REQUIRED>\\n"
+    planning_message+="**No .planning/ directory detected in this project.**\\n\\n"
+    planning_message+="Before starting ANY task that involves multiple steps, research, or more than 3 tool calls, you MUST first initialize the planning directory:\\n\\n"
+    planning_message+="\`\`\`bash\\n\${CLAUDE_PLUGIN_ROOT}/scripts/init-planning-dir.sh\\n\`\`\`\\n\\n"
+    planning_message+="This is NOT optional for complex tasks. The .planning/ directory is your persistent working memory.\\n"
+    planning_message+="- Simple questions or single-file edits: skip planning\\n"
+    planning_message+="- Everything else: initialize .planning/ FIRST, then proceed\\n"
+    planning_message+="</PLANNING_INIT_REQUIRED>"
 fi
 
 main_skill_escaped=$(escape_for_json "$main_skill_content")
-catchup_escaped=$(escape_for_json "$catchup_message")
+planning_escaped=$(escape_for_json "$planning_message")
 
 cat <<EOF
 {
   "hookSpecificOutput": {
     "hookEventName": "SessionStart",
-    "additionalContext": "<EXTREMELY_IMPORTANT>\nYou have superpower-planning skills.\n\n**Below is the full content of your 'superpower-planning:main' skill - your introduction to using skills. For all other skills, use the 'Skill' tool:**\n\n${main_skill_escaped}\n</EXTREMELY_IMPORTANT>${catchup_escaped}"
+    "additionalContext": "<EXTREMELY_IMPORTANT>\nYou have superpower-planning skills.\n\n**Below is the full content of your 'superpower-planning:main' skill - your introduction to using skills. For all other skills, use the 'Skill' tool:**\n\n${main_skill_escaped}\n</EXTREMELY_IMPORTANT>${planning_escaped}"
   }
 }
 EOF
