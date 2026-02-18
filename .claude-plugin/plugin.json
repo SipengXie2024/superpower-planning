@@ -5,6 +5,7 @@
   "author": {
     "name": "sipeng"
   },
+  "repository": "https://github.com/SipengXie2024/superpower-planning",
   "license": "MIT",
   "keywords": ["skills", "planning", "tdd", "debugging", "subagents", "workflows", "best-practices"]
 }

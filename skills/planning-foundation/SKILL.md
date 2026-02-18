@@ -1,26 +1,6 @@
 ---
 name: planning-foundation
 description: Implements persistent file-based planning for complex tasks. Creates .planning/ directory with task_plan.md, findings.md, and progress.md. Use when starting complex multi-step tasks, research projects, or any task requiring >5 tool calls. Foundation layer inherited by all other skills.
-user-invocable: true
-hooks:
-  PreToolUse:
-    - matcher: "Write|Edit|Bash|Read|Glob|Grep|WebFetch|WebSearch"
-      hooks:
-        - type: command
-          command: "cat .planning/task_plan.md 2>/dev/null | head -30 || true"
-  PostToolUse:
-    - matcher: "Write|Edit"
-      hooks:
-        - type: command
-          command: "if [ -f .planning/task_plan.md ]; then echo '[superpower-planning] File updated. If this completes a phase, update .planning/task_plan.md status.'; fi"
-  Stop:
-    - hooks:
-        - type: command
-          command: |
-            SCRIPT_DIR="${CLAUDE_PLUGIN_ROOT:-$(dirname "$0")/..}/scripts"
-            if [ -f .planning/task_plan.md ]; then
-              sh "$SCRIPT_DIR/check-complete.sh"
-            fi
 ---
 
 # Planning Foundation
