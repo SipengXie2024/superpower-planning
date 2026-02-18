@@ -1,0 +1,15 @@
+{
+  "name": "superpower-planning",
+  "description": "Local marketplace for superpower-planning unified skill suite",
+  "owner": {
+    "name": "sipeng"
+  },
+  "plugins": [
+    {
+      "name": "superpower-planning",
+      "description": "Unified skill suite: persistent file-based planning + structured execution workflows",
+      "version": "1.0.0",
+      "source": "./"
+    }
+  ]
+}
