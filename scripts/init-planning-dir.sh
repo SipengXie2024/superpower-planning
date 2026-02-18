@@ -3,10 +3,12 @@
 # Usage: ./init-planning-dir.sh [project-root]
 #
 # Creates:
-#   .planning/task_plan.md
+#   .planning/progress.md    (Task Status Dashboard + session log)
 #   .planning/findings.md
-#   .planning/progress.md
-#   .planning/agents/     (empty dir for subagent working dirs)
+#   .planning/agents/        (empty dir for subagent working dirs)
+#
+# Note: task_plan.md is only created for ad-hoc tasks (no docs/plans/).
+# For formal workflows, the permanent plan in docs/plans/ is the source of truth.
 
 set -e
 
@@ -115,10 +117,14 @@ if [ ! -f "${PLANNING_DIR}/progress.md" ]; then
     cat > "${PLANNING_DIR}/progress.md" << EOF
 # Progress Log
 
+## Task Status Dashboard
+<!-- Quick-scan execution status. Update after each task/phase completes. -->
+| Task | Status | Agent/Batch | Key Outcome |
+|------|--------|-------------|-------------|
+
 ## Session: $DATE
 
 ### Current Status
-- **Phase:** 1 - Requirements & Discovery
 - **Started:** $DATE
 
 ### Actions Taken
@@ -139,5 +145,6 @@ fi
 
 echo ""
 echo "Planning directory initialized!"
-echo "Files: .planning/task_plan.md, .planning/findings.md, .planning/progress.md"
+echo "Files: .planning/progress.md, .planning/findings.md"
+echo "       .planning/task_plan.md (ad-hoc only, created if no docs/plans/ exists)"
 echo "Agent dirs: .planning/agents/"

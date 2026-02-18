@@ -56,15 +56,15 @@ digraph process {
         "Code quality reviewer subagent approves?" [shape=diamond];
         "Implementer subagent fixes quality issues" [shape=box];
         "Aggregate agent findings into top-level .planning/" [shape=box style=filled fillcolor=lightyellow];
-        "Mark task complete in TodoWrite" [shape=box];
+        "Mark task complete via TaskUpdate" [shape=box];
     }
 
-    "Read plan, extract all tasks with full text, note context, create TodoWrite" [shape=box];
+    "Read plan, extract all tasks with full text, note context, create tasks via TaskCreate" [shape=box];
     "More tasks remain?" [shape=diamond];
     "Dispatch final code reviewer subagent for entire implementation" [shape=box];
     "Use superpower-planning:finishing-branch" [shape=box style=filled fillcolor=lightgreen];
 
-    "Read plan, extract all tasks with full text, note context, create TodoWrite" -> "Create agent planning dir";
+    "Read plan, extract all tasks with full text, note context, create tasks via TaskCreate" -> "Create agent planning dir";
     "Create agent planning dir" -> "Dispatch implementer subagent (./implementer-prompt.md)";
     "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer subagent asks questions?";
     "Implementer subagent asks questions?" -> "Answer questions, provide context" [label="yes"];
@@ -79,8 +79,8 @@ digraph process {
     "Code quality reviewer subagent approves?" -> "Implementer subagent fixes quality issues" [label="no"];
     "Implementer subagent fixes quality issues" -> "Dispatch code quality reviewer subagent (./quality-reviewer-prompt.md)" [label="re-review"];
     "Code quality reviewer subagent approves?" -> "Aggregate agent findings into top-level .planning/" [label="yes"];
-    "Aggregate agent findings into top-level .planning/" -> "Mark task complete in TodoWrite";
-    "Mark task complete in TodoWrite" -> "More tasks remain?";
+    "Aggregate agent findings into top-level .planning/" -> "Mark task complete via TaskUpdate";
+    "Mark task complete via TaskUpdate" -> "More tasks remain?";
     "More tasks remain?" -> "Create agent planning dir" [label="yes - next task"];
     "More tasks remain?" -> "Dispatch final code reviewer subagent for entire implementation" [label="no"];
     "Dispatch final code reviewer subagent for entire implementation" -> "Use superpower-planning:finishing-branch";
@@ -113,8 +113,9 @@ After each task completes (both reviews pass), aggregate the agent's findings:
 1. **Read** the agent's `.planning/agents/{role}-task-{N}/findings.md` and `progress.md`
 2. **Extract** items marked with `> **Critical for Orchestrator:**` plus any errors and test results
 3. **Append** extracted items to top-level `.planning/findings.md` under a task heading
-4. **Append** completion status to top-level `.planning/progress.md`
-5. **Update** `.planning/task_plan.md` phase/task status
+4. **Update** top-level `.planning/progress.md`:
+   - **Update the Task Status Dashboard table** at the top (add/update the row for this task)
+   - **Append** completion details to the session log section
 
 Example aggregation:
 ```markdown
@@ -124,7 +125,12 @@ Example aggregation:
 - [From spec-reviewer] All requirements met after fix pass
 - [From quality-reviewer] Approved with no issues
 
-<!-- Append to .planning/progress.md -->
+<!-- Update Task Status Dashboard table in .planning/progress.md -->
+| Task 1: Hook installation | ✅ complete | agents/implementer-task-1/ | 5 tests passing |
+| Task 2: Recovery modes | ✅ complete | agents/implementer-task-2/ | 8 tests passing |
+| Task 3: Config parser | ⏳ pending | - | - |
+
+<!-- Append to session log in .planning/progress.md -->
 - [x] Task 2: Recovery modes - COMPLETED
   - Implementer: 8 tests passing, committed
   - Spec review: Passed (2nd pass after fix)
@@ -144,7 +150,7 @@ You: I'm using Subagent-Driven Development to execute this plan.
 
 [Read plan file once: docs/plans/feature-plan.md]
 [Extract all 5 tasks with full text and context]
-[Create TodoWrite with all tasks]
+[Create all tasks via TaskCreate]
 
 Task 1: Hook installation script
 

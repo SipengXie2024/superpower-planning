@@ -96,18 +96,22 @@ When writing a plan, **automatically create** the `.planning/` directory structu
 
 ```
 .planning/
-  task_plan.md      # Mirror of the plan with checkboxes for tracking
-  progress.md       # Updated during execution with batch summaries
+  progress.md       # Task Status Dashboard + session log
   findings.md       # Unexpected discoveries and notes
 ```
+
+> **Note:** `task_plan.md` is NOT created here. The permanent plan in `docs/plans/` is the single source of truth. Execution status is tracked via the Task Status Dashboard in `progress.md`.
 
 Initialize `.planning/progress.md`:
 ```markdown
 # Progress
 
-## Batch Summaries
-| Batch | Tasks | Status | Notes |
-|-------|-------|--------|-------|
+## Task Status Dashboard
+<!-- Quick-scan execution status. Update after each task/batch completes. -->
+| Task | Status | Agent/Batch | Key Outcome |
+|------|--------|-------------|-------------|
+
+## Session Log
 
 ## Test Results
 | Test | Result | Timestamp |

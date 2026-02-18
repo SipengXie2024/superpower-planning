@@ -33,7 +33,7 @@ NOT: Consider writing tests first when feasible.
 **How it works in skills:**
 - Require announcements: "Announce skill usage"
 - Force explicit choices: "Choose A, B, or C"
-- Use tracking: TodoWrite for checklists
+- Use tracking: TaskCreate/TaskUpdate for checklists
 
 **When to use:**
 - Ensuring skills are actually followed
@@ -80,8 +80,8 @@ NOT: You can review code when convenient.
 
 **Example:**
 ```markdown
-Checklists without TodoWrite tracking = steps get skipped. Every time.
-NOT: Some people find TodoWrite helpful for checklists.
+Checklists without TaskCreate tracking = steps get skipped. Every time.
+NOT: Some people find task tracking helpful for checklists.
 ```
 
 ### 5. Unity

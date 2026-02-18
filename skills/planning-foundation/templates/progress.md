@@ -1,5 +1,10 @@
 # Progress Log
 
+## Task Status Dashboard
+<!-- Quick-scan execution status. Update after each task/phase completes. -->
+| Task | Status | Agent/Batch | Key Outcome |
+|------|--------|-------------|-------------|
+
 ## Session: [DATE]
 
 ### Phase 1: [Title]

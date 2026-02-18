@@ -27,7 +27,7 @@ You MUST create a task for each of these items and complete them in order:
 2. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
 3. **Propose 2-3 approaches** — with trade-offs and your recommendation
 4. **Present design** — in sections scaled to their complexity, get user approval after each section
-5. **Write design doc** — save to `docs/plans/YYYY-MM-DD-<topic>-design.md`, commit, and initialize `.planning/` with a `task_plan.md` skeleton derived from the design
+5. **Write design doc** — save to `docs/plans/YYYY-MM-DD-<topic>-design.md`, commit, and initialize `.planning/` with `progress.md` and `findings.md`
 6. **Transition to implementation** — invoke writing-plans skill to create implementation plan
 
 ## Process Flow
@@ -83,14 +83,19 @@ digraph brainstorming {
 - Commit the design document to git
 
 **Initialize `.planning/` directory:**
-- Create `.planning/task_plan.md` with a skeleton derived from the approved design:
+- Create `.planning/progress.md` with Task Status Dashboard (tasks derived from the design):
   ```markdown
-  # [Feature Name] Task Plan
+  # Progress
+
+  ## Task Status Dashboard
   > Source design: docs/plans/YYYY-MM-DD-<topic>-design.md
 
-  ## Tasks
-  - [ ] Task 1: ...
-  - [ ] Task 2: ...
+  | Task | Status | Agent/Batch | Key Outcome |
+  |------|--------|-------------|-------------|
+  | Task 1: ... | ⏳ pending | - | - |
+  | Task 2: ... | ⏳ pending | - | - |
+
+  ## Session Log
   ```
 - Create `.planning/findings.md` for design exploration findings:
   ```markdown

@@ -1,6 +1,6 @@
 ---
 name: planning-foundation
-description: Implements persistent file-based planning for complex tasks. Creates .planning/ directory with task_plan.md, findings.md, and progress.md. Use when starting complex multi-step tasks, research projects, or any task requiring >5 tool calls. Foundation layer inherited by all other skills.
+description: Implements persistent file-based planning for complex tasks. Creates .planning/ directory with progress.md and findings.md (plus task_plan.md for ad-hoc tasks). Use when starting complex multi-step tasks, research projects, or any task requiring >5 tool calls. Foundation layer inherited by all other skills.
 ---
 
 # Planning Foundation
@@ -13,9 +13,9 @@ Every workflow skill in superpower-planning inherits this foundation. `.planning
 
 ```
 .planning/                     # gitignored, ephemeral working state
-├── task_plan.md               # orchestrator's plan + phase tracking
+├── task_plan.md               # ad-hoc only: plan + phase tracking (see note below)
 ├── findings.md                # aggregated findings
-├── progress.md                # overall progress log
+├── progress.md                # Task Status Dashboard + session log
 └── agents/                    # per-subagent working dirs
     ├── implementer-task-1/
     │   ├── findings.md        # this agent's discoveries
@@ -25,14 +25,18 @@ Every workflow skill in superpower-planning inherits this foundation. `.planning
 
 Permanent design docs go in `docs/plans/`. `.planning/` is ephemeral session state.
 
+**When is `task_plan.md` used?**
+- **Ad-hoc tasks** (no `docs/plans/` file): `task_plan.md` is the plan AND the tracker — create it.
+- **Formal workflow** (plan exists in `docs/plans/`): Do NOT create `task_plan.md`. The permanent plan is the source of truth; execution status is tracked in `progress.md`'s Task Status Dashboard.
+
 ## Quick Start
 
 Before ANY complex task:
 
 1. **Create `.planning/` directory** with init script or manually
-2. **Create `task_plan.md`** — Use [templates/task_plan.md](templates/task_plan.md) as reference
+2. **Create `progress.md`** — Use [templates/progress.md](templates/progress.md) (includes Task Status Dashboard)
 3. **Create `findings.md`** — Use [templates/findings.md](templates/findings.md) as reference
-4. **Create `progress.md`** — Use [templates/progress.md](templates/progress.md) as reference
+4. **Ad-hoc only: Create `task_plan.md`** — Use [templates/task_plan.md](templates/task_plan.md) (skip if plan exists in `docs/plans/`)
 5. **Re-read plan before decisions** — Refreshes goals in attention window
 6. **Update after each phase** — Mark complete, log errors
 
@@ -49,14 +53,14 @@ Filesystem = Disk (persistent, unlimited)
 
 | File | Purpose | When to Update |
 |------|---------|----------------|
-| `task_plan.md` | Phases, progress, decisions | After each phase |
+| `task_plan.md` | Plan + phase tracking (ad-hoc only, no `docs/plans/`) | After each phase |
 | `findings.md` | Research, discoveries | After ANY discovery |
-| `progress.md` | Session log, test results | Throughout session |
+| `progress.md` | Task Status Dashboard + session log, test results | Dashboard: after each task/phase. Log: throughout session |
 
 ## Critical Rules
 
-### 1. Create Plan First
-Never start a complex task without `.planning/task_plan.md`. Non-negotiable.
+### 1. Create Planning Dir First
+Never start a complex task without `.planning/`. For ad-hoc tasks, create `task_plan.md`. For formal workflows (plan in `docs/plans/`), `progress.md` with Task Status Dashboard is sufficient.
 
 ### 2. The 2-Action Rule
 > "After every 2 view/browser/search operations, IMMEDIATELY save key findings to text files."
@@ -131,7 +135,7 @@ If you can answer these, your context management is solid:
 
 | Question | Answer Source |
 |----------|---------------|
-| Where am I? | Current phase in task_plan.md |
+| Where am I? | Task Status Dashboard in progress.md (or current phase in task_plan.md for ad-hoc) |
 | Where am I going? | Remaining phases |
 | What's the goal? | Goal statement in plan |
 | What have I learned? | findings.md |
@@ -180,7 +184,7 @@ The orchestrator aggregates agent findings into top-level `.planning/findings.md
 
 | Don't | Do Instead |
 |-------|------------|
-| Use TodoWrite for persistence | Create .planning/task_plan.md file |
+| Use TaskCreate/TaskUpdate for persistence | Use .planning/progress.md Task Status Dashboard (or task_plan.md for ad-hoc) |
 | State goals once and forget | Re-read plan before decisions |
 | Hide errors and retry silently | Log errors to plan file |
 | Stuff everything in context | Store large content in files |

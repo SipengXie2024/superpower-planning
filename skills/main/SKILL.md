@@ -37,9 +37,9 @@ The `.planning/` directory is your "RAM on disk" -- persistent working memory th
 
 On session start, check for an existing `.planning/` directory. If found:
 
-1. Read `.planning/task_plan.md` -- understand current phase and goals
+1. Read `.planning/progress.md` -- Task Status Dashboard shows current status; session log shows what was done
 2. Read `.planning/findings.md` -- recall discoveries and decisions
-3. Read `.planning/progress.md` -- see what was done and what remains
+3. Read `.planning/task_plan.md` if it exists -- ad-hoc plans have phase/goal details here
 4. Run `git diff --stat` to see what changed since last session
 5. Update planning files with recovered context
 6. Continue with the task

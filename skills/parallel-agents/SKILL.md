@@ -97,8 +97,7 @@ When all agents return:
 1. Read each agent's `.planning/agents/{role}/findings.md` and `progress.md`
 2. Extract critical items, errors, and test results from each
 3. Append to top-level `.planning/findings.md` under agent/task headings
-4. Append to top-level `.planning/progress.md` with completion status
-5. Update `.planning/task_plan.md` if applicable
+4. Update top-level `.planning/progress.md`: update Task Status Dashboard table + append completion details
 
 **Integration:**
 1. Read each agent's summary
