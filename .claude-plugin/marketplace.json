@@ -8,7 +8,7 @@
     {
       "name": "superpower-planning",
       "description": "Unified skill suite: persistent file-based planning + structured execution workflows",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "source": "./"
     }
   ]
