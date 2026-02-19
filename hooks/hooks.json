@@ -28,7 +28,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cat .planning/progress.md 2>/dev/null | head -15 || true"
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/pre-bash-dashboard.sh"
           }
         ]
       }

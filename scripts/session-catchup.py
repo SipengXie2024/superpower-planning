@@ -8,10 +8,6 @@ all subsequent sessions until now.
 
 Looks for .planning/ directory files instead of root-level planning files.
 
-Supports multiple AI IDEs:
-- Claude Code (.claude/projects/)
-- OpenCode (.local/share/opencode/storage/)
-
 Usage: python3 session-catchup.py [project-path]
 """
 
@@ -24,50 +20,15 @@ from typing import List, Dict, Optional, Tuple
 PLANNING_FILES = ['.planning/progress.md', '.planning/findings.md']
 
 
-def detect_ide() -> str:
-    """
-    Detect which IDE is being used based on environment and file structure.
-    Returns 'claude-code', 'opencode', or 'unknown'.
-    """
-    # Check for OpenCode environment
-    if os.environ.get('OPENCODE_DATA_DIR'):
-        return 'opencode'
-
-    # Check for Claude Code directory
-    claude_dir = Path.home() / '.claude'
-    if claude_dir.exists():
-        return 'claude-code'
-
-    # Check for OpenCode directory
-    opencode_dir = Path.home() / '.local' / 'share' / 'opencode'
-    if opencode_dir.exists():
-        return 'opencode'
-
-    return 'unknown'
-
 
 def get_project_dir_claude(project_path: str) -> Path:
     """Convert project path to Claude's storage path format."""
     sanitized = project_path.replace('/', '-')
     if not sanitized.startswith('-'):
         sanitized = '-' + sanitized
-    sanitized = sanitized.replace('_', '-')
+    sanitized = sanitized.replace('_', '-')  # Claude Code replaces underscores with hyphens
     return Path.home() / '.claude' / 'projects' / sanitized
 
-
-def get_project_dir_opencode(project_path: str) -> Optional[Path]:
-    """
-    Get OpenCode session storage directory.
-    OpenCode uses: ~/.local/share/opencode/storage/session/{projectHash}/
-    """
-    data_dir = os.environ.get('OPENCODE_DATA_DIR',
-                               str(Path.home() / '.local' / 'share' / 'opencode'))
-    storage_dir = Path(data_dir) / 'storage'
-
-    if not storage_dir.exists():
-        return None
-
-    return storage_dir
 
 
 def get_sessions_sorted(project_dir: Path) -> List[Path]:
@@ -209,17 +170,6 @@ def extract_messages_from_session(session_file: Path, after_line: int = -1) -> L
 def main():
     project_path = sys.argv[1] if len(sys.argv) > 1 else os.getcwd()
 
-    # Detect IDE
-    ide = detect_ide()
-
-    if ide == 'opencode':
-        print("\n[superpower-planning] OpenCode session catchup is not yet fully supported")
-        print("OpenCode uses a different session storage format (.json) than Claude Code (.jsonl)")
-        print("Session catchup requires parsing OpenCode's message storage structure.")
-        print("\nWorkaround: Manually read .planning/progress.md and .planning/findings.md to catch up.")
-        return
-
-    # Claude Code path
     project_dir = get_project_dir_claude(project_path)
 
     if not project_dir.exists():
@@ -272,7 +222,7 @@ def main():
         return
 
     # Output catchup report
-    print(f"\n[superpower-planning] SESSION CATCHUP DETECTED (IDE: {ide})")
+    print("\n[superpower-planning] SESSION CATCHUP DETECTED")
     print(f"Last planning update: {update_file} in session {update_session.stem[:8]}...")
 
     sessions_covered = update_session_idx + 1
