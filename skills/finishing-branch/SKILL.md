@@ -190,6 +190,17 @@ git worktree remove <worktree-path>
 - Get typed confirmation for Option 4
 - Clean up worktree for Options 1 & 4 only
 
+### Step 6: Persist Findings
+
+After cleanup, if `.planning/findings.md` has meaningful content:
+
+1. **Read** `.planning/findings.md`
+2. **Ask the user** (via AskUserQuestion) if they want to persist key findings to Claude's memory system
+3. If yes: Write the valuable, reusable insights (patterns discovered, architectural decisions, debugging lessons) to the project's auto memory files (`~/.claude/projects/.../memory/`)
+4. Skip session-specific details (task status, temporary workarounds) — only persist knowledge that helps future sessions
+
+**This step is main-agent only.** Subagents do not persist findings to memory.
+
 ## Integration
 
 **Called by:**

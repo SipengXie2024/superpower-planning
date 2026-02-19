@@ -87,7 +87,7 @@ git add tests/path/test.py src/path/file.py
 git commit -m "feat: add specific feature"
 ```
 
-> **Note:** Log unexpected discoveries to `.planning/findings.md`
+> **Note:** Log unexpected discoveries, technical decisions, and implementation insights to `.planning/findings.md` after each task.
 ````
 
 ## Auto-Create `.planning/` Directory
@@ -98,7 +98,7 @@ When writing a plan, **automatically create** the `.planning/` directory if it d
 ${CLAUDE_PLUGIN_ROOT}/scripts/init-planning-dir.sh
 ```
 
-This creates `progress.md`, `findings.md`, and `agents/` directory. The canonical template is at `planning-foundation/templates/progress.md`.
+This creates `progress.md` and `findings.md`. The canonical template is at `planning-foundation/templates/progress.md`. Subagent planning directories (`agents/`) are created by each subagent when needed.
 
 > **Note:** The plan in `docs/plans/` is the single source of truth for plan content. Execution status is tracked via the Task Status Dashboard in `progress.md`.
 
@@ -130,7 +130,7 @@ The parallelism score helps the user choose the right execution mode.
 - Exact commands with expected output
 - Reference relevant skills with @ syntax
 - DRY, YAGNI, TDD, frequent commits
-- Each task reminds: "Log unexpected discoveries to `.planning/findings.md`"
+- Each task reminds: "Log discoveries, decisions, and insights to `.planning/findings.md`"
 - Always include parallelism groups analysis
 
 ## Execution Handoff

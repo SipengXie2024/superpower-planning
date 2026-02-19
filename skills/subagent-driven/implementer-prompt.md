@@ -46,6 +46,8 @@ Task tool (general-purpose):
     6. Update planning dir with final status
     7. Report back
 
+    **2-Action Rule:** After every 2 read/search/explore operations, save key findings to `{AGENT_PLANNING_DIR}/findings.md`. Don't wait until the end — record discoveries, decisions, and surprises as you go.
+
     Work from: [directory]
 
     **While you work:** If you encounter something unexpected or unclear, **ask questions**.

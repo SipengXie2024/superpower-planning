@@ -5,7 +5,6 @@
 # Creates:
 #   .planning/progress.md    (Task Status Dashboard + session log)
 #   .planning/findings.md
-#   .planning/agents/        (empty dir for subagent working dirs)
 
 set -e
 
@@ -14,8 +13,8 @@ PROJECT_ROOT="${1:-.}"
 PLANNING_DIR="${PROJECT_ROOT}/.planning"
 DATE=$(date +%Y-%m-%d)
 
-# Create .planning directory
-mkdir -p "${PLANNING_DIR}/agents"
+# Create .planning directory (agents/ subdirs are created by subagents on demand)
+mkdir -p "${PLANNING_DIR}"
 
 echo "Initializing .planning/ directory at: ${PLANNING_DIR}"
 
@@ -68,4 +67,3 @@ fi
 echo ""
 echo "Planning directory initialized!"
 echo "Files: .planning/progress.md, .planning/findings.md"
-echo "Agent dirs: .planning/agents/"

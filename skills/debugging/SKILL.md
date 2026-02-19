@@ -144,6 +144,8 @@ You MUST complete each phase before proceeding to the next.
    - What settings, config, environment?
    - What assumptions does it make?
 
+**After completing Phase 2, record pattern analysis findings in `.planning/findings.md` under "## Debugging Findings" — working examples found, key differences identified, dependency insights.**
+
 ### Phase 3: Hypothesis and Testing
 
 **Scientific method:**
@@ -169,7 +171,7 @@ You MUST complete each phase before proceeding to the next.
    - Ask for help
    - Research more
 
-**After each hypothesis test, append result to `.planning/progress.md`.**
+**After each hypothesis test, append result to `.planning/progress.md` and update `.planning/findings.md` with what was learned (confirmed/rejected hypotheses, new evidence).**
 
 ### Phase 4: Implementation
 

@@ -28,7 +28,8 @@ For each task:
 1. Mark as in_progress
 2. Follow each step exactly (plan has bite-sized steps)
 3. Run verifications as specified
-4. Mark as completed
+4. **Record discoveries** — After each task, append any unexpected findings, decisions, or technical insights to `.planning/findings.md`
+5. Mark as completed
 
 ### Step 3: Report and Update Progress
 When batch complete:
@@ -37,6 +38,7 @@ When batch complete:
 - **Update `.planning/progress.md`** (if `.planning/` exists):
   - Mark completed tasks as `complete` in the Task Status Dashboard
   - Append batch summary to the session log section
+- **Update `.planning/findings.md`** — Consolidate any discoveries, decisions, or surprises from this batch
 - Say: "Ready for feedback."
 
 ### Step 4: Continue
@@ -79,7 +81,8 @@ After all tasks complete and verified:
 - Between batches: just report and wait
 - Stop when blocked, don't guess
 - Never start implementation on main/master branch without explicit user consent
-- After each batch, update `.planning/progress.md`
+- After each task, record discoveries to `.planning/findings.md`
+- After each batch, update both `.planning/progress.md` and `.planning/findings.md`
 - Before final report, read `.planning/progress.md` for full summary
 
 ## Integration

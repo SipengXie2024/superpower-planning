@@ -15,14 +15,14 @@ Every workflow skill in superpower-planning inherits this foundation. `.planning
 .planning/                     # gitignored, ephemeral working state
 ├── findings.md                # aggregated findings
 ├── progress.md                # Task Status Dashboard + session log
-└── agents/                    # per-subagent working dirs
+└── agents/                    # created on demand by subagents
     ├── implementer-task-1/
     │   ├── findings.md        # this agent's discoveries
     │   └── progress.md        # this agent's action log
     └── ...
 ```
 
-Plans go in `docs/plans/`. `.planning/` is ephemeral session state.
+Plans go in `docs/plans/`. `.planning/` is ephemeral session state. The `agents/` directory is NOT created at init — each subagent creates its own subdirectory when dispatched.
 
 ## Quick Start
 
@@ -56,9 +56,12 @@ Filesystem = Disk (persistent, unlimited)
 Never start a complex task without `.planning/`. Plans always go in `docs/plans/`. Execution status is tracked via the Task Status Dashboard in `progress.md`.
 
 ### 2. The 2-Action Rule
-> "After every 2 view/browser/search operations, IMMEDIATELY save key findings to text files."
+> "After every 2 read/search/explore operations, IMMEDIATELY save key findings to `.planning/findings.md`."
 
-This prevents visual/multimodal information from being lost.
+This prevents discoveries, decisions, and insights from being lost. Record:
+- **What you found** — unexpected code patterns, constraints, dependencies
+- **What you decided** — approach chosen and why, alternatives rejected
+- **What surprised you** — edge cases, gotchas, things that didn't match expectations
 
 ### 3. Read Before Decide
 Before major decisions, read the plan file. This keeps goals in your attention window.

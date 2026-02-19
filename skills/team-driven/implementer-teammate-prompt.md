@@ -47,6 +47,7 @@ Task tool (general-purpose):
     2. Create your planning dir: `.planning/agents/{your-name}-task-{N}/`
     3. If anything is unclear — DM the team lead to ask
     4. Implement following the task steps
+       - **2-Action Rule:** After every 2 read/search/explore operations, save key findings to your `findings.md`. Don't wait until the end.
     5. Self-review (completeness, quality, YAGNI, tests)
     6. Commit your work
     7. DM the reviewer with your report

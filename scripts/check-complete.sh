@@ -31,6 +31,13 @@ PENDING=$(grep -cE '\| (⏳ )?pending \|' "$PROGRESS_FILE" || true)
 # Report status (always exit 0 -- incomplete task is a normal state)
 if [ "$COMPLETE" -eq "$TOTAL" ] && [ "$TOTAL" -gt 0 ]; then
     echo "[superpower-planning] ALL TASKS COMPLETE ($COMPLETE/$TOTAL)"
+    # Remind main agent to offer findings persistence
+    if [ -f ".planning/findings.md" ]; then
+        LINES=$(wc -l < ".planning/findings.md" | tr -d ' ')
+        if [ "$LINES" -gt 5 ]; then
+            echo "[superpower-planning] .planning/findings.md has content ($LINES lines). Ask the user if they want to persist key findings to Claude's memory system (auto memory files)."
+        fi
+    fi
 else
     echo "[superpower-planning] Task in progress ($COMPLETE/$TOTAL tasks complete)"
     if [ "$IN_PROGRESS" -gt 0 ]; then
