@@ -100,7 +100,7 @@ When writing a plan, **automatically create** the `.planning/` directory structu
   findings.md       # Unexpected discoveries and notes
 ```
 
-> **Note:** `task_plan.md` is NOT created here. The permanent plan in `docs/plans/` is the single source of truth. Execution status is tracked via the Task Status Dashboard in `progress.md`.
+> **Note:** The plan in `docs/plans/` is the single source of truth for plan content. Execution status is tracked via the Task Status Dashboard in `progress.md`.
 
 Initialize `.planning/progress.md`:
 ```markdown

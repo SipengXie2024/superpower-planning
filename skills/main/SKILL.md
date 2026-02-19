@@ -39,10 +39,9 @@ On session start, check for an existing `.planning/` directory. If found:
 
 1. Read `.planning/progress.md` -- Task Status Dashboard shows current status; session log shows what was done
 2. Read `.planning/findings.md` -- recall discoveries and decisions
-3. Read `.planning/task_plan.md` if it exists -- ad-hoc plans have phase/goal details here
-4. Run `git diff --stat` to see what changed since last session
-5. Update planning files with recovered context
-6. Continue with the task
+3. Run `git diff --stat` to see what changed since last session
+4. Update planning files with recovered context
+5. Continue with the task
 
 ## Red Flags
 

@@ -18,7 +18,6 @@ This plugin gives Claude Code a disciplined workflow system. Instead of jumping 
 All workflows share a `.planning/` directory in your project root containing:
 - `progress.md` - Task Status Dashboard + session-level progress log
 - `findings.md` - research notes and discoveries
-- `task_plan.md` - plan + phase tracking (ad-hoc tasks only, when no `docs/plans/` exists)
 
 ## Skills (15)
 
