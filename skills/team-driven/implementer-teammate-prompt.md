@@ -29,10 +29,10 @@ Task tool (general-purpose):
     mkdir -p .planning/agents/implementer-1-task-3/
     ```
 
-    **Planning rules:**
-    [ORCHESTRATOR: Include the content of `skills/planning-foundation/templates/agent-context.md` here,
-     replacing `{AGENT_PLANNING_DIR}` with the agent's planning dir path.
-     For rule 5 (3-Strike Protocol), add: DM the team lead instead of just escalating.]
+    **Planning rules:** Read and follow all rules at:
+    `{CLAUDE_PLUGIN_ROOT}/skills/planning-foundation/templates/agent-context.md`
+    Replace `{AGENT_PLANNING_DIR}` in the rules with your planning dir path.
+    For rule 5 (3-Strike Protocol): DM the team lead instead of just escalating.
 
     ## Communication Protocol
 

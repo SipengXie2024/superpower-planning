@@ -21,9 +21,9 @@ Task tool (general-purpose):
     Your planning directory is: {AGENT_PLANNING_DIR}
     (e.g., .planning/agents/implementer-task-N/)
 
-    **Planning rules:**
-    [ORCHESTRATOR: Include the content of `skills/planning-foundation/templates/agent-context.md` here,
-     replacing `{AGENT_PLANNING_DIR}` with the actual path above.]
+    **Planning rules:** Read and follow all rules at:
+    `{CLAUDE_PLUGIN_ROOT}/skills/planning-foundation/templates/agent-context.md`
+    Replace `{AGENT_PLANNING_DIR}` in the rules with the path above.
 
     ## Before You Begin
 
