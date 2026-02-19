@@ -88,8 +88,8 @@ case $LOCATION in
   .worktrees|worktrees)
     path="$LOCATION/$BRANCH_NAME"
     ;;
-  ~/.config/superpower-planning/worktrees/*)
-    path="~/.config/superpower-planning/worktrees/$project/$BRANCH_NAME"
+  *)
+    path="$HOME/.config/superpower-planning/worktrees/$project/$BRANCH_NAME"
     ;;
 esac
 

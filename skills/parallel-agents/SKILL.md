@@ -148,13 +148,7 @@ These are timing/race condition issues.
 
 Your planning directory is: .planning/agents/fixer-abort-tests/
 
-You MUST follow these planning rules:
-1. **Log discoveries immediately** to findings.md
-2. **2-Action Rule** - After every 2 search/read operations, save findings
-3. **Log errors** to progress.md with error message and analysis
-4. **Never repeat failures** - Check progress.md before retrying
-5. **3-Strike Protocol** - After 3 failures on same thing, stop and escalate
-6. **Update progress** after major steps
+You MUST follow the 6 planning rules from planning-foundation/templates/agent-context.md
 
 Mark critical items with: `> **Critical for Orchestrator:** [description]`
 

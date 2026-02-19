@@ -34,10 +34,9 @@ For each task:
 When batch complete:
 - Show what was implemented
 - Show verification output
-- **Update `.planning/progress.md`** (if `.planning/` exists) with a batch summary row:
-  ```markdown
-  | Batch N | Tasks X-Y | Completed | [brief notes] |
-  ```
+- **Update `.planning/progress.md`** (if `.planning/` exists):
+  - Mark completed tasks as `complete` in the Task Status Dashboard
+  - Append batch summary to the session log section
 - Say: "Ready for feedback."
 
 ### Step 4: Continue

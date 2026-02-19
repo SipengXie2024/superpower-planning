@@ -17,7 +17,7 @@
 - Modify: `hooks/hooks.json`
 - Modify: `hooks/session-start.sh`
 - Modify: `scripts/check-complete.sh`
-- Modify: `scripts/check-planning-complete.sh`
+- Modify: `scripts/check-complete.sh`
 - Modify: `scripts/init-planning-dir.sh`
 
 **Step 1: Update `hooks/hooks.json`**
@@ -40,7 +40,7 @@ In the resume branch, replace reading task_plan.md with reading progress.md Dash
 
 In the else branch (no .planning/), the message stays the same — just prompt to initialize.
 
-**Step 3: Update `scripts/check-planning-complete.sh`**
+**Step 3: Update `scripts/check-complete.sh`**
 
 Change the guard from `if [ ! -f .planning/task_plan.md ]` to `if [ ! -f .planning/progress.md ]`.
 
@@ -68,7 +68,7 @@ Remove the entire task_plan.md creation block (lines 36-86). Update the final ec
 
 **Step 6: Verify all hook/script changes**
 
-Run: `bash -n hooks/session-start.sh && bash -n scripts/check-complete.sh && bash -n scripts/check-planning-complete.sh && bash -n scripts/init-planning-dir.sh`
+Run: `bash -n hooks/session-start.sh && bash -n scripts/check-complete.sh && bash -n scripts/check-complete.sh && bash -n scripts/init-planning-dir.sh`
 Expected: No syntax errors
 
 Run: `cat hooks/hooks.json | python3 -m json.tool > /dev/null`
@@ -262,7 +262,7 @@ Expected: No matches (or only this plan file itself and the design doc)
 
 **Step 2: Verify all scripts have valid syntax**
 
-Run: `bash -n hooks/session-start.sh && bash -n scripts/check-complete.sh && bash -n scripts/check-planning-complete.sh && bash -n scripts/init-planning-dir.sh && echo "All scripts OK"`
+Run: `bash -n hooks/session-start.sh && bash -n scripts/check-complete.sh && bash -n scripts/check-complete.sh && bash -n scripts/init-planning-dir.sh && echo "All scripts OK"`
 
 **Step 3: Verify hooks.json is valid JSON**
 

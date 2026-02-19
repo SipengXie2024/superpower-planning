@@ -1,6 +1,7 @@
 ---
 name: catchup
 description: Recover context from previous session using .planning/ files
+disable-model-invocation: true
 ---
 
 Invoke the `superpower-planning:planning-foundation` skill and follow its session recovery instructions:
