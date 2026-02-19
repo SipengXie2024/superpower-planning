@@ -13,20 +13,14 @@ fi
 # Count total tasks: lines matching "| Task " pattern but excluding the header row
 TOTAL=$(grep -c '^| Task [^|]' "$PROGRESS_FILE" || true)
 
-# Count complete tasks
-COMPLETE=$(grep -c '| complete |' "$PROGRESS_FILE" || true)
-COMPLETE_EMOJI=$(grep -c '| ✅ complete |' "$PROGRESS_FILE" || true)
-COMPLETE=$((COMPLETE + COMPLETE_EMOJI))
+# Count complete tasks (match with or without emoji prefix)
+COMPLETE=$(grep -cE '\| (✅ )?complete \|' "$PROGRESS_FILE" || true)
 
-# Count in_progress tasks
-IN_PROGRESS=$(grep -c '| in_progress |' "$PROGRESS_FILE" || true)
-IN_PROGRESS_EMOJI=$(grep -c '| ⏳ in_progress |' "$PROGRESS_FILE" || true)
-IN_PROGRESS=$((IN_PROGRESS + IN_PROGRESS_EMOJI))
+# Count in_progress tasks (match with or without emoji prefix)
+IN_PROGRESS=$(grep -cE '\| (⏳ )?in_progress \|' "$PROGRESS_FILE" || true)
 
-# Count pending tasks
-PENDING=$(grep -c '| pending |' "$PROGRESS_FILE" || true)
-PENDING_EMOJI=$(grep -c '| ⏳ pending |' "$PROGRESS_FILE" || true)
-PENDING=$((PENDING + PENDING_EMOJI))
+# Count pending tasks (match with or without emoji prefix)
+PENDING=$(grep -cE '\| (⏳ )?pending \|' "$PROGRESS_FILE" || true)
 
 # Default to 0 if empty
 : "${TOTAL:=0}"

@@ -77,23 +77,6 @@ def get_sessions_sorted(project_dir: Path) -> List[Path]:
     return sorted(main_sessions, key=lambda p: p.stat().st_mtime, reverse=True)
 
 
-def get_sessions_sorted_opencode(storage_dir: Path) -> List[Path]:
-    """
-    Get all OpenCode session files sorted by modification time.
-    OpenCode stores sessions at: storage/session/{projectHash}/{sessionID}.json
-    """
-    session_dir = storage_dir / 'session'
-    if not session_dir.exists():
-        return []
-
-    sessions = []
-    for project_hash_dir in session_dir.iterdir():
-        if project_hash_dir.is_dir():
-            for session_file in project_hash_dir.glob('*.json'):
-                sessions.append(session_file)
-
-    return sorted(sessions, key=lambda p: p.stat().st_mtime, reverse=True)
-
 
 def scan_for_planning_update(session_file: Path) -> Tuple[int, Optional[str]]:
     """
