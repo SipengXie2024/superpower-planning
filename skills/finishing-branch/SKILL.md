@@ -1,5 +1,5 @@
 ---
-name: finishing-a-development-branch
+name: finishing-branch
 description: Use when implementation is complete, all tests pass, and you need to decide how to integrate the work - guides completion of development work by presenting structured options for merge, PR, or cleanup
 ---
 
@@ -11,7 +11,7 @@ Guide completion of development work by presenting clear options and handling ch
 
 **Core principle:** Verify tests -> Present options -> Execute choice -> Clean up.
 
-**Announce at start:** "I'm using the finishing-a-development-branch skill to complete this work."
+**Announce at start:** "I'm using the finishing-branch skill to complete this work."
 
 ## The Process
 
@@ -103,7 +103,7 @@ EOF
 )"
 ```
 
-Then: Cleanup worktree (Step 5)
+Then: Keep worktree (may need for PR revisions)
 
 #### Option 3: Keep As-Is
 
@@ -135,7 +135,7 @@ Then: Cleanup worktree (Step 5)
 
 ### Step 5: Cleanup Worktree
 
-**For Options 1, 2, 4:**
+**For Options 1 and 4:**
 
 Check if in worktree:
 ```bash
@@ -196,4 +196,4 @@ git worktree remove <worktree-path>
 - **superpower-planning:executing-plans** (Step 5) - After all batches complete
 
 **Pairs with:**
-- **superpower-planning:using-git-worktrees** - Cleans up worktree created by that skill
+- **superpower-planning:git-worktrees** - Cleans up worktree created by that skill

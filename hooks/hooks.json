@@ -24,32 +24,22 @@
     ],
     "PreToolUse": [
       {
-        "matcher": "Write|Edit|Bash|Read|Glob|Grep|WebFetch|WebSearch",
+        "matcher": "Bash",
         "hooks": [
           {
             "type": "command",
-            "command": "cat .planning/progress.md 2>/dev/null | head -30 || true"
+            "command": "cat .planning/progress.md 2>/dev/null | head -15 || true"
           }
         ]
       }
     ],
-    "PostToolUse": [
-      {
-        "matcher": "Write|Edit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "if [ -f .planning/progress.md ]; then echo '[superpower-planning] File updated. If this completes a task, update .planning/progress.md Dashboard and sync from Task API.'; fi"
-          }
-        ]
-      }
-    ],
+    "PostToolUse": [],
     "Stop": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/check-planning-complete.sh"
+            "command": "${CLAUDE_PLUGIN_ROOT}/scripts/check-complete.sh"
           }
         ]
       }

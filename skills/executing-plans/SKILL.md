@@ -18,7 +18,7 @@ Load plan, review critically, execute tasks in batches, report for review betwee
 ### Step 1: Load and Review Plan
 1. Read plan file
 2. Review critically - identify any questions or concerns about the plan
-3. If concerns: Raise them with your human partner before starting
+3. If concerns: Raise them with user before starting
 4. If no concerns: Create tasks via TaskCreate and proceed
 
 ### Step 2: Execute Batch
@@ -50,7 +50,7 @@ Based on feedback:
 
 After all tasks complete and verified:
 - **Read `.planning/progress.md`** to compile a full summary of all batches, test results, and verification evidence before presenting final status
-- Announce: "I'm using the finishing-a-development-branch skill to complete this work."
+- Announce: "I'm using the finishing-branch skill to complete this work."
 - **REQUIRED SUB-SKILL:** Use superpower-planning:finishing-branch
 - Follow that skill to verify tests, present options, execute choice
 
@@ -86,6 +86,6 @@ After all tasks complete and verified:
 ## Integration
 
 **Required workflow skills:**
-- **superpower-planning:git-worktrees** - REQUIRED: Set up isolated workspace before starting
+- **superpower-planning:git-worktrees** - RECOMMENDED: Set up isolated workspace unless already on a feature branch
 - **superpower-planning:writing-plans** - Creates the plan this skill executes
 - **superpower-planning:finishing-branch** - Complete development after all tasks

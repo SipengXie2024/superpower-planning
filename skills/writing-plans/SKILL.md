@@ -13,7 +13,7 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
 
-**Context:** This should be run in a dedicated worktree (created by brainstorming skill).
+**Context:** Optionally runs in a dedicated worktree (user chooses during brainstorming).
 
 **Save plans to:** `docs/plans/YYYY-MM-DD-<feature-name>.md`
 
@@ -33,7 +33,7 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 ```markdown
 # [Feature Name] Implementation Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpower-planning:executing-plans to implement this plan task-by-task.
+> **For Claude:** Execute this plan using the skill chosen during Execution Handoff (see end of plan).
 > Planning dir: .planning/
 
 **Goal:** [One sentence describing what this builds]
@@ -92,41 +92,15 @@ git commit -m "feat: add specific feature"
 
 ## Auto-Create `.planning/` Directory
 
-When writing a plan, **automatically create** the `.planning/` directory structure if it does not already exist:
+When writing a plan, **automatically create** the `.planning/` directory if it does not already exist by running:
 
+```bash
+${CLAUDE_PLUGIN_ROOT}/scripts/init-planning-dir.sh
 ```
-.planning/
-  progress.md       # Task Status Dashboard + session log
-  findings.md       # Unexpected discoveries and notes
-```
+
+This creates `progress.md`, `findings.md`, and `agents/` directory. The canonical template is at `planning-foundation/templates/progress.md`.
 
 > **Note:** The plan in `docs/plans/` is the single source of truth for plan content. Execution status is tracked via the Task Status Dashboard in `progress.md`.
-
-Initialize `.planning/progress.md`:
-```markdown
-# Progress
-
-## Task Status Dashboard
-<!-- Quick-scan execution status. Update after each task/batch completes. -->
-| Task | Status | Agent/Batch | Key Outcome |
-|------|--------|-------------|-------------|
-
-## Session Log
-
-## Test Results
-| Test | Result | Timestamp |
-|------|--------|-----------|
-
-## Verification Evidence
-| Claim | Command | Result | Timestamp |
-|-------|---------|--------|-----------|
-```
-
-Initialize `.planning/findings.md` (if not already present):
-```markdown
-# Findings
-> Discoveries, surprises, and notes from design exploration and implementation.
-```
 
 ## Parallelism Groups
 

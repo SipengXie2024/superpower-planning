@@ -45,22 +45,13 @@ On session start, check for an existing `.planning/` directory. If found:
 
 ## Red Flags
 
-These thoughts mean STOP -- you're rationalizing:
+If you're thinking "this doesn't need a skill" — it does. Check BEFORE any action.
 
-| Thought | Reality |
-|---------|---------|
-| "This is just a simple question" | Questions are tasks. Check for skills. |
-| "I need more context first" | Skill check comes BEFORE clarifying questions. |
-| "Let me explore the codebase first" | Skills tell you HOW to explore. Check first. |
-| "I can check git/files quickly" | Files lack conversation context. Check for skills. |
-| "Let me gather information first" | Skills tell you HOW to gather information. |
-| "This doesn't need a formal skill" | If a skill exists, use it. |
-| "I remember this skill" | Skills evolve. Read current version. |
-| "This doesn't count as a task" | Action = task. Check for skills. |
-| "The skill is overkill" | Simple things become complex. Use it. |
-| "I'll just do this one thing first" | Check BEFORE doing anything. |
-| "This feels productive" | Undisciplined action wastes time. Skills prevent this. |
-| "I know what that means" | Knowing the concept != using the skill. Invoke it. |
+Common rationalizations that mean STOP and check for skills:
+- "Too simple / overkill" — Simple things become complex. Use the skill.
+- "Need context first / let me explore" — Skills tell you HOW to gather context.
+- "I remember this skill" — Skills evolve. Read the current version.
+- "Just one thing first" — Check BEFORE doing anything.
 
 ## Skill Priority
 

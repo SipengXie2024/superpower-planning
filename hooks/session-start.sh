@@ -49,7 +49,7 @@ else
     # .planning/ does NOT exist — inject strong initialization reminder
     planning_message="\\n\\n<PLANNING_INIT_REQUIRED>\\n"
     planning_message+="**No .planning/ directory detected in this project.**\\n\\n"
-    planning_message+="Before starting ANY task that involves multiple steps, research, or more than 3 tool calls, you MUST first initialize the planning directory:\\n\\n"
+    planning_message+="Before starting ANY task that involves multiple steps, research, or more than 5 tool calls, you MUST first initialize the planning directory:\\n\\n"
     planning_message+="\`\`\`bash\\n\${CLAUDE_PLUGIN_ROOT}/scripts/init-planning-dir.sh\\n\`\`\`\\n\\n"
     planning_message+="This is NOT optional for complex tasks. The .planning/ directory is your persistent working memory.\\n"
     planning_message+="- Simple questions or single-file edits: skip planning\\n"

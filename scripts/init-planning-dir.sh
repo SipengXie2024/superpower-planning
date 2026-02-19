@@ -9,6 +9,7 @@
 
 set -e
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
 PROJECT_ROOT="${1:-.}"
 PLANNING_DIR="${PROJECT_ROOT}/.planning"
 DATE=$(date +%Y-%m-%d)
@@ -32,26 +33,12 @@ fi
 
 # Create findings.md if it doesn't exist
 if [ ! -f "${PLANNING_DIR}/findings.md" ]; then
-    cat > "${PLANNING_DIR}/findings.md" << 'EOF'
-# Findings & Decisions
-
-## Requirements
--
-
-## Research Findings
--
-
-## Technical Decisions
-| Decision | Rationale |
-|----------|-----------|
-
-## Issues Encountered
-| Issue | Resolution |
-|-------|------------|
-
-## Resources
--
-EOF
+    TEMPLATE_DIR="${SCRIPT_DIR}/../skills/planning-foundation/templates"
+    if [ -f "${TEMPLATE_DIR}/findings.md" ]; then
+        cp "${TEMPLATE_DIR}/findings.md" "${PLANNING_DIR}/findings.md"
+    else
+        echo "# Findings & Decisions" > "${PLANNING_DIR}/findings.md"
+    fi
     echo "Created findings.md"
 else
     echo "findings.md already exists, skipping"
@@ -59,30 +46,20 @@ fi
 
 # Create progress.md if it doesn't exist
 if [ ! -f "${PLANNING_DIR}/progress.md" ]; then
-    cat > "${PLANNING_DIR}/progress.md" << EOF
+    TEMPLATE_DIR="${SCRIPT_DIR}/../skills/planning-foundation/templates"
+    if [ -f "${TEMPLATE_DIR}/progress.md" ]; then
+        sed "s/\[DATE\]/$DATE/g" "${TEMPLATE_DIR}/progress.md" > "${PLANNING_DIR}/progress.md"
+    else
+        cat > "${PLANNING_DIR}/progress.md" << EOF
 # Progress Log
 
 ## Task Status Dashboard
-<!-- Quick-scan execution status. Update after each task/phase completes. -->
 | Task | Status | Agent/Batch | Key Outcome |
 |------|--------|-------------|-------------|
 
 ## Session: $DATE
-
-### Current Status
-- **Started:** $DATE
-
-### Actions Taken
--
-
-### Test Results
-| Test | Expected | Actual | Status |
-|------|----------|--------|--------|
-
-### Errors
-| Error | Attempt | Resolution |
-|-------|---------|------------|
 EOF
+    fi
     echo "Created progress.md"
 else
     echo "progress.md already exists, skipping"

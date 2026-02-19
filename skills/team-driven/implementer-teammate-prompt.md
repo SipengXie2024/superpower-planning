@@ -29,33 +29,10 @@ Task tool (general-purpose):
     mkdir -p .planning/agents/implementer-1-task-3/
     ```
 
-    You MUST follow these planning rules:
-
-    1. **Log discoveries immediately** — Write any important findings, decisions,
-       or unexpected behaviors to `{AGENT_PLANNING_DIR}/findings.md` as you go.
-       Don't wait until the end.
-
-    2. **2-Action Rule** — After every 2 search or read operations, save what
-       you learned to `{AGENT_PLANNING_DIR}/findings.md`. This prevents knowledge
-       loss if you hit context limits.
-
-    3. **Log errors to progress.md** — When you encounter errors (build failures,
-       test failures, unexpected behavior), log them immediately to
-       `{AGENT_PLANNING_DIR}/progress.md` with the error message and your analysis.
-
-    4. **Never repeat failures** — Before trying a fix, check your progress.md
-       for previous attempts. Don't retry the same approach that already failed.
-
-    5. **3-Strike Protocol** — If you fail at the same thing 3 times, stop and
-       DM the team lead: "Blocked on [description]. Need help."
-       Write a clear description of the blocker to findings.md with
-       the prefix: `> **Critical for Orchestrator:** [description]`
-
-    6. **Update progress after major steps** — After completing each significant
-       step (e.g., "implemented core logic", "tests passing", "committed"),
-       append a status line to `{AGENT_PLANNING_DIR}/progress.md`.
-
-    Mark critical findings with: `> **Critical for Orchestrator:** [description]`
+    **Planning rules:**
+    [ORCHESTRATOR: Include the content of `skills/planning-foundation/templates/agent-context.md` here,
+     replacing `{AGENT_PLANNING_DIR}` with the agent's planning dir path.
+     For rule 5 (3-Strike Protocol), add: DM the team lead instead of just escalating.]
 
     ## Communication Protocol
 

@@ -281,9 +281,9 @@ reviewer → lead: "Task 3 approved"
 ## Integration
 
 **Required workflow skills:**
+- **superpower-planning:git-worktrees** — RECOMMENDED: Set up isolated workspace unless already on a feature branch
 - **superpower-planning:writing-plans** — Creates the plan with parallelism groups
 - **superpower-planning:finishing-branch** — Complete development after all tasks
 
 **Complementary skills:**
-- **superpower-planning:git-worktrees** — Set up isolated workspace before starting
 - **superpower-planning:verification** — Final verification before declaring done
