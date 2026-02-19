@@ -19,7 +19,7 @@ All workflows share a `.planning/` directory in your project root containing:
 - `progress.md` - Task Status Dashboard + session-level progress log
 - `findings.md` - research notes and discoveries
 
-## Skills (15)
+## Skills (16)
 
 | Skill | Description |
 |-------|-------------|
@@ -34,7 +34,8 @@ All workflows share a `.planning/` directory in your project root containing:
 | **requesting-code-review** | Orchestrates code review after feature completion. |
 | **receiving-code-review** | Technical rigor when processing review feedback. |
 | **parallel-agents** | Dispatches independent tasks to concurrent subagents. |
-| **subagent-driven** | Executes plan tasks via subagents in-session. |
+| **subagent-driven** | Executes plan tasks via subagents in-session (sequential). |
+| **team-driven** | Executes plan tasks via Agent Team for parallel execution and context resilience. |
 | **using-git-worktrees** | Isolated feature work via git worktrees. |
 | **finishing-a-development-branch** | Guides merge, PR, or cleanup after implementation. |
 | **writing-skills** | Create and test new Claude Code skills. |

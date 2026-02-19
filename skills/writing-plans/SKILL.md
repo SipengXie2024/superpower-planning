@@ -128,6 +128,28 @@ Initialize `.planning/findings.md` (if not already present):
 > Discoveries, surprises, and notes from design exploration and implementation.
 ```
 
+## Parallelism Groups
+
+**Every plan MUST include a parallelism analysis** after the task list. Identify which tasks can run in parallel (no shared files, no sequential dependencies) and group them:
+
+````markdown
+### Parallelism Groups
+
+- **Group A** (parallel): Task 1, Task 2, Task 3
+- **Group B** (after Group A): Task 4, Task 5
+- **Group C** (after Group B): Task 6
+
+**Parallelism score:** 3/6 tasks can run in parallel in the first group
+````
+
+**Tips for maximizing parallelism:**
+- Split work along file boundaries (each task edits different files)
+- Split work along module boundaries (each task touches a different subsystem)
+- Extract shared setup into an early serial task, then parallelize the rest
+- If a task can be split into independent subtasks, split it
+
+The parallelism score helps the user choose the right execution mode.
+
 ## Remember
 - Exact file paths always
 - Complete code in plan (not "add validation")
@@ -135,23 +157,36 @@ Initialize `.planning/findings.md` (if not already present):
 - Reference relevant skills with @ syntax
 - DRY, YAGNI, TDD, frequent commits
 - Each task reminds: "Log unexpected discoveries to `.planning/findings.md`"
+- Always include parallelism groups analysis
 
 ## Execution Handoff
 
 After saving the plan, offer execution choice:
 
-**"Plan complete and saved to `docs/plans/<filename>.md`. Two execution options:**
+**"Plan complete and saved to `docs/plans/<filename>.md`. Three execution options:**
 
-**1. Subagent-Driven (this session)** - I dispatch fresh subagent per task, review between tasks, fast iteration
+**1. Subagent-Driven (this session, sequential)** — Fresh subagent per task, two-stage review, serial execution. Best for light tasks with serial dependencies.
 
-**2. Parallel Session (separate)** - Open new session with executing-plans, batch execution with checkpoints
+**2. Team-Driven (this session, parallel)** — Agent Team with parallel implementers + dedicated reviewer. Best when tasks are heavy or parallelizable. Also prevents context-limit crashes on complex tasks.
+
+**3. Parallel Session (separate session)** — Open new session with executing-plans, batch execution with human checkpoints.
 
 **Which approach?"**
 
+**Recommendation logic:**
+- High parallelism score + heavy tasks → recommend Team-Driven
+- Light serial tasks → recommend Subagent-Driven
+- User wants manual checkpoints → recommend Parallel Session
+
 **If Subagent-Driven chosen:**
-- **REQUIRED SUB-SKILL:** Use superpower-planning:subagent-driven-development
+- **REQUIRED SUB-SKILL:** Use superpower-planning:subagent-driven
 - Stay in this session
 - Fresh subagent per task + code review
+
+**If Team-Driven chosen:**
+- **REQUIRED SUB-SKILL:** Use superpower-planning:team-driven
+- Stay in this session
+- Agent Team with parallel implementers + dedicated reviewer
 
 **If Parallel Session chosen:**
 - Guide them to open new session in worktree

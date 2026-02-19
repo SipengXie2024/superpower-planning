@@ -89,6 +89,7 @@ The skill itself tells you which.
 | `superpower-planning:writing-plans` | Write detailed implementation plans with phases and checkpoints. |
 | `superpower-planning:executing-plans` | Execute plans phase-by-phase with progress tracking and error recovery. |
 | `superpower-planning:subagent-driven` | Orchestrate work by dispatching subagents with clear task boundaries. |
+| `superpower-planning:team-driven` | Execute plans with Agent Teams for parallel execution and context resilience. |
 | `superpower-planning:parallel-agents` | Run multiple subagents in parallel for independent tasks. |
 | `superpower-planning:tdd` | Test-driven development: write tests first, then make them pass. |
 | `superpower-planning:debugging` | Systematic debugging: reproduce, isolate, fix, verify. |
