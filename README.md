@@ -29,15 +29,15 @@ All workflows share a `.planning/` directory in your project root containing:
 | **writing-plans** | Creates detailed implementation plans before touching code. |
 | **executing-plans** | Executes plans in batches with review checkpoints. |
 | **tdd** | Test-driven development: write tests before implementation. |
-| **systematic-debugging** | Root-cause analysis before proposing fixes. |
+| **debugging** | Root-cause analysis before proposing fixes. |
 | **verification** | Evidence-based completion checks before claiming "done". |
-| **requesting-code-review** | Orchestrates code review after feature completion. |
-| **receiving-code-review** | Technical rigor when processing review feedback. |
+| **requesting-review** | Orchestrates code review after feature completion. |
+| **receiving-review** | Technical rigor when processing review feedback. |
 | **parallel-agents** | Dispatches independent tasks to concurrent subagents. |
 | **subagent-driven** | Executes plan tasks via subagents in-session (sequential). |
 | **team-driven** | Executes plan tasks via Agent Team for parallel execution and context resilience. |
-| **using-git-worktrees** | Isolated feature work via git worktrees. |
-| **finishing-a-development-branch** | Guides merge, PR, or cleanup after implementation. |
+| **git-worktrees** | Isolated feature work via git worktrees. |
+| **finishing-branch** | Guides merge, PR, or cleanup after implementation. |
 | **writing-skills** | Create and test new Claude Code skills. |
 
 ## Commands (4)

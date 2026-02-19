@@ -27,8 +27,9 @@ You MUST create a task for each of these items and complete them in order:
 2. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria
 3. **Propose 2-3 approaches** — with trade-offs and your recommendation
 4. **Present design** — in sections scaled to their complexity, get user approval after each section
-5. **Write design doc** — save to `docs/plans/YYYY-MM-DD-<topic>-design.md`, commit, and initialize `.planning/` with `progress.md` and `findings.md`
-6. **Transition to implementation** — invoke writing-plans skill to create implementation plan
+5. **Write design doc** — save to `docs/plans/YYYY-MM-DD-<topic>-design.md`, commit, and initialize `.planning/`
+6. **Ask about worktree** — use AskUserQuestion to ask whether to create an isolated git worktree for implementation (invoke `superpower-planning:git-worktrees` if yes, skip if no)
+7. **Transition to implementation** — invoke writing-plans skill to create implementation plan
 
 ## Process Flow
 
@@ -40,6 +41,8 @@ digraph brainstorming {
     "Present design sections" [shape=box];
     "User approves design?" [shape=diamond];
     "Write design doc + init .planning/" [shape=box];
+    "Ask: create worktree?" [shape=diamond];
+    "Create worktree (git-worktrees skill)" [shape=box];
     "Invoke writing-plans skill" [shape=doublecircle];
 
     "Explore project context" -> "Ask clarifying questions";
@@ -48,7 +51,10 @@ digraph brainstorming {
     "Present design sections" -> "User approves design?";
     "User approves design?" -> "Present design sections" [label="no, revise"];
     "User approves design?" -> "Write design doc + init .planning/" [label="yes"];
-    "Write design doc + init .planning/" -> "Invoke writing-plans skill";
+    "Write design doc + init .planning/" -> "Ask: create worktree?";
+    "Ask: create worktree?" -> "Create worktree (git-worktrees skill)" [label="yes"];
+    "Ask: create worktree?" -> "Invoke writing-plans skill" [label="no"];
+    "Create worktree (git-worktrees skill)" -> "Invoke writing-plans skill";
 }
 ```
 
@@ -83,26 +89,9 @@ digraph brainstorming {
 - Commit the design document to git
 
 **Initialize `.planning/` directory:**
-- Create `.planning/progress.md` with Task Status Dashboard (tasks derived from the design):
-  ```markdown
-  # Progress
-
-  ## Task Status Dashboard
-  > Source design: docs/plans/YYYY-MM-DD-<topic>-design.md
-
-  | Task | Status | Agent/Batch | Key Outcome |
-  |------|--------|-------------|-------------|
-  | Task 1: ... | ⏳ pending | - | - |
-  | Task 2: ... | ⏳ pending | - | - |
-
-  ## Session Log
-  ```
-- Create `.planning/findings.md` for design exploration findings:
-  ```markdown
-  # Findings
-  > Discoveries, surprises, and notes from design exploration and implementation.
-  ```
-- Any design exploration findings (rejected approaches, discovered constraints, useful references) go into `.planning/findings.md`
+- Run `${CLAUDE_PLUGIN_ROOT}/scripts/init-planning-dir.sh` to create the directory with canonical templates
+- Populate the Task Status Dashboard in `progress.md` with tasks derived from the design
+- Move any design exploration findings (rejected approaches, discovered constraints, useful references) into `.planning/findings.md`
 
 **Implementation:**
 - Invoke the writing-plans skill to create a detailed implementation plan

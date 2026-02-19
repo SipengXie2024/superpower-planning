@@ -40,13 +40,7 @@ Skip any step = lying, not verifying
 
 ## Recording Verification Evidence
 
-After running a verification command and confirming its output, **if `.planning/` exists**, append a row to the Verification Evidence table in `.planning/progress.md`:
-
-```markdown
-| [claim] | [command run] | [PASS/FAIL + summary] | YYYY-MM-DD HH:MM |
-```
-
-This creates an audit trail of all verification evidence gathered during the project.
+After running a verification command and confirming its output, **if `.planning/` exists**, append a row to the Verification Evidence table in `.planning/progress.md`. This creates an audit trail of all verification evidence gathered during the project.
 
 ## Common Failures
 
@@ -119,7 +113,7 @@ Trust agent report
 ## Why This Matters
 
 From 24 failure memories:
-- your human partner said "I don't believe you" - trust broken
+- user said "I don't believe you" - trust broken
 - Undefined functions shipped - would crash
 - Missing requirements shipped - incomplete features
 - Time wasted on false completion -> redirect -> rework

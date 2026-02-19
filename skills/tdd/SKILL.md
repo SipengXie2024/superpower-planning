@@ -21,7 +21,7 @@ Write the test first. Watch it fail. Write minimal code to pass.
 - Refactoring
 - Behavior changes
 
-**Exceptions (ask your human partner):**
+**Exceptions (ask user):**
 - Throwaway prototypes
 - Generated code
 - Configuration files
@@ -182,10 +182,7 @@ Confirm:
 
 **Other tests fail?** Fix now.
 
-**After GREEN, if `.planning/` exists:** Append a test result row to `.planning/progress.md` under the Test Results table:
-```markdown
-| test_name | PASS | YYYY-MM-DD HH:MM |
-```
+**After GREEN, if `.planning/` exists:** Append a test result row to the Test Results table in `.planning/progress.md`.
 
 ### REFACTOR - Clean Up
 
@@ -348,7 +345,7 @@ Can't check all boxes? You skipped TDD. Start over.
 
 | Problem | Solution |
 |---------|----------|
-| Don't know how to test | Write wished-for API. Write assertion first. Ask your human partner. |
+| Don't know how to test | Write wished-for API. Write assertion first. Ask user. |
 | Test too complicated | Design too complicated. Simplify interface. |
 | Must mock everything | Code too coupled. Use dependency injection. |
 | Test setup huge | Extract helpers. Still complex? Simplify design. |
@@ -373,4 +370,4 @@ Production code → test exists and failed first
 Otherwise → not TDD
 ```
 
-No exceptions without your human partner's permission.
+No exceptions without user's permission.
