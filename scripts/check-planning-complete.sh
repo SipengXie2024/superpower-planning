@@ -1,8 +1,8 @@
 #!/bin/bash
-# Check if all planning phases are complete when Claude stops
-# Called by Stop hook - only runs if .planning/task_plan.md exists
+# Check if all planning tasks are complete when Claude stops
+# Called by Stop hook - only runs if .planning/progress.md exists
 
-if [ ! -f .planning/task_plan.md ]; then
+if [ ! -f .planning/progress.md ]; then
     exit 0
 fi
 

@@ -28,23 +28,18 @@ escape_for_json() {
 
 # Build conditional context based on .planning/ state
 planning_message=""
-if [ -f ".planning/task_plan.md" ]; then
+if [ -d ".planning" ]; then
     # .planning/ exists — inject recovery content
     if [ "$EVENT_TYPE" = "resume" ]; then
-        plan_head=$(head -30 .planning/task_plan.md 2>/dev/null || true)
-        progress_tail=$(tail -20 .planning/progress.md 2>/dev/null || true)
+        dashboard_head=$(head -30 .planning/progress.md 2>/dev/null || true)
         findings_head=$(head -20 .planning/findings.md 2>/dev/null || true)
 
         planning_message="\\n\\n<PLANNING_SESSION_RECOVERY>\\n"
         planning_message+="**Session interrupted — recovering .planning/ context.**\\n\\n"
-        planning_message+="### Plan (.planning/task_plan.md):\\n\`\`\`\\n${plan_head}\\n\`\`\`\\n\\n"
+        planning_message+="### Dashboard (.planning/progress.md):\\n\`\`\`\\n${dashboard_head}\\n\`\`\`\\n\\n"
 
         if [ -n "$findings_head" ]; then
             planning_message+="### Findings (.planning/findings.md):\\n\`\`\`\\n${findings_head}\\n\`\`\`\\n\\n"
-        fi
-
-        if [ -n "$progress_tail" ]; then
-            planning_message+="### Recent Progress (.planning/progress.md):\\n\`\`\`\\n${progress_tail}\\n\`\`\`\\n\\n"
         fi
 
         planning_message+="**Read full .planning/ files and run \`git diff --stat\` to fully recover context.**\\n"
