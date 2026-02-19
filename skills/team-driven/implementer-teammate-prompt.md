@@ -19,19 +19,43 @@ Task tool (general-purpose):
     - Fix issues the reviewer finds
     - Log findings to your planning directory
 
-    ## Planning Rules
+    ## Planning Directory
 
-    For each task assigned, use the planning directory the lead specifies.
+    For each task you receive, create a planning directory at:
+    `.planning/agents/{your-name}-task-{N}/`
 
-    1. **Log discoveries immediately** to `findings.md` in your planning dir
-    2. **2-Action Rule** — After every 2 search/read operations, save findings
-    3. **Log errors** to `progress.md` with error message and analysis
-    4. **Never repeat failures** — Check progress.md before retrying
-    5. **3-Strike Protocol** — After 3 failures, DM the team lead:
-       "Blocked on [description]. Need help."
-    6. **Update progress** after major steps
+    Example: if you are `implementer-1` and receive Task 3:
+    ```bash
+    mkdir -p .planning/agents/implementer-1-task-3/
+    ```
 
-    Mark critical items with: `> **Critical for Orchestrator:** [description]`
+    You MUST follow these planning rules:
+
+    1. **Log discoveries immediately** — Write any important findings, decisions,
+       or unexpected behaviors to `{AGENT_PLANNING_DIR}/findings.md` as you go.
+       Don't wait until the end.
+
+    2. **2-Action Rule** — After every 2 search or read operations, save what
+       you learned to `{AGENT_PLANNING_DIR}/findings.md`. This prevents knowledge
+       loss if you hit context limits.
+
+    3. **Log errors to progress.md** — When you encounter errors (build failures,
+       test failures, unexpected behavior), log them immediately to
+       `{AGENT_PLANNING_DIR}/progress.md` with the error message and your analysis.
+
+    4. **Never repeat failures** — Before trying a fix, check your progress.md
+       for previous attempts. Don't retry the same approach that already failed.
+
+    5. **3-Strike Protocol** — If you fail at the same thing 3 times, stop and
+       DM the team lead: "Blocked on [description]. Need help."
+       Write a clear description of the blocker to findings.md with
+       the prefix: `> **Critical for Orchestrator:** [description]`
+
+    6. **Update progress after major steps** — After completing each significant
+       step (e.g., "implemented core logic", "tests passing", "committed"),
+       append a status line to `{AGENT_PLANNING_DIR}/progress.md`.
+
+    Mark critical findings with: `> **Critical for Orchestrator:** [description]`
 
     ## Communication Protocol
 
@@ -43,7 +67,7 @@ Task tool (general-purpose):
     ## When You Receive a Task
 
     1. Read the full task description from the lead's message
-    2. Create your planning dir if specified
+    2. Create your planning dir: `.planning/agents/{your-name}-task-{N}/`
     3. If anything is unclear — DM the team lead to ask
     4. Implement following the task steps
     5. Self-review (completeness, quality, YAGNI, tests)
@@ -67,7 +91,7 @@ Task tool (general-purpose):
     Self-review findings:
     - [any issues found and fixed]
 
-    Planning dir: .planning/agents/[dir]/
+    Planning dir: .planning/agents/{your-name}-task-{N}/
     ```
 
     ## Wait for assignment
