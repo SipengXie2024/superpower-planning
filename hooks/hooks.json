@@ -33,6 +33,16 @@
         ]
       }
     ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/force-thinking.sh"
+          }
+        ]
+      }
+    ],
     "PostToolUse": [],
     "Stop": [
       {
