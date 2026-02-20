@@ -177,17 +177,17 @@ After all tasks complete:
 
 ## Per-Agent Planning Directories
 
-Same as subagent-driven — each implementer gets its own dir:
+Each **persistent teammate** maintains a single planning directory across all tasks:
 
 ```bash
-mkdir -p .planning/agents/implementer-1-task-N/
-```
-
-The reviewer also gets a planning dir:
-
-```bash
+mkdir -p .planning/agents/implementer-1/
+mkdir -p .planning/agents/implementer-2/
 mkdir -p .planning/agents/reviewer/
 ```
+
+Implementers update the same `findings.md` and `progress.md` as they work on successive tasks. This keeps context continuous rather than fragmented across per-task folders.
+
+**Note:** This differs from subagent-driven, where each one-shot subagent gets a per-task dir (`implementer-task-N/`).
 
 ## Prompt Templates
 

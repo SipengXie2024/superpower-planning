@@ -21,9 +21,17 @@ Task tool (general-purpose):
     Your planning directory is: {AGENT_PLANNING_DIR}
     (e.g., .planning/agents/implementer-task-N/)
 
-    **Planning rules:** Read and follow all rules at:
-    `{CLAUDE_PLUGIN_ROOT}/skills/planning-foundation/templates/agent-context.md`
-    Replace `{AGENT_PLANNING_DIR}` in the rules with the path above.
+    **MANDATORY — Planning Rules (do this BEFORE any implementation work):**
+
+    1. Use the Read tool to read this file:
+       `{CLAUDE_PLUGIN_ROOT}/skills/planning-foundation/templates/agent-context.md`
+       This contains the 6 planning rules you MUST follow. Replace `{AGENT_PLANNING_DIR}` with your planning dir path.
+
+    2. After reading the rules, initialize your planning dir by copying the templates:
+       - Read `{CLAUDE_PLUGIN_ROOT}/skills/planning-foundation/templates/findings.md` → write to `{AGENT_PLANNING_DIR}/findings.md`
+       - Read `{CLAUDE_PLUGIN_ROOT}/skills/planning-foundation/templates/progress.md` → write to `{AGENT_PLANNING_DIR}/progress.md`
+
+    **You MUST have `findings.md` and `progress.md` in your planning dir before writing any code. Do NOT create other files like `notes.md` — only use `findings.md` and `progress.md`.**
 
     ## Before You Begin
 
