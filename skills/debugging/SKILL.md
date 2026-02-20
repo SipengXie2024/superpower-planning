@@ -171,7 +171,9 @@ You MUST complete each phase before proceeding to the next.
    - Ask for help
    - Research more
 
-**After each hypothesis test, append result to `.planning/progress.md` and update `.planning/findings.md` with what was learned (confirmed/rejected hypotheses, new evidence).**
+**After each hypothesis test:**
+- **Append test result** (hypothesis, pass/fail, output) to `.planning/progress.md` Test Results table
+- **Append what was learned** (confirmed/rejected hypotheses, new evidence, root cause insights) to `.planning/findings.md` under "## Debugging Findings"
 
 ### Phase 4: Implementation
 

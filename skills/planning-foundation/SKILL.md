@@ -45,23 +45,27 @@ Filesystem = Disk (persistent, unlimited)
 
 ## File Purposes
 
-| File | Purpose | When to Update |
-|------|---------|----------------|
-| `findings.md` | Research, discoveries | After ANY discovery |
-| `progress.md` | Task Status Dashboard + session log, test results | Dashboard: after each task/phase. Log: throughout session |
+| File | Purpose | What Goes Here | When to Update |
+|------|---------|----------------|----------------|
+| `findings.md` | Knowledge base: discoveries, decisions, surprises | Code patterns, architecture insights, technical decisions + rationale, rejected alternatives, unexpected behavior, edge cases, dependency constraints, debugging root causes | After ANY discovery or decision |
+| `progress.md` | Operations log: status, actions, evidence | Task Status Dashboard rows, phase status changes, actions taken (files modified), error log + retries, test results, verification evidence, batch/phase summaries | After ANY status change, action, or error |
 
 ## Critical Rules
 
 ### 1. Create Planning Dir First
 Never start a complex task without `.planning/`. Plans always go in `docs/plans/`. Execution status is tracked via the Task Status Dashboard in `progress.md`.
 
-### 2. The 2-Action Rule
-> "After every 2 read/search/explore operations, IMMEDIATELY save key findings to `.planning/findings.md`."
+### 2. The 2-Action Dispatch Rule
+> "After every 2 read/search/explore operations, IMMEDIATELY save to the appropriate file by content type."
 
-This prevents discoveries, decisions, and insights from being lost. Record:
-- **What you found** — unexpected code patterns, constraints, dependencies
-- **What you decided** — approach chosen and why, alternatives rejected
-- **What surprised you** — edge cases, gotchas, things that didn't match expectations
+**Dispatch by content type:**
+
+| Content type | Target file | Examples |
+|---|---|---|
+| Discoveries, decisions, surprises | `findings.md` | Code patterns, constraints, approach chosen and why, edge cases |
+| Status, actions, errors, results | `progress.md` | Task marked complete, files modified, error + retry, test pass/fail |
+
+This prevents both knowledge AND progress from being lost.
 
 ### 3. Read Before Decide
 Before major decisions, read the plan file. This keeps goals in your attention window.

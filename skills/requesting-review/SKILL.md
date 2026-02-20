@@ -46,7 +46,9 @@ Use Task tool with superpower-planning:code-reviewer type, fill template at `cod
 - Note Minor issues for later
 - Push back if reviewer is wrong (with reasoning)
 
-**4. After review results, append summary to `.planning/findings.md` under "## Code Review Findings".**
+**4. After review results:**
+- **Append review outcome** (approved/changes-requested, issues fixed, issues deferred) to `.planning/progress.md` session log
+- **Append technical insights** (patterns learned, architectural feedback worth remembering) to `.planning/findings.md` under "## Code Review Findings"
 
 ## Example
 
