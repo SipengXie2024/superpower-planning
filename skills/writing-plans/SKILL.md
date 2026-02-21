@@ -135,9 +135,9 @@ The parallelism score helps the user choose the right execution mode.
 
 ## Execution Handoff
 
-After saving the plan, offer execution choice:
+After saving the plan, you MUST present exactly these three options using `AskUserQuestion`. Do NOT omit, replace, or invent options. All three MUST always be shown regardless of your analysis.
 
-**"Plan complete and saved to `docs/plans/<filename>.md`. Three execution options:**
+**Use `AskUserQuestion` with these exact options:**
 
 **1. Subagent-Driven (this session, sequential)** — Fresh subagent per task, two-stage review, serial execution. Best for light tasks with serial dependencies.
 
@@ -145,9 +145,9 @@ After saving the plan, offer execution choice:
 
 **3. Parallel Session (separate session)** — Open new session with executing-plans, batch execution with human checkpoints.
 
-**Which approach?"**
+Include your recommendation in the question text based on the logic below, but never remove options.
 
-**Recommendation logic:**
+**Recommendation logic (add "(Recommended)" to the best option's label):**
 - High parallelism score + heavy tasks → recommend Team-Driven
 - Light serial tasks → recommend Subagent-Driven
 - User wants manual checkpoints → recommend Parallel Session
