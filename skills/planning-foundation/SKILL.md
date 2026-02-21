@@ -16,9 +16,10 @@ Every workflow skill in superpower-planning inherits this foundation. `.planning
 ├── findings.md                # aggregated findings
 ├── progress.md                # Task Status Dashboard + session log
 └── agents/                    # created on demand by subagents
-    ├── implementer-task-1/
-    │   ├── findings.md        # this agent's discoveries
-    │   └── progress.md        # this agent's action log
+    ├── implementer/           # one dir per role, reused across tasks
+    │   ├── findings.md        # this agent's discoveries (appended across tasks)
+    │   └── progress.md        # this agent's action log (appended across tasks)
+    ├── spec-reviewer/
     └── ...
 ```
 
@@ -160,10 +161,12 @@ If you can answer these, your context management is solid:
 When dispatching subagents, each gets its own planning dir:
 
 ```
-.planning/agents/{role}-task-{N}/
-├── findings.md    # agent's discoveries
-└── progress.md    # agent's action log
+.planning/agents/{role}/
+├── findings.md    # agent's discoveries (appended across tasks)
+└── progress.md    # agent's action log (appended across tasks)
 ```
+
+**Do NOT create per-task directories** like `implementer-task-1/`. One directory per role, updated continuously.
 
 The orchestrator aggregates agent findings into top-level `.planning/findings.md` and `.planning/progress.md` after each task completes.
 

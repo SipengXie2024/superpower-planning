@@ -21,7 +21,7 @@ Task tool (superpower-planning:requesting-review):
   ## Planning Directory
 
   Your review planning directory is: {AGENT_PLANNING_DIR}
-  (e.g., .planning/agents/quality-reviewer-task-N/)
+  (e.g., .planning/agents/quality-reviewer/)
 
   Write your review findings to `{AGENT_PLANNING_DIR}/findings.md` as you go.
   Mark critical items with: `> **Critical for Orchestrator:** [description]`

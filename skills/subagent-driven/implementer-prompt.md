@@ -19,7 +19,9 @@ Task tool (general-purpose):
     ## Planning Directory
 
     Your planning directory is: {AGENT_PLANNING_DIR}
-    (e.g., .planning/agents/implementer-task-N/)
+    (e.g., .planning/agents/implementer/)
+
+    **Do NOT create per-task directories** like `implementer-task-1/`. Use ONE directory per role.
 
     **MANDATORY — Planning Rules (do this BEFORE any implementation work):**
 
@@ -27,9 +29,11 @@ Task tool (general-purpose):
        `{CLAUDE_PLUGIN_ROOT}/skills/planning-foundation/templates/agent-context.md`
        This contains the 6 planning rules you MUST follow. Replace `{AGENT_PLANNING_DIR}` with your planning dir path.
 
-    2. After reading the rules, initialize your planning dir by copying the templates:
-       - Read `{CLAUDE_PLUGIN_ROOT}/skills/planning-foundation/templates/findings.md` → write to `{AGENT_PLANNING_DIR}/findings.md`
-       - Read `{CLAUDE_PLUGIN_ROOT}/skills/planning-foundation/templates/progress.md` → write to `{AGENT_PLANNING_DIR}/progress.md`
+    2. Check if `{AGENT_PLANNING_DIR}/findings.md` and `progress.md` already exist:
+       - **If they exist:** Read them first to understand context from previous tasks, then APPEND to them.
+       - **If they don't exist:** Initialize by copying the templates:
+         - Read `{CLAUDE_PLUGIN_ROOT}/skills/planning-foundation/templates/findings.md` → write to `{AGENT_PLANNING_DIR}/findings.md`
+         - Read `{CLAUDE_PLUGIN_ROOT}/skills/planning-foundation/templates/progress.md` → write to `{AGENT_PLANNING_DIR}/progress.md`
 
     **You MUST have `findings.md` and `progress.md` in your planning dir before writing any code. Do NOT create other files like `notes.md` — only use `findings.md` and `progress.md`.**
 

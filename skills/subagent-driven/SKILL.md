@@ -44,7 +44,7 @@ digraph process {
 
     subgraph cluster_per_task {
         label="Per Task";
-        "Create agent planning dir" [shape=box style=filled fillcolor=lightyellow];
+        "Create agent planning dir (if not exists)" [shape=box style=filled fillcolor=lightyellow];
         "Dispatch implementer subagent (./implementer-prompt.md)" [shape=box];
         "Implementer subagent asks questions?" [shape=diamond];
         "Answer questions, provide context" [shape=box];
@@ -64,8 +64,8 @@ digraph process {
     "Dispatch final code reviewer subagent for entire implementation" [shape=box];
     "Use superpower-planning:finishing-branch" [shape=box style=filled fillcolor=lightgreen];
 
-    "Read plan, extract all tasks with full text, note context, create tasks via TaskCreate" -> "Create agent planning dir";
-    "Create agent planning dir" -> "Dispatch implementer subagent (./implementer-prompt.md)";
+    "Read plan, extract all tasks with full text, note context, create tasks via TaskCreate" -> "Create agent planning dir (if not exists)";
+    "Create agent planning dir (if not exists)" -> "Dispatch implementer subagent (./implementer-prompt.md)";
     "Dispatch implementer subagent (./implementer-prompt.md)" -> "Implementer subagent asks questions?";
     "Implementer subagent asks questions?" -> "Answer questions, provide context" [label="yes"];
     "Answer questions, provide context" -> "Dispatch implementer subagent (./implementer-prompt.md)";
@@ -81,7 +81,7 @@ digraph process {
     "Code quality reviewer subagent approves?" -> "Aggregate agent findings into top-level .planning/" [label="yes"];
     "Aggregate agent findings into top-level .planning/" -> "Mark task complete via TaskUpdate";
     "Mark task complete via TaskUpdate" -> "More tasks remain?";
-    "More tasks remain?" -> "Create agent planning dir" [label="yes - next task"];
+    "More tasks remain?" -> "Create agent planning dir (if not exists)" [label="yes - next task"];
     "More tasks remain?" -> "Dispatch final code reviewer subagent for entire implementation" [label="no"];
     "Dispatch final code reviewer subagent for entire implementation" -> "Use superpower-planning:finishing-branch";
 }
@@ -89,20 +89,24 @@ digraph process {
 
 ## Per-Agent Planning Directories
 
-Before dispatching each implementer subagent, create its planning directory:
+Each agent role gets ONE directory, reused across all tasks:
 
 ```bash
-mkdir -p .planning/agents/{role}-task-{N}/
+mkdir -p .planning/agents/{role}/
 ```
 
-Example for Task 2 implementer:
+Example:
 ```bash
-mkdir -p .planning/agents/implementer-task-2/
+mkdir -p .planning/agents/implementer/
+mkdir -p .planning/agents/spec-reviewer/
+mkdir -p .planning/agents/quality-reviewer/
 ```
 
 Each agent planning dir contains:
-- `findings.md` - Discoveries, decisions, critical items
-- `progress.md` - Step-by-step progress log
+- `findings.md` - Discoveries, decisions, critical items (appended across tasks)
+- `progress.md` - Step-by-step progress log (appended across tasks)
+
+**Do NOT create per-task directories** like `implementer-task-1/`, `implementer-task-2/`. One directory per role, updated continuously.
 
 Include the planning dir path in the agent's prompt using `./implementer-prompt.md` template.
 
@@ -110,7 +114,7 @@ Include the planning dir path in the agent's prompt using `./implementer-prompt.
 
 After each task completes (both reviews pass), aggregate the agent's findings:
 
-1. **Read** the agent's `.planning/agents/{role}-task-{N}/findings.md` and `progress.md`
+1. **Read** the agent's `.planning/agents/{role}/findings.md` and `progress.md`
 2. **Extract** items marked with `> **Critical for Orchestrator:**` plus any errors and test results
 3. **Append** extracted items to top-level `.planning/findings.md` under a task heading
 4. **Update** top-level `.planning/progress.md`:
@@ -126,8 +130,8 @@ Example aggregation:
 - [From quality-reviewer] Approved with no issues
 
 <!-- Update Task Status Dashboard table in .planning/progress.md -->
-| Task 1: Hook installation | ✅ complete | agents/implementer-task-1/ | 5 tests passing |
-| Task 2: Recovery modes | ✅ complete | agents/implementer-task-2/ | 8 tests passing |
+| Task 1: Hook installation | ✅ complete | agents/implementer/ | 5 tests passing |
+| Task 2: Recovery modes | ✅ complete | agents/implementer/ | 8 tests passing |
 | Task 3: Config parser | ⏳ pending | - | - |
 
 <!-- Append to session log in .planning/progress.md -->
@@ -154,7 +158,7 @@ You: I'm using Subagent-Driven Development to execute this plan.
 
 Task 1: Hook installation script
 
-[Create .planning/agents/implementer-task-1/]
+[Create .planning/agents/implementer/ (if not exists)]
 [Dispatch implementation subagent with full task text + context + planning dir]
 
 Implementer: "Before I begin - should the hook be installed at user or system level?"
@@ -167,7 +171,7 @@ Implementer: "Got it. Implementing now..."
   - Added tests, 5/5 passing
   - Self-review: Found I missed --force flag, added it
   - Committed
-  - Logged findings to .planning/agents/implementer-task-1/findings.md
+  - Logged findings to .planning/agents/implementer/findings.md
 
 [Dispatch spec compliance reviewer with its own planning dir]
 Spec reviewer: Spec compliant - all requirements met, nothing extra
@@ -180,7 +184,7 @@ Code reviewer: Strengths: Good test coverage, clean. Issues: None. Approved.
 
 Task 2: Recovery modes
 
-[Create .planning/agents/implementer-task-2/]
+[Reuse .planning/agents/implementer/ (already exists from Task 1)]
 [Dispatch implementation subagent with full task text + context + planning dir]
 
 Implementer: [No questions, proceeds]

@@ -187,7 +187,7 @@ mkdir -p .planning/agents/reviewer/
 
 Implementers update the same `findings.md` and `progress.md` as they work on successive tasks. This keeps context continuous rather than fragmented across per-task folders.
 
-**Note:** This differs from subagent-driven, where each one-shot subagent gets a per-task dir (`implementer-task-N/`).
+**Note:** Subagent-driven follows the same convention — one directory per role (e.g., `implementer/`), reused across tasks. Do NOT create per-task directories like `implementer-task-N/`.
 
 ## Prompt Templates
 
