@@ -86,6 +86,7 @@ The skill itself tells you which.
 | `superpower-planning:debugging` | Systematic debugging: reproduce, isolate, fix, verify. |
 | `superpower-planning:git-worktrees` | Use git worktrees for parallel branch work without stashing. |
 | `superpower-planning:finishing-branch` | Clean up and finalize a development branch before merge/PR. |
+| `superpower-planning:archiving` | Archive completed plans, consolidate memory, and reset .planning/ for the next task. |
 | `superpower-planning:requesting-review` | Prepare and submit code for review with context and rationale. |
 | `superpower-planning:receiving-review` | Process review feedback systematically and address all comments. |
 | `superpower-planning:verification` | Verify work is complete and correct before declaring done. |
