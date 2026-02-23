@@ -23,7 +23,7 @@ Every project goes through this process. A todo list, a single-function utility,
 
 You MUST create a task for each of these items and complete them in order:
 
-1. **Explore project context** — check files, docs, recent commits. **Save initial findings** (project structure, relevant patterns, constraints discovered) to `.planning/findings.md`
+1. **Explore project context** — check files, docs, recent commits. **Save initial findings** (project structure, relevant patterns, constraints discovered) to `.planning/findings.md`. Also check `.planning/archive/*.md` for relevant historical archives — if found, read related archives and note relevant Key Decisions and Lessons Learned in `.planning/findings.md` under a `## Historical Context` section.
 2. **Ask clarifying questions** — one at a time, understand purpose/constraints/success criteria. Record key user answers and decisions to `.planning/findings.md`
 3. **Propose 2-3 approaches** — with trade-offs and your recommendation
 4. **Present design** — in sections scaled to their complexity, get user approval after each section
