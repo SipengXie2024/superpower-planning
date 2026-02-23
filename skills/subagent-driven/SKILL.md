@@ -9,6 +9,19 @@ Execute plan by dispatching fresh subagent per task, with two-stage review after
 
 **Core principle:** Fresh subagent per task + per-agent planning dir + two-stage review (spec then quality) = high quality, fast iteration
 
+## NON-NEGOTIABLE: Two-Stage Review Gate
+
+<EXTREMELY-IMPORTANT>
+Every task MUST pass TWO independent reviews before it can be marked complete:
+
+1. **Spec Compliance Review** — Dispatch `./spec-reviewer-prompt.md` subagent
+2. **Code Quality Review** — Dispatch `./quality-reviewer-prompt.md` subagent (only after spec review passes)
+
+A task is NOT complete until BOTH reviews return APPROVED. No exceptions — not for "simple" tasks, config changes, or thorough self-reviews.
+
+The Task Status Dashboard in `.planning/progress.md` has `Spec Review` and `Quality Review` columns. Both MUST show `PASS` before status can be `complete`.
+</EXTREMELY-IMPORTANT>
+
 ## When to Use
 
 ```dot
@@ -112,7 +125,7 @@ Include the planning dir path in the agent's prompt using `./implementer-prompt.
 
 ## Orchestrator Aggregation Flow
 
-After each task completes (both reviews pass), aggregate the agent's findings:
+After each task completes (both reviews passed), aggregate the agent's findings:
 
 1. **Read** the agent's `.planning/agents/{role}/findings.md` and `progress.md`
 2. **Extract** items marked with `> **Critical for Orchestrator:**` plus any errors and test results
@@ -130,9 +143,9 @@ Example aggregation:
 - [From quality-reviewer] Approved with no issues
 
 <!-- Update Task Status Dashboard table in .planning/progress.md -->
-| Task 1: Hook installation | ✅ complete | agents/implementer/ | 5 tests passing |
-| Task 2: Recovery modes | ✅ complete | agents/implementer/ | 8 tests passing |
-| Task 3: Config parser | ⏳ pending | - | - |
+| Task 1: Hook installation | ✅ complete | PASS | PASS | agents/implementer/ | 5 tests passing |
+| Task 2: Recovery modes | ✅ complete | PASS (2nd pass) | PASS | agents/implementer/ | 8 tests passing |
+| Task 3: Config parser | ⏳ pending | - | - | - | - |
 
 <!-- Append to session log in .planning/progress.md -->
 - [x] Task 2: Recovery modes - COMPLETED
@@ -264,20 +277,15 @@ Done!
 ## Red Flags
 
 **Never:**
+- **Skip reviews** — see Two-Stage Review Gate above. No exceptions.
 - Start implementation on main/master branch without explicit user consent
-- Skip reviews (spec compliance OR code quality)
-- Proceed with unfixed issues
 - Dispatch multiple implementation subagents in parallel (conflicts)
 - Make subagent read plan file (provide full text instead)
 - Skip scene-setting context (subagent needs to understand where task fits)
 - Ignore subagent questions (answer before letting them proceed)
-- Accept "close enough" on spec compliance (spec reviewer found issues = not done)
-- Skip review loops (reviewer found issues = implementer fixes = review again)
-- Let implementer self-review replace actual review (both are needed)
-- **Start code quality review before spec compliance is passed** (wrong order)
-- Move to next task while either review has open issues
-- Skip planning dir creation (agents need structured output)
-- Skip aggregation step (knowledge gets lost between tasks)
+- Accept "close enough" on spec compliance (reviewer found issues = not done)
+- Start code quality review before spec compliance passes (wrong order)
+- Skip planning dir creation or aggregation step (knowledge gets lost)
 
 **If subagent asks questions:**
 - Answer clearly and completely

@@ -11,6 +11,22 @@ Execute plan by creating an Agent Team with persistent implementer teammates and
 
 **Announce at start:** "I'm using the team-driven skill to execute this plan with an Agent Team."
 
+## NON-NEGOTIABLE: Reviewer Must Review Every Task
+
+<EXTREMELY-IMPORTANT>
+The reviewer teammate MUST perform BOTH spec compliance and code quality review for every task before it can be marked complete.
+
+**A task is NOT complete until the reviewer DMs the lead with APPROVED.**
+
+You MUST NOT:
+- Skip the reviewer for ANY reason ("task was simple", "just a config change")
+- Mark a task complete without reviewer approval
+- Proceed to the next parallelism group while any task has open review issues
+
+The Task Status Dashboard in `.planning/progress.md` has `Spec Review` and `Quality Review` columns.
+A task row MUST show `PASS` in BOTH columns before you can set its status to `complete`.
+</EXTREMELY-IMPORTANT>
+
 ## When to Use
 
 ```dot
@@ -262,8 +278,8 @@ reviewer → lead: "Task 3 approved"
 ## Red Flags
 
 **Never:**
+- **Skip the reviewer for any task — this is the #1 rule. NO EXCEPTIONS. Every task MUST be reviewed (spec + quality) before it can be marked complete.**
 - Assign two implementers to tasks that edit the same files
-- Skip the reviewer for any task
 - Let implementers communicate directly with each other (use lead as coordinator for cross-task concerns)
 - Proceed to next group before current group is fully reviewed and approved
 - Forget to aggregate findings from agent planning dirs

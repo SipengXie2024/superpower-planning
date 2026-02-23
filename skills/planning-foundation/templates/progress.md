@@ -2,8 +2,9 @@
 
 ## Task Status Dashboard
 <!-- Quick-scan execution status. Update after each task/phase completes. -->
-| Task | Status | Agent/Batch | Key Outcome |
-|------|--------|-------------|-------------|
+<!-- For subagent-driven / team-driven: Spec Review and Quality Review MUST both show PASS before Status can be ✅ complete. For executing-plans or other modes, these columns may be left as "-". -->
+| Task | Status | Spec Review | Quality Review | Agent/Batch | Key Outcome |
+|------|--------|-------------|----------------|-------------|-------------|
 
 ## Session: [DATE]
 

@@ -4,11 +4,7 @@ description: Skill router and planning initialization. Loaded on every session s
 ---
 
 <EXTREMELY-IMPORTANT>
-If you think there is even a 1% chance a skill might apply to what you are doing, you ABSOLUTELY MUST invoke the skill.
-
-IF A SKILL APPLIES TO YOUR TASK, YOU DO NOT HAVE A CHOICE. YOU MUST USE IT.
-
-This is not negotiable. This is not optional. You cannot rationalize your way out of this.
+If there is even a 1% chance a skill applies to your task, you MUST invoke it. No exceptions, no rationalizations.
 </EXTREMELY-IMPORTANT>
 
 ## How to Access Skills
@@ -77,6 +73,7 @@ The skill itself tells you which.
 |-------|---------|
 | `superpower-planning:planning-foundation` | Persistent file-based planning with .planning/ directory. Foundation layer inherited by all other skills. |
 | `superpower-planning:brainstorming` | Structured brainstorming before implementation. Think before you code. |
+| `superpower-planning:spec-interview` | Refine design docs through systematic deep questioning. Auto-invoked after brainstorming. |
 | `superpower-planning:writing-plans` | Write detailed implementation plans with phases and checkpoints. |
 | `superpower-planning:executing-plans` | Execute plans phase-by-phase with progress tracking and error recovery. |
 | `superpower-planning:subagent-driven` | Orchestrate work by dispatching subagents with clear task boundaries. |

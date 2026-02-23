@@ -19,13 +19,14 @@ All workflows share a `.planning/` directory in your project root containing:
 - `progress.md` - Task Status Dashboard + session-level progress log
 - `findings.md` - research notes and discoveries
 
-## Skills (16)
+## Skills (17)
 
 | Skill | Description |
 |-------|-------------|
 | **main** | Skill router loaded on every session. Determines which skills to invoke. |
 | **planning-foundation** | Creates and manages `.planning/` directory for complex tasks. |
 | **brainstorming** | Explores intent, requirements and design before implementation. |
+| **spec-interview** | Refines design docs through systematic deep questioning. Auto-invoked after brainstorming. |
 | **writing-plans** | Creates detailed implementation plans before touching code. |
 | **executing-plans** | Executes plans in batches with review checkpoints. |
 | **tdd** | Test-driven development: write tests before implementation. |
