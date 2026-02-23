@@ -54,15 +54,16 @@ Generate a structured summary with this format:
 ### Step 3: Save Archive
 
 1. Create directory: `mkdir -p .planning/archive/`
-2. Write the summary to `.planning/archive/YYYY-MM-DD-<name>.md`
-3. Report: "Archive saved to .planning/archive/YYYY-MM-DD-<name>.md"
+2. Determine filename: `.planning/archive/YYYY-MM-DD-<name>.md`. If that file already exists, append a numeric suffix (`-2`, `-3`, etc.) until a unique name is found.
+3. Write the summary to the determined filename
+4. Report: "Archive saved to .planning/archive/<final-filename>.md"
 
 ### Step 4: Memory Consolidation & Polish
 
 This step performs a **fact-based memory maintenance pass** — not just adding new findings, but optimizing existing memory against current repo state.
 
 **4a. Explore current facts**
-- Read all memory files: Glob `~/.claude/projects/*/memory/*` for the current project
+- Locate the current project's memory directory: find the auto-memory path that matches this project's working directory under `~/.claude/projects/`. Read `MEMORY.md` and any topic files in that directory only — do NOT glob across all projects.
 - Run `git diff --stat` to see recent changes
 - Quick Glob/Read of key repo files to verify paths and patterns mentioned in memory are still accurate
 
@@ -111,10 +112,9 @@ If there are no suggestions in a category, omit that category entirely.
 
 ### Step 5: Reset .planning/
 
-1. Overwrite `.planning/progress.md` with the canonical template from `planning-foundation/templates/progress.md`
-   - Replace `[DATE]` with current date
-2. Overwrite `.planning/findings.md` with the canonical template from `planning-foundation/templates/findings.md`
-3. Remove `.planning/agents/` directory and all contents: `rm -rf .planning/agents/`
+1. Delete `.planning/progress.md` and `.planning/findings.md`
+2. Remove `.planning/agents/` directory and all contents: `rm -rf .planning/agents/`
+3. Run `${CLAUDE_PLUGIN_ROOT}/scripts/init-planning-dir.sh` to recreate `progress.md` and `findings.md` from canonical templates
 4. **Preserve** `.planning/archive/` — do NOT delete it
 
 ### Step 6: Report Completion
