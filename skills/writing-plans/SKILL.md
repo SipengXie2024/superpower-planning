@@ -45,6 +45,15 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 ---
 ```
 
+## Historical Archive Check
+
+Before writing the plan, check for relevant historical archives:
+
+1. Glob `.planning/archive/*.md`
+2. If archives exist, read the first 10 lines of each (title + summary)
+3. If any are relevant to the current task, read fully and incorporate relevant lessons into the plan
+4. If none are relevant or no archives exist, skip silently
+
 ## Task Structure
 
 ````markdown
