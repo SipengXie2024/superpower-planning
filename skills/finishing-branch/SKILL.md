@@ -201,6 +201,8 @@ After cleanup, if `.planning/findings.md` has meaningful content:
 
 **This step is main-agent only.** Subagents do not persist findings to memory.
 
+**Alternative:** Instead of manually persisting findings, suggest the user run `/archive` for comprehensive archive + memory consolidation + .planning/ reset.
+
 ## Integration
 
 **Called by:**
