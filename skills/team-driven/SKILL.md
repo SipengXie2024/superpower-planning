@@ -145,6 +145,18 @@ Task(team_name="plan-execution", name="reviewer", subagent_type="general-purpose
 
 **Reviewer teammate prompt:** Use `./reviewer-teammate-prompt.md` template.
 
+<EXTREMELY-IMPORTANT>
+**FIXED POOL — No New Implementers After Setup**
+
+The implementers spawned in this step are the ONLY implementers for the entire plan execution. You MUST NOT create additional implementers later, regardless of the reason.
+
+- If all implementers are busy → **wait** for one to finish, then assign the next task
+- If a new parallelism group has more tasks than implementers → **run in waves** (assign to implementers as they become free)
+- NEVER create an implementer named after a task (e.g., `implementer-task6`, `implementer-task-N`) — implementers are named `implementer-1`, `implementer-2`, etc. and are reused across all tasks
+
+Creating new implementers mid-execution wastes resources, fragments context, and violates the persistent-teammate design.
+</EXTREMELY-IMPORTANT>
+
 ### Step 3: Create Tasks and Set Dependencies
 
 Create all tasks via TaskCreate. Set `addBlockedBy` for tasks in later groups:
@@ -181,7 +193,7 @@ As teammates complete tasks:
 1. **Reviewer approves** → lead receives DM notification
 2. **Lead updates progress.md Dashboard** — mark task complete, note key outcome
 3. **Lead reads agent planning dirs** — aggregate findings to top-level `.planning/findings.md`
-4. **Lead assigns next tasks** if teammate is free and unblocked tasks exist
+4. **Lead assigns next tasks** to the **same teammate that just finished** if unblocked tasks exist — reuse the existing implementer pool, NEVER spawn new ones
 
 ### Step 6: Shutdown
 
@@ -279,6 +291,7 @@ reviewer → lead: "Task 3 approved"
 
 **Never:**
 - **Skip the reviewer for any task — this is the #1 rule. NO EXCEPTIONS. Every task MUST be reviewed (spec + quality) before it can be marked complete.**
+- **Create new implementers after initial setup** — the implementer pool is fixed at Step 2. If all are busy, WAIT. Never spawn `implementer-task6`, `implementer-taskN`, or any ad-hoc implementer.
 - Assign two implementers to tasks that edit the same files
 - Let implementers communicate directly with each other (use lead as coordinator for cross-task concerns)
 - Proceed to next group before current group is fully reviewed and approved
