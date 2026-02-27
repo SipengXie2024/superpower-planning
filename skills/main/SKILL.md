@@ -19,6 +19,10 @@ If there is even a 1% chance a skill applies to your task, you MUST invoke it. N
 
 **Invoke relevant or requested skills BEFORE any response or action.** Even a 1% chance a skill might apply means you should invoke the skill to check. If an invoked skill turns out to be wrong for the situation, you don't need to use it.
 
+When multiple skills could apply: process skills first (brainstorming, debugging), then implementation skills (executing-plans, tdd).
+
+If you're thinking "this doesn't need a skill" — it probably does. Check BEFORE any action.
+
 ## Planning Context
 
 When starting a complex task (multi-step, research, >5 tool calls):
@@ -39,33 +43,31 @@ On session start, check for an existing `.planning/` directory. If found:
 4. Update planning files with recovered context
 5. Continue with the task
 
-## Red Flags
+## Planning Approach Routing
 
-If you're thinking "this doesn't need a skill" — it does. Check BEFORE any action.
+When facing a non-trivial task (multi-step, architectural decisions, multi-file changes), do NOT automatically call `EnterPlanMode` or invoke `brainstorming`. Instead, present the choice to the user via `AskUserQuestion`:
 
-Common rationalizations that mean STOP and check for skills:
-- "Too simple / overkill" — Simple things become complex. Use the skill.
-- "Need context first / let me explore" — Skills tell you HOW to gather context.
-- "I remember this skill" — Skills evolve. Read the current version.
-- "Just one thing first" — Check BEFORE doing anything.
+**Option 1: Quick Planning (Plan Mode)** — Lightweight read-only exploration. Best for medium-scope tasks with known approach, quick alignment before implementation.
 
-## Skill Priority
+**Option 2: Structured Brainstorming** — Full brainstorming pipeline with design doc, spec interview, implementation plan. Best for complex features, creative design decisions, multi-file refactors.
 
-When multiple skills could apply, use this order:
+**When to skip this choice:**
+- Trivial tasks (typo, single-line fix) → just do it, no planning needed
+- User explicitly requests one mode (e.g., "let's brainstorm", "/plan") → use what they asked for
+- Already inside plan mode or brainstorming → continue the current flow
 
-1. **Process skills first** (brainstorming, debugging) -- these determine HOW to approach the task
-2. **Implementation skills second** (executing-plans, tdd) -- these guide execution
+**After Plan Mode completes:** If the approved plan reveals complex work (3+ tasks, multiple files), suggest transitioning to brainstorming/writing-plans for a formal implementation plan. Plan mode output can inform writing-plans — reference it, don't re-derive.
 
-"Let's build X" -> brainstorming first, then implementation skills.
-"Fix this bug" -> debugging first, then domain-specific skills.
+## Execution Routing
 
-## Skill Types
+When the user requests plan execution (e.g., "execute the plan", "implement it", "start building"), do NOT directly invoke a single execution skill. Instead:
 
-**Rigid** (TDD, debugging): Follow exactly. Don't adapt away discipline.
-
-**Flexible** (patterns): Adapt principles to context.
-
-The skill itself tells you which.
+1. If no plan exists at `docs/plans/*-implementation.md`, invoke `superpower-planning:writing-plans` first.
+2. If a plan exists, present the execution strategy choice via `AskUserQuestion`:
+   - **Subagent-Driven** (this session, sequential) → `superpower-planning:subagent-driven`
+   - **Team-Driven** (this session, parallel) → `superpower-planning:team-driven`
+   - **Parallel Session** (separate session) → `superpower-planning:executing-plans`
+3. Recommend based on: high parallelism + heavy tasks → Team-Driven; light serial → Subagent-Driven; manual checkpoints → Parallel Session.
 
 ## Available Skills
 
@@ -75,9 +77,9 @@ The skill itself tells you which.
 | `superpower-planning:brainstorming` | Structured brainstorming before implementation. Think before you code. |
 | `superpower-planning:spec-interview` | Refine design docs through systematic deep questioning. Auto-invoked after brainstorming. |
 | `superpower-planning:writing-plans` | Write detailed implementation plans with phases and checkpoints. |
-| `superpower-planning:executing-plans` | Execute plans phase-by-phase with progress tracking and error recovery. |
-| `superpower-planning:subagent-driven` | Orchestrate work by dispatching subagents with clear task boundaries. |
-| `superpower-planning:team-driven` | Execute plans with Agent Teams for parallel execution and context resilience. |
+| `superpower-planning:executing-plans` | Execute plans in a **separate session** with batch execution and human checkpoints. One of 3 execution strategies — see Execution Routing. |
+| `superpower-planning:subagent-driven` | Execute plans in **this session, sequentially** via fresh subagents with two-stage review. One of 3 execution strategies — see Execution Routing. |
+| `superpower-planning:team-driven` | Execute plans in **this session, in parallel** via Agent Team with dedicated reviewer. One of 3 execution strategies — see Execution Routing. |
 | `superpower-planning:parallel-agents` | Run multiple subagents in parallel for independent tasks. |
 | `superpower-planning:tdd` | Test-driven development: write tests first, then make them pass. |
 | `superpower-planning:debugging` | Systematic debugging: reproduce, isolate, fix, verify. |
