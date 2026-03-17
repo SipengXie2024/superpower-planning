@@ -1,5 +1,5 @@
 ---
-description: Execute an implementation plan using the best execution strategy
+description: Execute a reviewed implementation plan using the best execution strategy
 disable-model-invocation: true
 ---
 
@@ -7,9 +7,11 @@ Before invoking any execution skill, you MUST:
 
 1. **Locate the plan** — Check `docs/plans/` for the most recent `*-implementation.md` file. If multiple exist, ask the user which plan to execute via `AskUserQuestion`.
 
-2. **Read the plan** — Skim the plan to understand its parallelism groups and task complexity.
+2. **Confirm the plan is ready for execution** — The plan should already have gone through `writing-plans`, including its plan review loop. If you discover the plan is incomplete, ambiguous, or clearly not review-ready, send it back through `superpower-planning:writing-plans` before execution.
 
-3. **Present the execution strategy** — Use `AskUserQuestion` with exactly these three options:
+3. **Read the plan** — Skim the plan to understand its file decomposition, parallelism groups, task complexity, and verification steps.
+
+4. **Present the execution strategy** — Use `AskUserQuestion` with exactly these three options:
 
    **1. Subagent-Driven (this session, sequential)** — Fresh subagent per task, two-stage review, serial execution. Best for light tasks with serial dependencies.
 
@@ -19,7 +21,13 @@ Before invoking any execution skill, you MUST:
 
    Include your recommendation based on the plan's parallelism score and task weight.
 
-4. **Invoke the chosen skill:**
+5. **Invoke the chosen skill:**
    - Subagent-Driven → `superpower-planning:subagent-driven`
    - Team-Driven → `superpower-planning:team-driven`
    - Parallel Session → `superpower-planning:executing-plans`
+
+## Notes
+
+- Do not skip straight from a rough plan to execution.
+- Execution routing exists because different plans need different orchestration styles.
+- If the plan reveals tightly coupled work with weak decomposition, it may need to be revised before execution instead of forcing a bad execution strategy.
