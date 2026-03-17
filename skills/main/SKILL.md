@@ -49,7 +49,9 @@ When facing a non-trivial task (multi-step, architectural decisions, multi-file 
 
 **Option 1: Quick Planning (Plan Mode)** — Lightweight read-only exploration. Best for medium-scope tasks with known approach, quick alignment before implementation.
 
-**Option 2: Structured Brainstorming** — Full brainstorming pipeline with design doc, spec interview, implementation plan. Best for complex features, creative design decisions, multi-file refactors.
+**Option 2: Lightweight Execution** — Fast structured execution with `.planning/` tracking but no review loops or formal plans. Best for clear requirements, 2-5 files, <10 tasks. Code gets written in this session.
+
+**Option 3: Structured Brainstorming** — Full brainstorming pipeline with design doc, spec interview, implementation plan. Best for complex features, creative design decisions, multi-file refactors.
 
 **When to skip this choice:**
 - Trivial tasks (typo, single-line fix) → just do it, no planning needed
@@ -57,6 +59,8 @@ When facing a non-trivial task (multi-step, architectural decisions, multi-file 
 - Already inside plan mode or brainstorming → continue the current flow
 
 **After Plan Mode completes:** If the approved plan reveals complex work (3+ tasks, multiple files), suggest transitioning to brainstorming/writing-plans for a formal implementation plan. Plan mode output can inform writing-plans — reference it, don't re-derive.
+
+**When Lightweight Execution is chosen:** Invoke `superpower-planning:lightweight-execute`. This skill handles everything: `.planning/` init, exploration, task checklist, implementation, verification, and finishing-branch. No further routing is needed.
 
 ## Execution Routing
 
@@ -74,6 +78,7 @@ When the user requests plan execution (e.g., "execute the plan", "implement it",
 | Skill | Purpose |
 |-------|---------|
 | `superpower-planning:planning-foundation` | Persistent file-based planning with .planning/ directory. Foundation layer inherited by all other skills. |
+| `superpower-planning:lightweight-execute` | Fast structured execution for clear, medium-scope tasks (2-5 files). Skips formal plans and review loops, keeps `.planning/` tracking and verification. |
 | `superpower-planning:brainstorming` | Structured brainstorming before implementation. Think before you code. |
 | `superpower-planning:spec-interview` | Refine design docs through systematic deep questioning. Auto-invoked after brainstorming. |
 | `superpower-planning:writing-plans` | Write detailed implementation plans with phases and checkpoints. |

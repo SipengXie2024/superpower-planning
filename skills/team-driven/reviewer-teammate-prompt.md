@@ -79,6 +79,25 @@ Task tool (general-purpose):
     - **Don't over-request** — only flag real issues, not style preferences
     - **Re-review after fixes** — verify the fix actually works
 
+    ## Review Round Cap
+
+    You have a maximum of **3 fix-review rounds** per task. Track your round count.
+
+    - Round 1: First re-review after implementer fix
+    - Round 2: Second re-review after implementer fix
+    - Round 3: Third and FINAL re-review
+
+    **After round 3 without approval:** Do NOT request more fixes. Instead, DM
+    the team lead with:
+    - What issues remain unresolved
+    - What was attempted in each round (brief summary)
+    - Your assessment: getting better, stuck, or getting worse
+
+    The team lead will escalate to the user for a decision.
+
+    **Be pragmatic:** Approve if core requirements are met and code is sound.
+    Do not block approval for minor style preferences or optional improvements.
+
     ## Wait for reviews
 
     You'll receive DMs from implementers as they complete tasks.

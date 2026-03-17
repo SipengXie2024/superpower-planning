@@ -22,6 +22,23 @@ A task is NOT complete until BOTH reviews return APPROVED. No exceptions — not
 The Task Status Dashboard in `.planning/progress.md` has `Spec Review` and `Quality Review` columns. Both MUST show `PASS` before status can be `complete`.
 </EXTREMELY-IMPORTANT>
 
+## Review Loop Caps
+
+Each review loop (spec compliance and code quality) is capped at **3 fix-review rounds** per task.
+
+**Round counting:** The initial review does not count as a round. A "round" is one fix-then-re-review cycle: initial review → fix → re-review (round 1) → fix → re-review (round 2) → fix → re-review (round 3) → STOP.
+
+**After 3 rounds without approval, STOP the loop and escalate to the user:**
+
+1. List what issues remain unresolved
+2. Summarize what was attempted in each round
+3. Ask the user to decide:
+   - **Override and approve** — accept the current state despite open issues
+   - **Provide guidance** — give specific direction for a targeted fix (does NOT reset the counter)
+   - **Abort the task** — stop work on this task entirely
+
+**Track round count** in the Task Status Dashboard. Use notation like `FAIL (round 2/3)` in the Spec Review or Quality Review column.
+
 ## When to Use
 
 ```dot
@@ -86,11 +103,11 @@ digraph process {
     "Implementer subagent implements, tests, commits, self-reviews" -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)";
     "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" -> "Spec reviewer subagent confirms code matches spec?";
     "Spec reviewer subagent confirms code matches spec?" -> "Implementer subagent fixes spec gaps" [label="no"];
-    "Implementer subagent fixes spec gaps" -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [label="re-review"];
+    "Implementer subagent fixes spec gaps" -> "Dispatch spec reviewer subagent (./spec-reviewer-prompt.md)" [label="re-review\n(max 3 rounds)"];
     "Spec reviewer subagent confirms code matches spec?" -> "Dispatch code quality reviewer subagent (./quality-reviewer-prompt.md)" [label="yes"];
     "Dispatch code quality reviewer subagent (./quality-reviewer-prompt.md)" -> "Code quality reviewer subagent approves?";
     "Code quality reviewer subagent approves?" -> "Implementer subagent fixes quality issues" [label="no"];
-    "Implementer subagent fixes quality issues" -> "Dispatch code quality reviewer subagent (./quality-reviewer-prompt.md)" [label="re-review"];
+    "Implementer subagent fixes quality issues" -> "Dispatch code quality reviewer subagent (./quality-reviewer-prompt.md)" [label="re-review\n(max 3 rounds)"];
     "Code quality reviewer subagent approves?" -> "Aggregate agent findings into top-level .planning/" [label="yes"];
     "Aggregate agent findings into top-level .planning/" -> "Mark task complete via TaskUpdate";
     "Mark task complete via TaskUpdate" -> "More tasks remain?";
@@ -295,7 +312,8 @@ Done!
 **If reviewer finds issues:**
 - Implementer (same subagent) fixes them
 - Reviewer reviews again
-- Repeat until approved
+- Maximum 3 fix-review rounds per review stage
+- After 3 rounds without approval: escalate to user (do NOT continue looping)
 - Don't skip the re-review
 
 **If subagent fails task:**

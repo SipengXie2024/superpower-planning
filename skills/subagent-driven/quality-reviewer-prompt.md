@@ -25,6 +25,15 @@ Task tool (superpower-planning:requesting-review):
 
   Write your review findings to `{AGENT_PLANNING_DIR}/findings.md` as you go.
   Mark critical items with: `> **Critical for Orchestrator:** [description]`
+
+  ## Review Round Context
+
+  You may be invoked multiple times for the same task if issues were found in
+  a previous round. The orchestrator tracks review rounds (max 3). If this is
+  a re-review, focus on whether the specific issues from the previous round
+  have been addressed. Approve if the implementation is sound and maintainable,
+  even if it is not perfect. Critical and Important issues warrant rejection;
+  Minor issues alone should not block approval.
 ```
 
 **Code reviewer returns:** Strengths, Issues (Critical/Important/Minor), Assessment

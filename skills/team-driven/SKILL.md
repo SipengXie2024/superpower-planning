@@ -27,6 +27,25 @@ The Task Status Dashboard in `.planning/progress.md` has `Spec Review` and `Qual
 A task row MUST show `PASS` in BOTH columns before you can set its status to `complete`.
 </EXTREMELY-IMPORTANT>
 
+## Review Loop Cap
+
+The reviewer's fix-review loop is capped at **3 rounds** per task.
+
+**Round counting:** The initial review does not count as a round. A "round" is one fix-then-re-review cycle: initial review → DM implementer to fix → re-review (round 1) → DM fix → re-review (round 2) → DM fix → re-review (round 3) → STOP.
+
+**After 3 rounds without approval, the reviewer MUST DM the team lead to escalate.** The escalation message should include:
+
+1. What issues remain unresolved
+2. What was attempted in each round
+3. Whether the issues are getting better, worse, or stuck
+
+**The team lead then escalates to the user** with three choices:
+- **Override and approve** — accept the current state despite open issues
+- **Provide guidance** — give specific direction for a targeted fix (does NOT reset the counter)
+- **Abort the task** — stop work on this task entirely
+
+**Track round count** in the Task Status Dashboard. Use notation like `FAIL (round 2/3)` in the review columns.
+
 ## When to Use
 
 ```dot
@@ -101,7 +120,7 @@ digraph process {
     "Implementer DMs reviewer" -> "Reviewer reviews (spec + quality)";
     "Reviewer reviews (spec + quality)" -> "Issues found?";
     "Issues found?" -> "Reviewer DMs implementer to fix" [label="yes"];
-    "Reviewer DMs implementer to fix" -> "Reviewer reviews (spec + quality)" [label="re-review"];
+    "Reviewer DMs implementer to fix" -> "Reviewer reviews (spec + quality)" [label="re-review\n(max 3 rounds)"];
     "Issues found?" -> "Reviewer DMs lead: approved" [label="no"];
     "Reviewer DMs lead: approved" -> "Lead: aggregate findings, update progress.md";
     "Lead: aggregate findings, update progress.md" -> "More groups?";
@@ -191,7 +210,8 @@ SendMessage: type="message", recipient="implementer-2", content="Please work on 
 As teammates complete tasks:
 
 1. **Reviewer approves** → lead receives DM notification
-2. **Lead updates progress.md Dashboard** — mark task complete, note key outcome
+2. **Reviewer escalates** (after 3 rounds) → lead presents unresolved issues to user for decision
+3. **Lead updates progress.md Dashboard** — mark task complete, note key outcome
 3. **Lead reads agent planning dirs** — aggregate findings to top-level `.planning/findings.md`
 4. **Lead assigns next tasks** to the **same teammate that just finished** if unblocked tasks exist — reuse the existing implementer pool, NEVER spawn new ones
 
@@ -292,6 +312,7 @@ reviewer → lead: "Task 3 approved"
 **Never:**
 - **Skip the reviewer for any task — this is the #1 rule. NO EXCEPTIONS. Every task MUST be reviewed (spec + quality) before it can be marked complete.**
 - **Create new implementers after initial setup** — the implementer pool is fixed at Step 2. If all are busy, WAIT. Never spawn `implementer-task6`, `implementer-taskN`, or any ad-hoc implementer.
+- Loop reviews more than 3 rounds without escalating to the user
 - Assign two implementers to tasks that edit the same files
 - Let implementers communicate directly with each other (use lead as coordinator for cross-task concerns)
 - Proceed to next group before current group is fully reviewed and approved

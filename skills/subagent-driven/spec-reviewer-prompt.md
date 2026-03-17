@@ -63,6 +63,14 @@ Task tool (general-purpose):
 
     **Verify by reading code, not by trusting report.**
 
+    ## Review Round Context
+
+    You may be invoked multiple times for the same task if issues were found in
+    a previous round. The orchestrator tracks review rounds (max 3). If this is
+    a re-review, focus on whether the specific issues from the previous round
+    have been addressed. Be decisive — approve if the core requirements are met,
+    even if minor style preferences remain.
+
     Report:
     - Spec compliant (if everything matches after code inspection)
     - Issues found: [list specifically what's missing or extra, with file:line references]
