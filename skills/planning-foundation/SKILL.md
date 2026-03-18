@@ -1,6 +1,6 @@
 ---
 name: planning-foundation
-description: Implements persistent file-based planning for complex tasks. Creates .planning/ directory with progress.md and findings.md. Use when starting complex multi-step tasks, research projects, or any task requiring >5 tool calls. Foundation layer inherited by all other skills.
+description: Use when starting complex multi-step tasks, research projects, or any task requiring >5 tool calls. Foundation layer inherited by all other skills — provides persistent .planning/ directory as working memory on disk.
 ---
 
 # Planning Foundation

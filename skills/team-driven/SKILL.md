@@ -212,8 +212,8 @@ As teammates complete tasks:
 1. **Reviewer approves** → lead receives DM notification
 2. **Reviewer escalates** (after 3 rounds) → lead presents unresolved issues to user for decision
 3. **Lead updates progress.md Dashboard** — mark task complete, note key outcome
-3. **Lead reads agent planning dirs** — aggregate findings to top-level `.planning/findings.md`
-4. **Lead assigns next tasks** to the **same teammate that just finished** if unblocked tasks exist — reuse the existing implementer pool, NEVER spawn new ones
+4. **Lead reads agent planning dirs** — aggregate findings to top-level `.planning/findings.md`
+5. **Lead assigns next tasks** to the **same teammate that just finished** if unblocked tasks exist — reuse the existing implementer pool, NEVER spawn new ones
 
 ### Step 6: Shutdown
 

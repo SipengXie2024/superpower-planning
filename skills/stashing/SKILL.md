@@ -1,6 +1,6 @@
 ---
 name: stashing
-description: Pause unfinished work without archiving it. Use when switching to another project, waiting on dependencies, or temporarily setting aside current .planning/ state. Saves current planning context into .planning/stash/ and supports later resume with stale-findings check.
+description: Use when switching to another project, waiting on dependencies, or temporarily setting aside unfinished work. Pauses current .planning/ state into .planning/stash/ for later resume with stale-findings check.
 ---
 
 # Stashing Unfinished Work
@@ -123,8 +123,8 @@ When resuming from a stash later:
      - `still valid`
      - `needs refresh`
      - `obsolete`
-6. Explicitly report any stale or questionable findings before execution resumes
-7. If drift is large, recommend switching to `superpower-planning:brainstorming` or `superpower-planning:writing-plans` instead of blindly continuing
+7. Explicitly report any stale or questionable findings before execution resumes
+8. If drift is large, recommend switching to `superpower-planning:brainstorming` or `superpower-planning:writing-plans` instead of blindly continuing
 
 ## Resume Output Format
 

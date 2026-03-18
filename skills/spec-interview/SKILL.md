@@ -1,6 +1,6 @@
 ---
 name: spec-interview
-description: Refine design docs and specs through systematic deep questioning. Auto-invoked after brainstorming, or manually triggered with "help me refine this plan", "ask me about the project", or "deep interview".
+description: Use when refining design docs and specs through deep questioning. Triggered when user says "help me refine this plan", "ask me about the project", "deep interview", or after brainstorming produces a design doc.
 ---
 
 # Spec Interview

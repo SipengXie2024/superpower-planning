@@ -1,6 +1,6 @@
 ---
 name: executing-plans
-description: Use when you have a written implementation plan to execute in a separate session with review checkpoints
+description: Use when executing a written implementation plan in a separate session with batch execution and human review checkpoints between batches
 ---
 
 # Executing Plans
