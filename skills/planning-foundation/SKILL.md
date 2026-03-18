@@ -25,6 +25,10 @@ Every workflow skill in superpower-planning inherits this foundation. `.planning
 
 Plans go in `docs/plans/`. `.planning/` is ephemeral session state. The `agents/` directory is NOT created at init — each subagent creates its own subdirectory when dispatched.
 
+Additional lifecycle directories may exist:
+- `.planning/archive/` — completed work summaries
+- `.planning/stash/` — paused unfinished work snapshots for later resume
+
 ## Quick Start
 
 Before ANY complex task:

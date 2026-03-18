@@ -190,18 +190,37 @@ git worktree remove <worktree-path>
 - Get typed confirmation for Option 4
 - Clean up worktree for Options 1 & 4 only
 
-### Step 6: Persist Findings
+### Step 6: Archive Reminder and Persist Findings
 
-After cleanup, if `.planning/findings.md` has meaningful content:
+After cleanup, if `.planning/findings.md` or `.planning/progress.md` has meaningful content:
 
 1. **Read** `.planning/findings.md`
-2. **Ask the user** (via AskUserQuestion) if they want to persist key findings to Claude's memory system
-3. If yes: Write the valuable, reusable insights (patterns discovered, architectural decisions, debugging lessons) to the project's auto memory files (`~/.claude/projects/.../memory/`)
-4. Skip session-specific details (task status, temporary workarounds) — only persist knowledge that helps future sessions
+2. **Prompt the user explicitly** via `AskUserQuestion`:
+
+```text
+Implementation is finished. Before we move on, do you want me to archive this session?
+
+1. Yes — run /archive now (recommended)
+2. Not now — remind me next time work resumes
+3. Skip archiving for this task
+```
+
+3. If the user chooses **1**: invoke `superpower-planning:archiving`
+4. If the user chooses **2**:
+   - Add a clear reminder line at the top of `.planning/progress.md`, for example:
+     `ARCHIVE REMINDER: This task is complete. Run /archive before starting unrelated work.`
+   - Report that the reminder was saved
+5. If the user chooses **3**: continue without archiving
+
+If the user does **not** archive and `.planning/findings.md` still has meaningful content:
+
+6. **Ask the user** if they want to persist key findings to Claude's memory system anyway
+7. If yes: write the valuable, reusable insights (patterns discovered, architectural decisions, debugging lessons) to the project's auto memory files (`~/.claude/projects/.../memory/`)
+8. Skip session-specific details (task status, temporary workarounds) — only persist knowledge that helps future sessions
 
 **This step is main-agent only.** Subagents do not persist findings to memory.
 
-**Alternative:** Instead of manually persisting findings, suggest the user run `/archive` for comprehensive archive + memory consolidation + .planning/ reset.
+**Default bias:** Prefer `/archive` over ad-hoc memory writes when a meaningful task has just finished.
 
 ## Integration
 

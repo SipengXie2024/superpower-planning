@@ -53,6 +53,8 @@ When facing a non-trivial task (multi-step, architectural decisions, multi-file 
 
 **Option 3: Structured Brainstorming** — Full brainstorming pipeline with design doc, spec interview, implementation plan. Best for complex features, creative design decisions, multi-file refactors.
 
+**Option 4: Stash Current Work** — Pause unfinished work safely, save current `.planning/` context into `.planning/stash/`, and switch away cleanly. Best when changing projects or waiting on external input.
+
 **When to skip this choice:**
 - Trivial tasks (typo, single-line fix) → just do it, no planning needed
 - User explicitly requests one mode (e.g., "let's brainstorm", "/plan") → use what they asked for
@@ -91,11 +93,18 @@ When the user requests plan execution (e.g., "execute the plan", "implement it",
 | `superpower-planning:git-worktrees` | Use git worktrees for parallel branch work without stashing. |
 | `superpower-planning:finishing-branch` | Clean up and finalize a development branch before merge/PR. |
 | `superpower-planning:archiving` | Archive completed plans, consolidate memory, and reset .planning/ for the next task. |
+| `superpower-planning:stashing` | Pause unfinished work, save it into `.planning/stash/`, and support later resume with stale-findings check. |
 | `superpower-planning:requesting-review` | Prepare and submit code for review with context and rationale. |
 | `superpower-planning:receiving-review` | Process review feedback systematically and address all comments. |
 | `superpower-planning:verification` | Verify work is complete and correct before declaring done. |
 | `superpower-planning:releasing` | Bump versions, tag, and publish GitHub Releases with changelogs. |
 | `superpower-planning:writing-skills` | Create new skills for this plugin following the skill format. |
+
+## Stash / Resume Routing
+
+- When the user says they want to pause current unfinished work, switch projects, or come back later: use `superpower-planning:stashing` or `/stash`
+- When the user says they want to continue paused work, resume a previous project, or recover a stashed task: use `/resume-stash`
+- Resume must include a stale-findings check before execution continues
 
 ## User Instructions
 

@@ -21,19 +21,21 @@ This plugin gives Claude Code a disciplined workflow system. Instead of jumping 
 4. **Review the plan** — plans go through a reviewer loop before execution handoff
 5. **Execute with the right strategy** — subagent-driven, team-driven, or parallel session
 6. **Verify and review** — check correctness before declaring done
-7. **Archive and recover context** — consolidate findings and retain persistent working memory across sessions
+7. **Stash, archive, and recover context** — pause unfinished work, archive completed work, and retain persistent working memory across sessions
 
 All workflows share a `.planning/` directory in your project root containing:
 - `progress.md` — Task Status Dashboard + session-level progress log
 - `findings.md` — research notes, discoveries, and important decisions
 - `archive/` — completed work summaries, lessons learned, and historical context for future tasks
+- `stash/` — paused unfinished work snapshots for later resume
 
-## Skills (19)
+## Skills (21)
 
 | Skill | Description |
 |-------|-------------|
 | **main** | Skill router loaded on every session. Determines which skills to invoke. |
 | **planning-foundation** | Creates and manages `.planning/` directory for complex tasks. |
+| **lightweight-execute** | Fast structured execution for clear, medium-scope tasks without the full planning/review ceremony. |
 | **brainstorming** | Explores intent, requirements, decomposition, and design before implementation. |
 | **spec-interview** | Refines design docs through systematic deep questioning. Auto-invoked after brainstorming. |
 | **writing-plans** | Creates detailed implementation plans before touching code, including plan review loop and execution handoff. |
@@ -47,12 +49,13 @@ All workflows share a `.planning/` directory in your project root containing:
 | **subagent-driven** | Executes plan tasks via subagents in-session (sequential) with two-stage review. |
 | **team-driven** | Executes plan tasks via Agent Team for parallel execution and context resilience. |
 | **git-worktrees** | Isolated feature work via git worktrees. |
-| **finishing-branch** | Guides merge, PR, or cleanup after implementation. |
+| **finishing-branch** | Guides merge, PR, cleanup, and archive reminder after implementation. |
 | **archiving** | Archives completed plans, consolidates memory, and resets `.planning/` for the next task. |
+| **stashing** | Pauses unfinished work into `.planning/stash/` and supports resume with stale-findings checks. |
 | **releasing** | Bumps versions, tags, and publishes releases with changelogs. |
 | **writing-skills** | Creates and tests new Claude Code skills. |
 
-## Commands (5)
+## Commands (7)
 
 | Command | Description |
 |---------|-------------|
@@ -61,6 +64,8 @@ All workflows share a `.planning/` directory in your project root containing:
 | `/execute-plan` | Execute a reviewed implementation plan using the best execution strategy. |
 | `/catchup` | Recover context from previous sessions. |
 | `/archive` | Archive completed work and consolidate planning memory. |
+| `/stash` | Pause unfinished work and save the current `.planning/` state for later. |
+| `/resume-stash` | Restore a paused stash back into active `.planning/` with stale-findings checks. |
 
 ## Agents (1)
 
@@ -72,11 +77,26 @@ All workflows share a `.planning/` directory in your project root containing:
 
 - **SessionStart** — Automatically loads the main skill router and recovers `.planning/` state on session resume.
 
+## Lifecycle Model
+
+`superpower-planning` now supports three distinct work states:
+
+- **active** — the current task lives in `.planning/`
+- **stashed** — unfinished work is paused in `.planning/stash/` for later resume
+- **archived** — finished work is summarized in `.planning/archive/`
+
+In short:
+- `archive = done`
+- `stash = paused`
+
+When resuming a stash, the workflow explicitly checks whether saved findings are still valid before continuing.
+
 ## Why This Fork Exists
 
 `superpower-planning` keeps the persistent planning and archival workflow as a first-class concept:
 - `.planning/` is long-lived working memory, not a temporary scratchpad
 - `archive/` preserves historical context across sessions
+- `stash/` supports switching between unfinished projects safely
 - execution routing remains explicit: **Subagent-Driven**, **Team-Driven**, or **Parallel Session**
 - specs and plans are now both guarded by review loops before execution proceeds
 
