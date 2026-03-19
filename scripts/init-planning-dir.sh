@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Initialize .planning/ directory for a new work session
 # Usage: ./init-planning-dir.sh [project-root]
 #

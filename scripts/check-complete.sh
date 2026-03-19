@@ -1,7 +1,8 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Check if all tasks in .planning/progress.md Dashboard are complete
 # Always exits 0 -- uses stdout for status reporting
 # Used by Stop hook to report task completion status
+set -e
 
 PROGRESS_FILE="${1:-.planning/progress.md}"
 

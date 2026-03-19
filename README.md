@@ -76,6 +76,15 @@ All workflows share a `.planning/` directory in your project root containing:
 ## Hooks
 
 - **SessionStart** — Automatically loads the main skill router and recovers `.planning/` state on session resume.
+- **PreToolUse (Bash)** — Shows planning dashboard before build/test/commit commands (requires `jq`).
+- **Stop** — Checks task completion status and warns about stale planning files.
+
+## Optional Dependencies
+
+| Tool | Used by | Fallback |
+|------|---------|----------|
+| `jq` | PreToolUse dashboard hook, `release.sh` | Dashboard hook silently degrades; `release.sh` exits with error |
+| `gh` | `release.sh` | Exits with error if missing |
 
 ## Lifecycle Model
 

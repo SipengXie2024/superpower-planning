@@ -1,6 +1,8 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Show planning dashboard before substantial Bash commands.
 # Triggered by PreToolUse on Bash; reads command from stdin JSON.
+# Requires: jq (optional — hook silently degrades if jq is not installed)
+set -e
 
 PROGRESS_FILE=".planning/progress.md"
 [ -f "$PROGRESS_FILE" ] || exit 0

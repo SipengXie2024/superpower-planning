@@ -53,10 +53,13 @@ Generate a structured summary with this format:
 
 ### Step 3: Save Archive
 
-1. Create directory: `mkdir -p .planning/archive/`
-2. Determine filename: `.planning/archive/YYYY-MM-DD-<name>.md`. If that file already exists, append a numeric suffix (`-2`, `-3`, etc.) until a unique name is found.
-3. Write the summary to the determined filename
-4. Report: "Archive saved to .planning/archive/<final-filename>.md"
+1. Generate a unique archive path:
+```bash
+mkdir -p .planning/archive
+${CLAUDE_PLUGIN_ROOT}/scripts/unique-filename.sh .planning/archive "<name>"
+```
+2. Write the summary to the returned path
+3. Report: "Archive saved to .planning/archive/<final-filename>.md"
 
 ### Step 4: Memory Consolidation & Polish
 
@@ -112,10 +115,11 @@ If there are no suggestions in a category, omit that category entirely.
 
 ### Step 5: Reset .planning/
 
-1. Delete `.planning/progress.md` and `.planning/findings.md`
-2. Remove `.planning/agents/` directory and all contents: `rm -rf .planning/agents/`
-3. Run `${CLAUDE_PLUGIN_ROOT}/scripts/init-planning-dir.sh` to recreate `progress.md` and `findings.md` from canonical templates
-4. **Preserve** `.planning/archive/` — do NOT delete it
+```bash
+${CLAUDE_PLUGIN_ROOT}/scripts/planning-reset.sh
+```
+
+This removes `progress.md`, `findings.md`, and `agents/`, then recreates clean templates from canonical sources. `archive/` and `stash/` are preserved automatically.
 
 ### Step 6: Report Completion
 
@@ -130,7 +134,7 @@ Archive complete:
 
 ## Edge Cases
 
-**Empty .planning/:** If progress.md and findings.md are still at template state (no real content), warn the user and ask if they still want to archive. An empty archive has no value.
+**Empty .planning/:** Run `${CLAUDE_PLUGIN_ROOT}/scripts/check-planning-state.sh` — if it returns `empty`, warn the user and ask if they still want to archive. An empty archive has no value.
 
 **No memory changes needed:** If there are no new findings worth persisting and existing memory is already accurate, skip Step 4c-4e entirely. Report "Memory already up to date."
 

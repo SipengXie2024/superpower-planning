@@ -25,26 +25,26 @@ Do **not** use this skill for completed work. Use `superpower-planning:archiving
 
 ### Step 1: Check stash-worthiness and completion guard
 
-Read:
-- `.planning/progress.md`
-- `.planning/findings.md`
-- `.planning/agents/*/findings.md` if present
-- `.planning/agents/*/progress.md` if present
+Run the planning state check:
+```bash
+${CLAUDE_PLUGIN_ROOT}/scripts/check-planning-state.sh
+```
 
-Before asking for a stash name or writing any stash file:
-
-1. If `.planning/progress.md` shows the task is complete, or contains an `ARCHIVE REMINDER` line, do **not** stash it.
-2. Instead, redirect to `superpower-planning:archiving`.
-3. If top-level planning files are effectively empty/template-only **and** agent files are also empty or absent, warn the user that there is nothing meaningful to stash.
+Act on the result:
+- `missing` or `empty` → warn the user there is nothing meaningful to stash. Stop.
+- `complete` → do **not** stash. Redirect to `superpower-planning:archiving`.
+- `active` → proceed to Step 2.
 
 ### Step 2: Determine stash name
 
 Derive a short stash name from the active task, then ask the user to confirm or modify it.
 
-Filename format:
-- `.planning/stash/YYYY-MM-DD-<name>.md`
-
-If the filename already exists, append `-2`, `-3`, etc.
+Generate the filename:
+```bash
+mkdir -p .planning/stash
+${CLAUDE_PLUGIN_ROOT}/scripts/unique-filename.sh .planning/stash "<name>"
+```
+Use the returned path for the stash file.
 
 ### Step 3: Generate stash snapshot
 
@@ -80,38 +80,35 @@ Create a concise snapshot with this structure:
 
 Keep it compact and actionable. Summarize meaningful agent findings/progress rather than copying full agent files.
 
-### Step 4: Save stash
+### Step 4: Save stash and reset
 
-1. Create `.planning/stash/` if missing
-2. Write the snapshot file
-3. Report the final saved path
+1. Write the snapshot file to the path from Step 2
+2. Report the saved path
+3. Reset active planning state:
+```bash
+${CLAUDE_PLUGIN_ROOT}/scripts/planning-reset.sh
+```
+This removes `progress.md`, `findings.md`, and `agents/`, then recreates clean templates. `archive/` and `stash/` are preserved.
 
-### Step 5: Reset active `.planning/`
-
-After the stash is safely written:
-
-1. Remove active top-level files:
-   - `.planning/progress.md`
-   - `.planning/findings.md`
-2. Remove `.planning/agents/` contents if present
-3. Run `${CLAUDE_PLUGIN_ROOT}/scripts/init-planning-dir.sh` to recreate canonical active planning files
-4. Preserve:
-   - `.planning/archive/`
-   - `.planning/stash/`
-
-### Step 6: Resume protocol
+### Step 5: Resume protocol
 
 When resuming from a stash later:
 
-1. **Check active work first**:
-   - check if `.planning/` has **any meaningful content** (unfinished work, completed work, archive reminders, or agent state)
-   - if not empty/template-only, warn the user and offer options:
+1. **Check active work first:**
+```bash
+${CLAUDE_PLUGIN_ROOT}/scripts/check-planning-state.sh
+```
+   - `missing` or `empty` → safe to proceed
+   - `active` or `complete` → warn the user and offer options:
      1. Stash active work first, then resume
      2. Archive active work first, then resume
      3. Overwrite active work (destructive)
-   - Do not overwrite without explicit confirmation unless active work is strictly empty/template-only.
+   - Do not overwrite without explicit confirmation.
 
-2. List available stash files under `.planning/stash/`
+2. **List available stashes:**
+```bash
+${CLAUDE_PLUGIN_ROOT}/scripts/stash-list.sh
+```
 3. If multiple exist, use `AskUserQuestion` to let the user choose one
 4. Read the selected stash file
 5. Restore relevant context into active `.planning/progress.md` and `.planning/findings.md`

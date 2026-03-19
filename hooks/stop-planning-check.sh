@@ -1,10 +1,11 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # Stop hook: Check if top-level findings.md and progress.md are stale when agent stops
 #
 # Architecture: subagents write to their own .planning/agents/{role}/ files.
 # The orchestrator/main agent aggregates into .planning/findings.md and .planning/progress.md.
 # This hook only checks the top-level files — it's a reminder for the main agent.
 # Subagents are guided by agent-context.md rules (2-Action Dispatch Rule) instead.
+set -e
 
 FINDINGS_FILE=".planning/findings.md"
 PROGRESS_FILE=".planning/progress.md"
@@ -21,7 +22,7 @@ WARNINGS=""
 
 # Check findings.md freshness
 if [ -f "$FINDINGS_FILE" ]; then
-    MTIME=$(stat -c %Y "$FINDINGS_FILE" 2>/dev/null) || true
+    MTIME=$(stat -c %Y "$FINDINGS_FILE" 2>/dev/null || stat -f %m "$FINDINGS_FILE" 2>/dev/null) || true
     if [ -n "$MTIME" ]; then
         AGE=$(( NOW - MTIME ))
         if [ "$AGE" -ge "$STALE_THRESHOLD" ]; then
@@ -32,7 +33,7 @@ fi
 
 # Check progress.md freshness
 if [ -f "$PROGRESS_FILE" ]; then
-    MTIME=$(stat -c %Y "$PROGRESS_FILE" 2>/dev/null) || true
+    MTIME=$(stat -c %Y "$PROGRESS_FILE" 2>/dev/null || stat -f %m "$PROGRESS_FILE" 2>/dev/null) || true
     if [ -n "$MTIME" ]; then
         AGE=$(( NOW - MTIME ))
         if [ "$AGE" -ge "$STALE_THRESHOLD" ]; then

@@ -33,9 +33,9 @@
         ]
       }
     ],
-    "PostToolUse": [],
     "Stop": [
       {
+        "matcher": "",
         "hooks": [
           {
             "type": "command",

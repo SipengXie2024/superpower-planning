@@ -184,7 +184,7 @@ The orchestrator aggregates agent findings into top-level `.planning/findings.md
 
 - `scripts/init-planning-dir.sh` — Initialize `.planning/` directory with all files
 - `scripts/check-complete.sh` — Verify all phases complete
-- `scripts/session-catchup.py` — Recover context from previous session
+- `scripts/session-catchup.py` — Recover context from previous session (manual utility, requires Python)
 
 ## Anti-Patterns
 

@@ -1,5 +1,4 @@
 ---
-name: catchup
 description: Recover context from previous session using .planning/ files
 disable-model-invocation: true
 ---
