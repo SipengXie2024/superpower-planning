@@ -180,20 +180,14 @@ description: Use when implementing any feature or bugfix, before writing impleme
 - **NEVER summarize the skill's process or workflow**
 
 ```yaml
-# BAD: Too abstract, vague, doesn't include when to use
+# BAD: Too abstract, no triggering context
 description: For async testing
-
-# BAD: First person
-description: I can help you with async tests when they're flaky
 
 # BAD: Mentions technology but skill isn't specific to it
 description: Use when tests use setTimeout/sleep and are flaky
 
 # GOOD: Starts with "Use when", describes problem, no workflow
 description: Use when tests have race conditions, timing dependencies, or pass/fail inconsistently
-
-# GOOD: Technology-specific skill with explicit trigger
-description: Use when using React Router and handling authentication redirects
 ```
 
 ### 2. Keyword Coverage
@@ -418,32 +412,13 @@ Skills that enforce discipline need to resist rationalization. See **testing-ski
 
 ## RED-GREEN-REFACTOR for Skills
 
-Follow the TDD cycle:
+Follow the same TDD cycle (see TDD Mapping table above):
 
-### RED: Write Failing Test (Baseline)
+1. **RED:** Run pressure scenarios WITHOUT skill → document baseline violations and rationalizations verbatim
+2. **GREEN:** Write minimal skill addressing those specific violations → verify agents now comply
+3. **REFACTOR:** Agent found new rationalization? Add explicit counter. Re-test until bulletproof.
 
-Run pressure scenario with subagent WITHOUT the skill. Document exact behavior:
-- What choices did they make?
-- What rationalizations did they use (verbatim)?
-- Which pressures triggered violations?
-
-This is "watch the test fail" - you must see what agents naturally do before writing the skill.
-
-### GREEN: Write Minimal Skill
-
-Write skill that addresses those specific rationalizations. Don't add extra content for hypothetical cases.
-
-Run same scenarios WITH skill. Agent should now comply.
-
-### REFACTOR: Close Loopholes
-
-Agent found new rationalization? Add explicit counter. Re-test until bulletproof.
-
-**Testing methodology:** See testing-skills-with-subagents.md (in this directory) for the complete testing methodology:
-- How to write pressure scenarios
-- Pressure types (time, sunk cost, authority, exhaustion)
-- Plugging holes systematically
-- Meta-testing techniques
+**Testing methodology:** See testing-skills-with-subagents.md for pressure scenario design, pressure types, and plugging holes systematically.
 
 ## Anti-Patterns
 
@@ -466,20 +441,9 @@ step2 [label="read file"];
 helper1, helper2, step3, pattern4
 **Why bad:** Labels should have semantic meaning
 
-## STOP: Before Moving to Next Skill
-
-**After writing ANY skill, you MUST STOP and complete the deployment process.**
-
-**Do NOT:**
-- Create multiple skills in batch without testing each
-- Move to next skill before current one is verified
-- Skip testing because "batching is more efficient"
-
-**The deployment checklist below is MANDATORY for EACH skill.**
-
-Deploying untested skills = deploying untested code. It's a violation of quality standards.
-
 ## Skill Creation Checklist (TDD Adapted)
+
+**STOP before moving to next skill.** Complete this checklist for EACH skill before starting another. No batching — deploying untested skills = deploying untested code.
 
 **IMPORTANT: Use TaskCreate to create a task for EACH checklist item below.**
 
@@ -517,18 +481,6 @@ Deploying untested skills = deploying untested code. It's a violation of quality
 **Deployment:**
 - [ ] Commit skill to git and push to your fork (if configured)
 - [ ] Consider contributing back via PR (if broadly useful)
-
-## Discovery Workflow
-
-How future Claude finds your skill:
-
-1. **Encounters problem** ("tests are flaky")
-3. **Finds SKILL** (description matches)
-4. **Scans overview** (is this relevant?)
-5. **Reads patterns** (quick reference table)
-6. **Loads example** (only when implementing)
-
-**Optimize for this flow** - put searchable terms early and often.
 
 ## The Bottom Line
 

@@ -9,6 +9,8 @@ Execute plan by dispatching fresh subagent per task, with two-stage review after
 
 **Core principle:** Fresh subagent per task + per-agent planning dir + two-stage review (spec then quality) = high quality, fast iteration
 
+**Announce at start:** "I'm using the subagent-driven skill to execute this plan."
+
 ## NON-NEGOTIABLE: Two-Stage Review Gate
 
 <EXTREMELY-IMPORTANT>

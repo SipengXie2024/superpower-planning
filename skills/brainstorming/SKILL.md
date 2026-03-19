@@ -1,11 +1,13 @@
 ---
 name: brainstorming
-description: Use when creating features, building components, adding functionality, or modifying behavior. Triggers before any creative or design work that precedes implementation.
+description: Use when designing complex multi-step features, building new components, or planning significant behavior changes that require design exploration before implementation.
 ---
 
 # Brainstorming Ideas Into Designs
 
 Help turn ideas into fully formed designs and specs through natural collaborative dialogue.
+
+**Announce at start:** "I'm using the brainstorming skill to explore this design."
 
 Start by understanding the current project context, then ask questions to refine the idea. Once you understand what you're building, present the design and get user approval.
 

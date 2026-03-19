@@ -1,6 +1,6 @@
 ---
 name: releasing
-description: Use when publishing a new version — bumping version numbers, creating git tags, and publishing GitHub Releases with changelogs.
+description: Use when publishing a new version of the plugin.
 ---
 
 # Releasing a New Version

@@ -1,6 +1,6 @@
 ---
 name: stashing
-description: Use when switching to another project, waiting on dependencies, or temporarily setting aside unfinished work. Pauses current .planning/ state into .planning/stash/ for later resume with stale-findings check.
+description: Use when switching to another project, waiting on dependencies, or temporarily setting aside unfinished work.
 ---
 
 # Stashing Unfinished Work

@@ -1,6 +1,6 @@
 ---
 name: archiving
-description: Use after completing a plan or when .planning/ has accumulated stale data. Archives completed work, consolidates memory, and resets .planning/ for the next task.
+description: Use after completing a plan or when .planning/ has accumulated stale data and needs a clean reset for the next task.
 ---
 
 # Archiving Completed Plans
