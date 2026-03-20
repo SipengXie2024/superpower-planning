@@ -81,7 +81,7 @@ After the interview is complete, integrate all clarifications back into the orig
 
 ## Return to Calling Flow
 
-If invoked from brainstorming, return control to the brainstorming checklist. The next step is typically **Ask about worktree** (step 7), then **Transition to writing-plans** (step 8). Do NOT invoke writing-plans directly from here — let the brainstorming flow handle the transition.
+If invoked from brainstorming, return control to the brainstorming checklist. The next step is typically **Ask about worktree**, then **Transition to implementation**. Do NOT invoke writing-plans directly from here — let the brainstorming flow handle the transition.
 
 If invoked standalone (user manually triggered), simply end after committing the updated document.
 

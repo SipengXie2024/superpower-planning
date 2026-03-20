@@ -15,7 +15,7 @@ Assume they are a skilled developer, but know almost nothing about our toolset o
 
 **Context:** Optionally runs in a dedicated worktree (user chooses during brainstorming).
 
-**Save plans to:** `docs/plans/YYYY-MM-DD-<feature-name>.md`
+**Save plans to:** `.planning/plan.md`
 
 ## Scope Check
 
@@ -38,10 +38,12 @@ This file-structure pass should happen before task decomposition.
 
 Before writing the plan, check for relevant historical archives:
 
-1. Glob `.planning/archive/*.md`
-2. If archives exist, read the first 10 lines of each (title + summary)
-3. If any are relevant to the current task, read fully and incorporate relevant lessons into the plan
-4. If none are relevant or no archives exist, skip silently
+```bash
+${CLAUDE_PLUGIN_ROOT}/scripts/archive-search.sh "<keyword>"
+```
+
+1. If relevant archives are found, read the full archive directory (especially `summary.md`, `findings.md`) and incorporate relevant lessons into the plan
+2. If none are relevant or no archives exist, skip silently
 
 ## Bite-Sized Task Granularity
 
@@ -126,7 +128,7 @@ ${CLAUDE_PLUGIN_ROOT}/scripts/init-planning-dir.sh
 
 This creates `progress.md` and `findings.md`. The canonical template is at `planning-foundation/templates/progress.md`. Subagent planning directories (`agents/`) are created by each subagent when needed.
 
-> **Note:** The plan in `docs/plans/` is the single source of truth for plan content. Execution status is tracked via the Task Status Dashboard in `progress.md`.
+> **Note:** The plan in `.planning/plan.md` is the single source of truth for plan content. Execution status is tracked via the Task Status Dashboard in `progress.md`.
 
 ## Parallelism Groups
 

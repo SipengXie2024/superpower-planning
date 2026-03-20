@@ -23,14 +23,14 @@ BASE="${DIR}/${DATE}-${NAME}"
 
 # Try without suffix first
 CANDIDATE="${BASE}${EXT}"
-if [ ! -f "$CANDIDATE" ]; then
+if [ ! -e "$CANDIDATE" ]; then
     echo "$CANDIDATE"
     exit 0
 fi
 
 # Add numeric suffix
 SUFFIX=2
-while [ -f "${BASE}-${SUFFIX}${EXT}" ]; do
+while [ -e "${BASE}-${SUFFIX}${EXT}" ]; do
     SUFFIX=$(( SUFFIX + 1 ))
 done
 

@@ -20,8 +20,9 @@ Guide completion of development work by presenting clear options and handling ch
 **Before presenting options, verify tests pass:**
 
 ```bash
-# Run project's test suite
-npm test / cargo test / pytest / go test ./...
+# Auto-detect and run project's test suite
+TEST_CMD=$(${CLAUDE_PLUGIN_ROOT}/scripts/detect-test-command.sh)
+eval "$TEST_CMD"
 ```
 
 **If tests fail:**
@@ -40,8 +41,7 @@ Stop. Don't proceed to Step 2.
 ### Step 2: Determine Base Branch
 
 ```bash
-# Try common base branches
-git merge-base HEAD main 2>/dev/null || git merge-base HEAD master 2>/dev/null
+${CLAUDE_PLUGIN_ROOT}/scripts/detect-base-branch.sh
 ```
 
 Or ask: "This branch split from main - is that correct?"

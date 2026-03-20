@@ -7,9 +7,11 @@ description: Use after completing a plan or when .planning/ has accumulated stal
 
 ## Overview
 
-Archive the current `.planning/` session state into a structured summary, consolidate and polish project memory based on current repo facts, and reset `.planning/` for the next task.
+Archive the active project in `.planning/` into a structured archive directory, consolidate and polish project memory based on current repo facts, and reset `.planning/` for the next task.
 
-**Announce at start:** "I'm using the archiving skill to archive this session and consolidate memory."
+**Core principle:** The target is the active project (design, plan, findings, progress), not "the session."
+
+**Announce at start:** "I'm using the archiving skill to archive this project and consolidate memory."
 
 **Prerequisite:** `.planning/progress.md` and `.planning/findings.md` must exist with content beyond the empty template.
 
@@ -18,23 +20,24 @@ Archive the current `.planning/` session state into a structured summary, consol
 ### Step 1: Determine Archive Name
 
 1. Read `.planning/progress.md` — extract task names from the Task Status Dashboard
-2. If a plan file is referenced (e.g., `docs/plans/YYYY-MM-DD-<feature>.md`), use its feature name
+2. If `.planning/plan.md` exists, derive the feature name from it
 3. Otherwise, derive a short name from the main task descriptions
 4. Use `AskUserQuestion` to let the user confirm or modify the archive name
 
 ### Step 2: Generate Archive Summary
 
-Read all planning files:
+Read all active project files:
+- `.planning/design.md` (if exists)
+- `.planning/plan.md` (if exists)
 - `.planning/progress.md`
 - `.planning/findings.md`
 - `.planning/agents/*/findings.md` (if any exist)
 
-Generate a structured summary with this format:
+Generate a concise `summary.md` with this format:
 
 ```
 # Archive: <name>
 **Date:** YYYY-MM-DD
-**Plan:** <path to plan file, or "N/A">
 
 ## Summary
 <!-- 2-3 sentences: what was done, what was the outcome -->
@@ -49,17 +52,22 @@ Generate a structured summary with this format:
 <!-- Important files that were created or significantly modified -->
 ```
 
-**Keep it concise.** The archive is a reference document, not a full log. Aim for 30-60 lines.
+**Keep it concise.** The summary is a quick-reference document. Aim for 30-60 lines. The full design, plan, findings, and progress are preserved alongside it.
 
 ### Step 3: Save Archive
 
-1. Generate a unique archive path:
+1. Generate a unique archive directory name:
 ```bash
 mkdir -p .planning/archive
-${CLAUDE_PLUGIN_ROOT}/scripts/unique-filename.sh .planning/archive "<name>"
+${CLAUDE_PLUGIN_ROOT}/scripts/unique-filename.sh .planning/archive "<name>" ""
 ```
-2. Write the summary to the returned path
-3. Report: "Archive saved to .planning/archive/<final-filename>.md"
+2. Create the archive directory and save all active project files:
+```bash
+mkdir -p "<returned-path>"
+${CLAUDE_PLUGIN_ROOT}/scripts/snapshot-save.sh "<returned-path>"
+```
+3. Write `summary.md` to the archive directory
+4. Report: "Archive saved to .planning/archive/<name>/"
 
 ### Step 4: Memory Consolidation & Polish
 
@@ -88,17 +96,17 @@ Present to user in this format:
 ```
 Memory Optimization Suggestions:
 
-📌 New items (from this session's findings)
+New items (from this session's findings)
   - [new finding 1]
   - [new finding 2]
 
-✂️ Compress (existing memory that can be condensed)
-  - [memory item X] → [compressed version]
+Compress (existing memory that can be condensed)
+  - [memory item X] -> [compressed version]
 
-🔄 Update (inconsistent with current repo facts)
-  - [outdated memory Y] → [corrected version]
+Update (inconsistent with current repo facts)
+  - [outdated memory Y] -> [corrected version]
 
-🗑️ Remove (no longer applicable)
+Remove (no longer applicable)
   - [obsolete memory Z] — reason: [why]
 ```
 
@@ -119,7 +127,7 @@ If there are no suggestions in a category, omit that category entirely.
 ${CLAUDE_PLUGIN_ROOT}/scripts/planning-reset.sh
 ```
 
-This removes `progress.md`, `findings.md`, and `agents/`, then recreates clean templates from canonical sources. `archive/` and `stash/` are preserved automatically.
+This removes `design.md`, `plan.md`, `progress.md`, `findings.md`, and `agents/`, then recreates clean templates from canonical sources. `archive/` and `stash/` are preserved automatically.
 
 ### Step 6: Report Completion
 
@@ -127,9 +135,9 @@ Display a concise completion summary:
 
 ```
 Archive complete:
-- 📦 Archive: .planning/archive/YYYY-MM-DD-<name>.md
-- 🧠 Memory: <N> items added, <N> compressed, <N> updated, <N> removed
-- 🔄 .planning/ reset to clean state
+- Archive: .planning/archive/<name>/
+- Memory: <N> items added, <N> compressed, <N> updated, <N> removed
+- .planning/ reset to clean state
 ```
 
 ## Edge Cases
@@ -140,9 +148,12 @@ Archive complete:
 
 **Multiple sessions in one .planning/:** If progress.md shows multiple session headers, include all of them in the archive summary.
 
+**Legacy archives:** Existing single-file archives in `.planning/archive/*.md` remain valid. The archive listing and historical archive checks should handle both formats.
+
 ## Key Principles
 
 - **Fact-based:** All memory polishing grounded in current repo state, not assumptions
 - **Semi-automatic:** LLM proposes, user confirms. Never write memory without approval
 - **Non-destructive:** Archive is saved BEFORE any cleanup. Archive survives reset
-- **Concise:** Archive summaries are reference docs, not full logs
+- **Complete:** Archive preserves the entire project (design, plan, findings, progress) as a unit
+- **Concise:** summary.md is a quick-reference doc, not a full log

@@ -9,8 +9,8 @@ Use this template when dispatching a plan reviewer subagent.
 ```text
 You are reviewing an implementation plan before execution begins.
 
-SPEC_PATH: docs/plans/YYYY-MM-DD-topic-design.md
-PLAN_PATH: docs/plans/YYYY-MM-DD-topic-implementation.md
+SPEC_PATH: .planning/design.md
+PLAN_PATH: .planning/plan.md
 REVIEW_SCOPE: first-pass review
 AGENT_PLANNING_DIR: .planning/agents/plan-reviewer/
 

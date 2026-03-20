@@ -18,7 +18,7 @@ Use this when dispatching a reviewer for a newly written spec.
 ```text
 You are reviewing a written spec before implementation planning begins.
 
-SPEC_PATH: docs/plans/YYYY-MM-DD-topic-design.md
+SPEC_PATH: .planning/design.md
 SPEC_SUMMARY: [brief summary]
 REVIEW_SCOPE: first-pass review
 AGENT_PLANNING_DIR: .planning/agents/spec-reviewer/

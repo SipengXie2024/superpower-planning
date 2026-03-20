@@ -101,6 +101,13 @@ if [ "$has_content" = false ] && [ -d "${PLANNING_DIR}/agents" ]; then
     fi
 fi
 
+# Check design.md and plan.md
+if [ "$has_content" = false ]; then
+    if [ -f "${PLANNING_DIR}/design.md" ] || [ -f "${PLANNING_DIR}/plan.md" ]; then
+        has_content=true
+    fi
+fi
+
 if [ "$has_content" = true ]; then
     echo "active"
 else

@@ -75,9 +75,9 @@ DESCRIPTION: [brief summary]
 
 ```text
 WHAT_WAS_IMPLEMENTED: Task 3 - verification and repair functions
-PLAN_OR_REQUIREMENTS: Task 3 from docs/plans/deployment-plan.md
-PLAN_PATH: docs/plans/deployment-plan.md
-SPEC_PATH: docs/plans/deployment-design.md
+PLAN_OR_REQUIREMENTS: Task 3 from .planning/plan.md
+PLAN_PATH: .planning/plan.md
+SPEC_PATH: .planning/design.md
 BASE_SHA: a7981ec
 HEAD_SHA: 3df7661
 DESCRIPTION: Added verifyIndex() and repairIndex() with 4 issue types
@@ -127,9 +127,9 @@ HEAD_SHA=$(git rev-parse HEAD)
 
 [Dispatch superpower-planning:code-reviewer subagent]
   WHAT_WAS_IMPLEMENTED: Verification and repair functions for conversation index
-  PLAN_OR_REQUIREMENTS: Task 2 from docs/plans/deployment-plan.md
-  PLAN_PATH: docs/plans/deployment-plan.md
-  SPEC_PATH: docs/plans/deployment-design.md
+  PLAN_OR_REQUIREMENTS: Task 2 from .planning/plan.md
+  PLAN_PATH: .planning/plan.md
+  SPEC_PATH: .planning/design.md
   BASE_SHA: a7981ec
   HEAD_SHA: 3df7661
   DESCRIPTION: Added verifyIndex() and repairIndex() with 4 issue types

@@ -58,7 +58,7 @@ Each domain is independent - fixing tool approval doesn't affect abort tests.
 Before dispatching, create a planning dir for each agent:
 
 ```bash
-mkdir -p .planning/agents/{role}-task-{N}/
+mkdir -p .planning/agents/{role}-{domain}/
 ```
 
 Example for 3 parallel agents:

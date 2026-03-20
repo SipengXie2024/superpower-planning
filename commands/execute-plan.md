@@ -5,7 +5,7 @@ disable-model-invocation: true
 
 Before invoking any execution skill, you MUST:
 
-1. **Locate the plan** — Check `docs/plans/` for the most recent `*-implementation.md` file. If multiple exist, ask the user which plan to execute via `AskUserQuestion`.
+1. **Locate the plan** — Check `.planning/plan.md`. If it does not exist, check `.planning/` state and suggest writing a plan first.
 
 2. **Confirm the plan is ready for execution** — The plan should already have gone through `writing-plans`, including its plan review loop. If you discover the plan is incomplete, ambiguous, or clearly not review-ready, send it back through `superpower-planning:writing-plans` before execution.
 

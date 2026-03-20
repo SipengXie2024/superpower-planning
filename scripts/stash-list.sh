@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
-# List available stash files with summary info
+# List available stash entries with summary info
 #
 # Usage: stash-list.sh [project-root]
 #
-# Output: one line per stash file with date and name, or "none" if empty
+# Supports both directory-based stashes (new) and single-file stashes (legacy).
+# Output: one line per stash entry with date and name, or "none" if empty
 # Exit 0 always
 
 set -e
@@ -16,23 +17,50 @@ if [ ! -d "$STASH_DIR" ]; then
     exit 0
 fi
 
-FILE_COUNT=$(find "$STASH_DIR" -maxdepth 1 -name '*.md' -type f 2>/dev/null | wc -l)
+# Collect entries into an array
+entries=()
 
-if [ "$FILE_COUNT" -eq 0 ]; then
-    echo "none"
-    exit 0
-fi
-
-echo "Available stashes:"
-find "$STASH_DIR" -maxdepth 1 -name '*.md' -type f 2>/dev/null | sort | while IFS= read -r f; do
-    fname=$(basename "$f" .md)
-    # Extract status line from the stash file
-    status=$(grep -m1 '^\*\*Status:\*\*' "$f" 2>/dev/null | sed 's/\*\*Status:\*\* //' || echo "unknown")
-    # Extract current goal (first line of that section)
-    goal=$(sed -n '/^## Current Goal/,/^##/{/^## Current Goal/d;/^##/d;/^$/d;/^<!--/d;p;}' "$f" 2>/dev/null | head -1 || echo "")
+# Directory-based stashes (new format)
+for d in "$STASH_DIR"/*/; do
+    [ -d "$d" ] || continue
+    dname=$(basename "$d")
+    meta_file=""
+    if [ -f "$d/snapshot.md" ]; then
+        meta_file="$d/snapshot.md"
+    elif [ -f "$d/progress.md" ]; then
+        meta_file="$d/progress.md"
+    fi
+    status="paused"
+    goal=""
+    if [ -n "$meta_file" ]; then
+        status=$(grep -m1 '^\*\*Status:\*\*' "$meta_file" 2>/dev/null | sed 's/\*\*Status:\*\* //' || echo "paused")
+        goal=$(sed -n '/^## Current Goal/,/^##/{/^## Current Goal/d;/^##/d;/^$/d;/^<!--/d;p;}' "$meta_file" 2>/dev/null | head -1 || echo "")
+    fi
     if [ -n "$goal" ]; then
-        echo "  - ${fname}  [${status}]  ${goal}"
+        entries+=("  - ${dname}  [${status}]  ${goal}")
     else
-        echo "  - ${fname}  [${status}]"
+        entries+=("  - ${dname}  [${status}]")
     fi
 done
+
+# Legacy single-file stashes
+for f in "$STASH_DIR"/*.md; do
+    [ -f "$f" ] || continue
+    fname=$(basename "$f" .md)
+    status=$(grep -m1 '^\*\*Status:\*\*' "$f" 2>/dev/null | sed 's/\*\*Status:\*\* //' || echo "unknown")
+    goal=$(sed -n '/^## Current Goal/,/^##/{/^## Current Goal/d;/^##/d;/^$/d;/^<!--/d;p;}' "$f" 2>/dev/null | head -1 || echo "")
+    if [ -n "$goal" ]; then
+        entries+=("  - ${fname}  [${status}]  ${goal}  (legacy)")
+    else
+        entries+=("  - ${fname}  [${status}]  (legacy)")
+    fi
+done
+
+if [ ${#entries[@]} -eq 0 ]; then
+    echo "none"
+else
+    echo "Available stashes:"
+    for entry in "${entries[@]}"; do
+        echo "$entry"
+    done
+fi

@@ -146,12 +146,13 @@ Include the planning dir path in the agent's prompt using `./implementer-prompt.
 
 After each task completes (both reviews passed), aggregate the agent's findings:
 
-1. **Read** the agent's `.planning/agents/{role}/findings.md` and `progress.md`
-2. **Extract** items marked with `> **Critical for Orchestrator:**` plus any errors and test results
-3. **Append** extracted items to top-level `.planning/findings.md` under a task heading
-4. **Update** top-level `.planning/progress.md`:
-   - **Update the Task Status Dashboard table** at the top (add/update the row for this task)
-   - **Append** completion details to the session log section
+```bash
+${CLAUDE_PLUGIN_ROOT}/scripts/aggregate-agent-findings.sh "<role>" "Task N: <name>"
+```
+
+This extracts "Critical for Orchestrator" items and appends them to top-level `.planning/findings.md` and `.planning/progress.md`. Then manually:
+- **Update the Task Status Dashboard table** at the top (add/update the row for this task)
+- **Append** completion details to the session log section
 
 Example aggregation:
 ```markdown
@@ -184,7 +185,7 @@ Example aggregation:
 ```
 You: I'm using Subagent-Driven Development to execute this plan.
 
-[Read plan file once: docs/plans/feature-plan.md]
+[Read plan file once: .planning/plan.md]
 [Extract all 5 tasks with full text and context]
 [Create all tasks via TaskCreate]
 

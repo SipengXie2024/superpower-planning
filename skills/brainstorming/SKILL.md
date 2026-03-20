@@ -28,7 +28,7 @@ You MUST create a task for each of these items and complete them in order:
 3. **Ask clarifying questions** — ask one question at a time via `AskUserQuestion` to understand purpose, constraints, success criteria. Record key user answers and decisions to `.planning/findings.md`.
 4. **Propose 2-3 approaches** — with trade-offs and your recommendation, presented via `AskUserQuestion` for user to choose.
 5. **Present design** — in sections scaled to complexity, get user approval after each section via `AskUserQuestion`.
-6. **Write design doc** — save to `docs/plans/YYYY-MM-DD-<topic>-design.md`, commit, and initialize `.planning/`.
+6. **Write design doc** — save to `.planning/design.md` (initialize `.planning/` first if needed).
 7. **Spec review loop** — run one reviewer subagent against the written spec. If issues are found, fix and re-run. Maximum 3 rounds.
 8. **Spec interview** — ask: "Do you want to run a spec interview to refine details in the design?" (default: yes). If yes, invoke `superpower-planning:spec-interview` with the design doc as target. If user skips, proceed.
 9. **User review gate** — explicitly ask the user to review the written spec before planning.
@@ -46,7 +46,7 @@ digraph brainstorming {
     "Propose 2-3 approaches" [shape=box];
     "Present design sections" [shape=box];
     "User approves design?" [shape=diamond];
-    "Write design doc + init .planning/" [shape=box];
+    "Write design doc to .planning/" [shape=box];
     "Spec review loop (max 3)" [shape=box];
     "Run spec interview?" [shape=diamond];
     "Invoke spec-interview skill" [shape=box];
@@ -63,13 +63,13 @@ digraph brainstorming {
     "Propose 2-3 approaches" -> "Present design sections";
     "Present design sections" -> "User approves design?";
     "User approves design?" -> "Present design sections" [label="no, revise"];
-    "User approves design?" -> "Write design doc + init .planning/" [label="yes"];
-    "Write design doc + init .planning/" -> "Spec review loop (max 3)";
+    "User approves design?" -> "Write design doc to .planning/" [label="yes"];
+    "Write design doc to .planning/" -> "Spec review loop (max 3)";
     "Spec review loop (max 3)" -> "Run spec interview?";
     "Run spec interview?" -> "Invoke spec-interview skill" [label="yes"];
     "Run spec interview?" -> "User reviews spec?" [label="skip"];
     "Invoke spec-interview skill" -> "User reviews spec?";
-    "User reviews spec?" -> "Write design doc + init .planning/" [label="changes requested"];
+    "User reviews spec?" -> "Write design doc to .planning/" [label="changes requested"];
     "User reviews spec?" -> "Ask: create worktree?" [label="approved"];
     "Ask: create worktree?" -> "Create worktree" [label="yes"];
     "Ask: create worktree?" -> "Invoke writing-plans skill" [label="no"];
@@ -106,9 +106,8 @@ digraph brainstorming {
 ## After the Design
 
 **Documentation:**
-- Write the validated design to `docs/plans/YYYY-MM-DD-<topic>-design.md`
+- Write the validated design to `.planning/design.md`
 - Use elements-of-style:writing-clearly-and-concisely skill if available
-- Commit the design document to git
 
 **Initialize `.planning/` directory:**
 - Run `${CLAUDE_PLUGIN_ROOT}/scripts/init-planning-dir.sh` to create the directory with canonical templates

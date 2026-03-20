@@ -103,18 +103,7 @@ cd "$path"
 Auto-detect and run appropriate setup:
 
 ```bash
-# Node.js
-if [ -f package.json ]; then npm install; fi
-
-# Rust
-if [ -f Cargo.toml ]; then cargo build; fi
-
-# Python
-if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-if [ -f pyproject.toml ]; then poetry install; fi
-
-# Go
-if [ -f go.mod ]; then go mod download; fi
+${CLAUDE_PLUGIN_ROOT}/scripts/detect-project-setup.sh "$path"
 ```
 
 ### 4. Verify Clean Baseline
@@ -122,11 +111,8 @@ if [ -f go.mod ]; then go mod download; fi
 Run tests to ensure worktree starts clean:
 
 ```bash
-# Examples - use project-appropriate command
-npm test
-cargo test
-pytest
-go test ./...
+TEST_CMD=$(${CLAUDE_PLUGIN_ROOT}/scripts/detect-test-command.sh "$path")
+eval "$TEST_CMD"
 ```
 
 **If tests fail:** Report failures, ask whether to proceed or investigate.

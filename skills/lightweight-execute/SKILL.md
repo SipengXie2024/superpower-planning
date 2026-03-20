@@ -31,7 +31,7 @@ digraph when_to_use {
 
 | Aspect | Lightweight | Full Pipeline |
 |--------|------------|---------------|
-| Planning | Task checklist in `progress.md` | Design doc + formal plan in `docs/plans/` |
+| Planning | Task checklist in `progress.md` | Design doc + formal plan in `.planning/` |
 | Review loops | None (self-review only) | Two-stage per-task (spec + quality) |
 | Execution | Direct in current session | Subagent-driven, team-driven, or batch |
 | Subagents | None | Fresh subagent per task or agent team |
@@ -149,7 +149,7 @@ This handles test verification, merge/PR options, and worktree cleanup.
 
 - No brainstorming ceremony (Q&A, approach proposals, design doc)
 - No spec interview
-- No formal plan document in `docs/plans/`
+- No formal plan document (`.planning/plan.md`)
 - No plan review loop
 - No subagent dispatching (you implement directly)
 - No per-task two-stage review (spec + quality)

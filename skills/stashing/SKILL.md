@@ -5,9 +5,9 @@ description: Use when switching to another project, waiting on dependencies, or 
 
 # Stashing Unfinished Work
 
-Pause current work without claiming it is done.
+Pause the active project in `.planning/` without claiming it is done.
 
-**Core principle:** `archive = done`, `stash = paused`.
+**Core principle:** `archive = done`, `stash = paused`. The target is the active project (design, plan, findings, progress), not "the session."
 
 **Announce at start:** "I'm using the stashing skill to pause this work safely."
 
@@ -39,22 +39,30 @@ Act on the result:
 
 Derive a short stash name from the active task, then ask the user to confirm or modify it.
 
-Generate the filename:
+Generate a unique directory name:
 ```bash
 mkdir -p .planning/stash
-${CLAUDE_PLUGIN_ROOT}/scripts/unique-filename.sh .planning/stash "<name>"
+${CLAUDE_PLUGIN_ROOT}/scripts/unique-filename.sh .planning/stash "<name>" ""
 ```
-Use the returned path for the stash file.
+The empty extension `""` produces a directory-compatible name without `.md` suffix. Create the directory:
+```bash
+mkdir -p "<returned-path>"
+```
 
-### Step 3: Generate stash snapshot
+### Step 3: Save active project into stash directory
 
-Create a concise snapshot with this structure:
+Save all active project files using the shared snapshot script:
+
+```bash
+${CLAUDE_PLUGIN_ROOT}/scripts/snapshot-save.sh "<returned-path>"
+```
+
+Then write a `snapshot.md` with metadata for quick resume context:
 
 ```markdown
 # Stash: <name>
 **Date:** YYYY-MM-DD
 **Status:** paused
-**Source Plan:** <path or N/A>
 
 ## Current Goal
 <!-- 1-2 lines -->
@@ -65,30 +73,21 @@ Create a concise snapshot with this structure:
 ## Next Steps
 <!-- immediate next 3-5 actions -->
 
-## Key Findings
-<!-- only the reusable or high-signal findings -->
-
-## Agent State Summary
-<!-- summarize any meaningful findings/progress from .planning/agents/* -->
-
 ## Open Questions / Blockers
 <!-- what is missing, blocked, or uncertain -->
 
 ## Important Files / Branches
-<!-- key files, branch names, plan paths -->
+<!-- key files, branch names -->
 ```
 
-Keep it compact and actionable. Summarize meaningful agent findings/progress rather than copying full agent files.
+### Step 4: Reset active state
 
-### Step 4: Save stash and reset
-
-1. Write the snapshot file to the path from Step 2
-2. Report the saved path
-3. Reset active planning state:
 ```bash
 ${CLAUDE_PLUGIN_ROOT}/scripts/planning-reset.sh
 ```
-This removes `progress.md`, `findings.md`, and `agents/`, then recreates clean templates. `archive/` and `stash/` are preserved.
+This removes `design.md`, `plan.md`, `progress.md`, `findings.md`, and `agents/`, then recreates clean templates. `archive/` and `stash/` are preserved.
+
+Report: "Stashed to .planning/stash/<name>/"
 
 ### Step 5: Resume protocol
 
@@ -110,8 +109,11 @@ ${CLAUDE_PLUGIN_ROOT}/scripts/check-planning-state.sh
 ${CLAUDE_PLUGIN_ROOT}/scripts/stash-list.sh
 ```
 3. If multiple exist, use `AskUserQuestion` to let the user choose one
-4. Read the selected stash file
-5. Restore relevant context into active `.planning/progress.md` and `.planning/findings.md`
+4. **Restore files from stash directory to `.planning/` root:**
+```bash
+${CLAUDE_PLUGIN_ROOT}/scripts/stash-restore.sh ".planning/stash/<selected>"
+```
+5. Read `snapshot.md` from the stash directory for resume context
 6. **Perform stale-findings check** before continuing:
    - compare stash assumptions against current repo state
    - run `git diff --stat`
@@ -122,6 +124,8 @@ ${CLAUDE_PLUGIN_ROOT}/scripts/stash-list.sh
      - `obsolete`
 7. Explicitly report any stale or questionable findings before execution resumes
 8. If drift is large, recommend switching to `superpower-planning:brainstorming` or `superpower-planning:writing-plans` instead of blindly continuing
+
+**Legacy stash format:** If the selected stash is a single `.md` file (old format) instead of a directory, read it and restore context into `.planning/findings.md` and `.planning/progress.md` as before.
 
 ## Resume Output Format
 
@@ -142,6 +146,6 @@ Recommended next step:
 ## Key Principles
 
 - `stash` is for paused unfinished work, not completed work
-- stash snapshots should optimize for restart speed, not completeness
+- stash preserves the entire active project (design, plan, findings, progress, agents)
 - stale-findings check is mandatory on resume
 - if resume reveals major drift, suggest re-planning instead of blindly continuing

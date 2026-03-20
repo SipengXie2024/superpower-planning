@@ -21,6 +21,8 @@ fi
 # Remove active planning files
 rm -f "${PLANNING_DIR}/progress.md"
 rm -f "${PLANNING_DIR}/findings.md"
+rm -f "${PLANNING_DIR}/design.md"
+rm -f "${PLANNING_DIR}/plan.md"
 
 # Remove agents directory
 if [ -d "${PLANNING_DIR}/agents" ]; then

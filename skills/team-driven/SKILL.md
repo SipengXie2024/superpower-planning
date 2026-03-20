@@ -1,6 +1,6 @@
 ---
 name: team-driven
-description: Use when executing implementation plans with Agent Teams for parallel task execution and context resilience. Preferred over subagent-driven when tasks are heavy or parallelizable.
+description: Use when executing implementation plans with parallel task groups or individual tasks too heavy for subagent context limits.
 ---
 
 # Team-Driven Development
@@ -212,7 +212,7 @@ As teammates complete tasks:
 1. **Reviewer approves** → lead receives DM notification
 2. **Reviewer escalates** (after 3 rounds) → lead presents unresolved issues to user for decision
 3. **Lead updates progress.md Dashboard** — mark task complete, note key outcome
-4. **Lead reads agent planning dirs** — aggregate findings to top-level `.planning/findings.md`
+4. **Lead aggregates findings:** `${CLAUDE_PLUGIN_ROOT}/scripts/aggregate-agent-findings.sh "<role>" "Task N: <name>"`
 5. **Lead assigns next tasks** to the **same teammate that just finished** if unblocked tasks exist — reuse the existing implementer pool, NEVER spawn new ones
 
 ### Step 6: Shutdown
@@ -247,7 +247,7 @@ Implementers update the same `findings.md` and `progress.md` as they work on suc
 ```
 You: I'm using Team-Driven Development to execute this plan.
 
-[Read plan: docs/plans/feature-plan.md]
+[Read plan: .planning/plan.md]
 [Identify groups: Group A (Tasks 1,2,3), Group B (Tasks 4,5), Group C (Task 6)]
 [MAX_PARALLEL = 3]
 

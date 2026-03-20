@@ -68,7 +68,7 @@ When facing a non-trivial task (multi-step, architectural decisions, multi-file 
 
 When the user requests plan execution (e.g., "execute the plan", "implement it", "start building"), do NOT directly invoke a single execution skill. Instead:
 
-1. If no plan exists at `docs/plans/*-implementation.md`, invoke `superpower-planning:writing-plans` first.
+1. If no plan exists at `.planning/plan.md`, invoke `superpower-planning:writing-plans` first.
 2. If a plan exists, present the execution strategy choice via `AskUserQuestion`:
    - **Subagent-Driven** (this session, sequential) → `superpower-planning:subagent-driven`
    - **Team-Driven** (this session, parallel) → `superpower-planning:team-driven`

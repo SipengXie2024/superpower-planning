@@ -13,21 +13,31 @@ Every workflow skill in superpower-planning inherits this foundation. `.planning
 
 ```
 .planning/                     # gitignored, ephemeral working state
+├── design.md                  # design spec (created by brainstorming)
+├── plan.md                    # implementation plan (created by writing-plans)
 ├── findings.md                # aggregated findings
 ├── progress.md                # Task Status Dashboard + session log
-└── agents/                    # created on demand by subagents
-    ├── implementer/           # one dir per role, reused across tasks
-    │   ├── findings.md        # this agent's discoveries (appended across tasks)
-    │   └── progress.md        # this agent's action log (appended across tasks)
-    ├── spec-reviewer/
-    └── ...
+├── agents/                    # created on demand by subagents
+│   ├── implementer/           # one dir per role, reused across tasks
+│   │   ├── findings.md        # this agent's discoveries (appended across tasks)
+│   │   └── progress.md        # this agent's action log (appended across tasks)
+│   ├── spec-reviewer/
+│   └── ...
+├── stash/                     # paused projects (directory per entry)
+│   └── YYYY-MM-DD-<name>/
+│       ├── design.md, plan.md, findings.md, progress.md
+│       └── agents/
+└── archive/                   # completed projects (directory per entry)
+    └── YYYY-MM-DD-<name>/
+        ├── design.md, plan.md, findings.md, progress.md
+        └── summary.md
 ```
 
-Plans go in `docs/plans/`. `.planning/` is ephemeral session state. The `agents/` directory is NOT created at init — each subagent creates its own subdirectory when dispatched.
+All project documents live in `.planning/`. The `agents/` directory is NOT created at init — each subagent creates its own subdirectory when dispatched.
 
-Additional lifecycle directories may exist:
-- `.planning/archive/` — completed work summaries
-- `.planning/stash/` — paused unfinished work snapshots for later resume
+Lifecycle directories:
+- `.planning/stash/` — paused projects (each entry is a subdirectory with all active files)
+- `.planning/archive/` — completed projects (each entry is a subdirectory with all active files + summary.md)
 
 ## Quick Start
 
@@ -52,13 +62,15 @@ Filesystem = Disk (persistent, unlimited)
 
 | File | Purpose | What Goes Here | When to Update |
 |------|---------|----------------|----------------|
+| `design.md` | Design spec: architecture and requirements | Created by brainstorming skill. Architecture, components, data flow, error handling, testing strategy | After design approval or spec review |
+| `plan.md` | Implementation plan: bite-sized tasks | Created by writing-plans skill. File structure, task steps, parallelism groups, verification commands | After plan approval or plan review |
 | `findings.md` | Knowledge base: discoveries, decisions, surprises | Code patterns, architecture insights, technical decisions + rationale, rejected alternatives, unexpected behavior, edge cases, dependency constraints, debugging root causes | After ANY discovery or decision |
 | `progress.md` | Operations log: status, actions, evidence | Task Status Dashboard rows, phase status changes, actions taken (files modified), error log + retries, test results, verification evidence, batch/phase summaries | After ANY status change, action, or error |
 
 ## Critical Rules
 
 ### 1. Create Planning Dir First
-Never start a complex task without `.planning/`. Plans always go in `docs/plans/`. Execution status is tracked via the Task Status Dashboard in `progress.md`.
+Never start a complex task without `.planning/`. All project documents (design, plan, findings, progress) live in `.planning/`. Execution status is tracked via the Task Status Dashboard in `progress.md`.
 
 ### 2. The 2-Action Dispatch Rule
 > "After every 2 read/search/explore operations, IMMEDIATELY save to the appropriate file by content type."
@@ -182,8 +194,29 @@ The orchestrator aggregates agent findings into top-level `.planning/findings.md
 
 ## Scripts
 
-- `scripts/init-planning-dir.sh` — Initialize `.planning/` directory with all files
-- `scripts/check-complete.sh` — Verify all phases complete
+**Planning lifecycle:**
+- `scripts/init-planning-dir.sh` — Initialize `.planning/` with findings.md and progress.md
+- `scripts/planning-reset.sh` — Reset active state, preserve archive/ and stash/
+- `scripts/check-planning-state.sh` — Check state: missing | empty | active | complete
+- `scripts/check-complete.sh` — Verify all tasks complete
+- `scripts/snapshot-save.sh` — Copy active project files to a target directory (shared by stash/archive)
+
+**Stash/archive:**
+- `scripts/stash-list.sh` — List available stashes (directory + legacy format)
+- `scripts/stash-restore.sh` — Restore stash to active .planning/ state
+- `scripts/archive-search.sh` — Search archives by keyword
+- `scripts/unique-filename.sh` — Generate unique dated filename/dirname
+
+**Agent orchestration:**
+- `scripts/aggregate-agent-findings.sh` — Merge agent "Critical for Orchestrator" items into top-level files
+
+**Project detection:**
+- `scripts/detect-base-branch.sh` — Detect main/master/develop
+- `scripts/detect-test-command.sh` — Detect project test command
+- `scripts/detect-project-setup.sh` — Detect and run project setup
+
+**Other:**
+- `scripts/release.sh` — Version bump, tag, GitHub Release
 - `scripts/session-catchup.py` — Recover context from previous session (manual utility, requires Python)
 
 ## Anti-Patterns
