@@ -53,7 +53,6 @@ All workflows share a `.planning/` directory in your project root containing:
 | **archiving** | Archives completed plans, consolidates memory, and resets `.planning/` for the next task. |
 | **stashing** | Pauses unfinished work into `.planning/stash/` and supports resume with stale-findings checks. |
 | **releasing** | Bumps versions, tags, and publishes releases with changelogs. |
-| **writing-skills** | Creates and tests new Claude Code skills. |
 
 ## Commands (7)
 

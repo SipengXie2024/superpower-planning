@@ -21,7 +21,7 @@ Every task MUST pass TWO independent reviews before it can be marked complete:
 
 A task is NOT complete until BOTH reviews return APPROVED. No exceptions — not for "simple" tasks, config changes, or thorough self-reviews.
 
-The Task Status Dashboard in `.planning/progress.md` has `Spec Review` and `Quality Review` columns. Both MUST show `PASS` before status can be `complete`.
+The Task Status Dashboard in `.planning/progress.md` has `Spec Review`, `Quality Review`, and `Plan Align` columns. All three MUST show `PASS` before status can be `complete`.
 </EXTREMELY-IMPORTANT>
 
 ## Review Loop Caps
@@ -67,6 +67,17 @@ digraph when_to_use {
 - Per-agent planning directories (structured knowledge capture)
 - Two-stage review after each task: spec compliance first, then code quality
 - Faster iteration (no human-in-loop between tasks)
+
+## Plan Anchoring: How to Extract Tasks
+
+When extracting tasks from `plan.md` to dispatch to subagents:
+
+1. **Copy verbatim** — Use the exact text from `plan.md`, do not paraphrase or summarize
+2. **Include the section reference** — Tell the subagent which section header in `plan.md` contains this task (e.g., `### Task 3: Recovery modes`)
+3. **Include cross-task constraints** — If `plan.md` or `design.md` has global constraints (shared interfaces, naming conventions, performance requirements), include them in the context section
+4. **Pass plan file paths** — Always include `plan.md` and `design.md` paths so subagents can cross-reference the originals
+
+**Why:** The orchestrator's extraction is the #1 source of plan drift. Verbatim copying + plan references let subagents and reviewers independently verify against the source of truth.
 
 ## The Process
 
@@ -114,7 +125,8 @@ digraph process {
     "Aggregate agent findings into top-level .planning/" -> "Mark task complete via TaskUpdate";
     "Mark task complete via TaskUpdate" -> "More tasks remain?";
     "More tasks remain?" -> "Create agent planning dir (if not exists)" [label="yes - next task"];
-    "More tasks remain?" -> "Dispatch final code reviewer subagent for entire implementation" [label="no"];
+    "More tasks remain?" -> "Plan Alignment Gate: re-read plan.md, verify all tasks match original plan" [label="no"];
+    "Plan Alignment Gate: re-read plan.md, verify all tasks match original plan" -> "Dispatch final code reviewer subagent for entire implementation";
     "Dispatch final code reviewer subagent for entire implementation" -> "Use superpower-planning:finishing-branch";
 }
 ```
@@ -163,9 +175,9 @@ Example aggregation:
 - [From quality-reviewer] Approved with no issues
 
 <!-- Update Task Status Dashboard table in .planning/progress.md -->
-| Task 1: Hook installation | ✅ complete | PASS | PASS | agents/implementer/ | 5 tests passing |
-| Task 2: Recovery modes | ✅ complete | PASS (2nd pass) | PASS | agents/implementer/ | 8 tests passing |
-| Task 3: Config parser | ⏳ pending | - | - | - | - |
+| Task 1: Hook installation | ✅ complete | PASS | PASS | PASS | agents/implementer/ | 5 tests passing |
+| Task 2: Recovery modes | ✅ complete | PASS (2nd pass) | PASS | PASS | agents/implementer/ | 8 tests passing |
+| Task 3: Config parser | ⏳ pending | - | - | - | - | - |
 
 <!-- Append to session log in .planning/progress.md -->
 - [x] Task 2: Recovery modes - COMPLETED
@@ -293,6 +305,26 @@ Done!
 - Controller does more prep work (extracting all tasks upfront)
 - Review loops add iterations
 - But catches issues early (cheaper than debugging later)
+
+## Plan Alignment Gate
+
+After ALL tasks complete and BEFORE the final code review, perform a plan alignment check:
+
+1. **Re-read `.planning/plan.md`** completely — refresh the original requirements in context
+2. **Re-read `.planning/design.md`** if it exists — refresh architectural constraints
+3. **For each completed task**, verify:
+   - Does the implementation match what the plan specified (not just what you extracted)?
+   - Were any cross-task constraints in the plan respected (shared interfaces, naming, etc.)?
+   - Did accumulated decisions across tasks drift from the plan's original intent?
+4. **Record results** in `.planning/progress.md`:
+   - Update the `Plan Align` column in the Task Status Dashboard
+   - If drift is detected: log it in `.planning/findings.md` with specific details
+5. **If significant drift is detected**, escalate to the user BEFORE the final code review:
+   - Describe what drifted and why
+   - Propose corrective action
+   - Let the user decide whether to fix or accept
+
+**This gate catches cumulative drift that per-task reviews miss.** Individual tasks may each pass spec review while the whole implementation drifts from the plan's intent.
 
 ## Red Flags
 

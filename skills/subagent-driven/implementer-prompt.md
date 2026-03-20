@@ -12,6 +12,16 @@ Task tool (general-purpose):
 
     [FULL TEXT of task from plan - paste it here, don't make subagent read file]
 
+    ## Plan Reference
+
+    Plan file: .planning/plan.md
+    Task section: [exact section header, e.g., "### Task 3: Recovery modes"]
+    Design file: .planning/design.md (if exists)
+
+    The task description above was extracted from the plan by the orchestrator.
+    If anything seems ambiguous or incomplete, read the original plan section
+    at the path above to get the full context. The plan is the source of truth.
+
     ## Context
 
     [Scene-setting: where this fits, dependencies, architectural context]

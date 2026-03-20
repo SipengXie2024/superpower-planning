@@ -2,9 +2,10 @@
 
 ## Task Status Dashboard
 <!-- Quick-scan execution status. Update after each task/phase completes. -->
-<!-- For subagent-driven / team-driven: Spec Review and Quality Review MUST both show PASS before Status can be ✅ complete. For executing-plans or other modes, these columns may be left as "-". -->
-| Task | Status | Spec Review | Quality Review | Agent/Batch | Key Outcome |
-|------|--------|-------------|----------------|-------------|-------------|
+<!-- For subagent-driven / team-driven: Spec Review, Quality Review, and Plan Align MUST all show PASS before Status can be ✅ complete. For executing-plans or other modes, these columns may be left as "-". -->
+<!-- Plan Align is checked per-task by the spec reviewer (against original plan.md) and per-group/final by the orchestrator (Plan Alignment Gate). -->
+| Task | Status | Spec Review | Quality Review | Plan Align | Agent/Batch | Key Outcome |
+|------|--------|-------------|----------------|------------|-------------|-------------|
 
 ## Session: [DATE]
 

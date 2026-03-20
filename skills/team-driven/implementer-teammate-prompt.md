@@ -54,12 +54,22 @@ Task tool (general-purpose):
     - **Send blockers to:** team lead (DM describing blocker)
     - **Receive fix requests from:** reviewer (DM with issues)
 
+    ## Plan Files (Cross-Reference)
+
+    - **Plan:** `.planning/plan.md` — the source of truth for all task requirements
+    - **Design:** `.planning/design.md` — architectural constraints (if exists)
+
+    The task description you receive from the team lead is extracted from the plan.
+    If anything seems ambiguous or incomplete, read the original task section in
+    `.planning/plan.md` for the full context. The plan is the source of truth.
+
     ## When You Receive a Task
 
     1. Read the full task description from the lead's message
     2. If this is your FIRST task: create planning dir and initialize files (see Planning Directory above) — this is NOT optional
-    3. If anything is unclear — DM the team lead to ask
-    4. Implement following the task steps
+    3. If anything seems ambiguous: read the original task section in `.planning/plan.md`
+    4. If still unclear — DM the team lead to ask
+    5. Implement following the task steps
        - **2-Action Rule:** After every 2 read/search/explore operations, save key findings to your `findings.md`. Don't wait until the end.
     5. Self-review (completeness, quality, YAGNI, tests)
     6. Commit your work

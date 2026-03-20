@@ -23,8 +23,8 @@ You MUST NOT:
 - Mark a task complete without reviewer approval
 - Proceed to the next parallelism group while any task has open review issues
 
-The Task Status Dashboard in `.planning/progress.md` has `Spec Review` and `Quality Review` columns.
-A task row MUST show `PASS` in BOTH columns before you can set its status to `complete`.
+The Task Status Dashboard in `.planning/progress.md` has `Spec Review`, `Quality Review`, and `Plan Align` columns.
+A task row MUST show `PASS` in ALL THREE columns before you can set its status to `complete`.
 </EXTREMELY-IMPORTANT>
 
 ## Review Loop Cap
@@ -123,11 +123,23 @@ digraph process {
     "Reviewer DMs implementer to fix" -> "Reviewer reviews (spec + quality)" [label="re-review\n(max 3 rounds)"];
     "Issues found?" -> "Reviewer DMs lead: approved" [label="no"];
     "Reviewer DMs lead: approved" -> "Lead: aggregate findings, update progress.md";
-    "Lead: aggregate findings, update progress.md" -> "More groups?";
+    "Lead: aggregate findings, update progress.md" -> "Plan Alignment Gate: re-read plan.md, verify group results";
+    "Plan Alignment Gate: re-read plan.md, verify group results" -> "More groups?";
     "More groups?" -> "Assign Group N tasks to available implementers" [label="yes - next group"];
     "More groups?" -> "Shutdown team, use finishing-branch" [label="no"];
 }
 ```
+
+## Plan Anchoring: How to Extract Tasks
+
+When extracting tasks from `plan.md` to send to implementer teammates:
+
+1. **Copy verbatim** — Use the exact text from `plan.md`, do not paraphrase or summarize
+2. **Include the section reference** — Tell the implementer which section header in `plan.md` contains this task (e.g., `### Task 3: Recovery modes`)
+3. **Include cross-task constraints** — If `plan.md` or `design.md` has global constraints (shared interfaces, naming conventions, performance requirements), include them
+4. **Pass plan file paths** — Always mention that `.planning/plan.md` and `.planning/design.md` are available for cross-reference
+
+**Why:** The lead's extraction is the #1 source of plan drift. Verbatim copying + plan references let implementers and the reviewer independently verify against the source of truth.
 
 ## Step-by-Step
 
@@ -211,9 +223,26 @@ As teammates complete tasks:
 
 1. **Reviewer approves** → lead receives DM notification
 2. **Reviewer escalates** (after 3 rounds) → lead presents unresolved issues to user for decision
-3. **Lead updates progress.md Dashboard** — mark task complete, note key outcome
-4. **Lead aggregates findings:** `${CLAUDE_PLUGIN_ROOT}/scripts/aggregate-agent-findings.sh "<role>" "Task N: <name>"`
-5. **Lead assigns next tasks** to the **same teammate that just finished** if unblocked tasks exist — reuse the existing implementer pool, NEVER spawn new ones
+3. **Reviewer reports plan drift** → lead corrects the task extraction and re-assigns with accurate requirements
+4. **Lead updates progress.md Dashboard** — mark task complete, note key outcome
+5. **Lead aggregates findings:** `${CLAUDE_PLUGIN_ROOT}/scripts/aggregate-agent-findings.sh "<role>" "Task N: <name>"`
+6. **Lead assigns next tasks** to the **same teammate that just finished** if unblocked tasks exist — reuse the existing implementer pool, NEVER spawn new ones
+
+### Step 5.5: Plan Alignment Gate (After Each Parallelism Group)
+
+After ALL tasks in a parallelism group are reviewed and approved:
+
+1. **Re-read `.planning/plan.md`** — refresh original requirements in context
+2. **For each completed task in this group**, verify:
+   - Does the implementation match the plan (not just what was extracted)?
+   - Were cross-task constraints respected (shared interfaces, naming, etc.)?
+3. **Update `Plan Align` column** in the Task Status Dashboard
+4. **If significant drift detected**, escalate to user BEFORE starting the next group:
+   - Describe what drifted and why
+   - Propose corrective action
+   - Let user decide whether to fix or accept
+
+**This gate catches cumulative drift that per-task reviews miss.** Only proceed to the next parallelism group after this check passes.
 
 ### Step 6: Shutdown
 

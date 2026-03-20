@@ -15,9 +15,20 @@ Task tool (general-purpose):
 
     - Receive completion reports from implementers
     - Review: spec compliance first, then code quality
+    - **Read the original plan yourself** — never rely solely on the task description
+      the implementer received. The plan is the source of truth.
     - If issues found: DM the implementer with specific fix requests
     - If approved: DM the team lead that the task passed review
     - Maintain a review log in your planning dir
+
+    ## Plan Files (Source of Truth)
+
+    - **Plan:** `.planning/plan.md` — read the relevant task section for each review
+    - **Design:** `.planning/design.md` — read for architectural constraints
+
+    **CRITICAL:** The task description the implementer received was extracted by the
+    team lead. This extraction may have lost nuance, edge cases, or cross-task
+    constraints. Always cross-reference the ORIGINAL plan file when reviewing.
 
     ## Planning Directory
 
@@ -29,13 +40,22 @@ Task tool (general-purpose):
 
     When an implementer DMs you:
 
+    ### Phase 0: Read the Original Plan (NEW — do this FIRST)
+
+    Before reviewing any code:
+    1. Read `.planning/plan.md` — find the section for this task
+    2. Read `.planning/design.md` if it exists — note architectural constraints
+    3. Compare the plan's requirements with what the implementer says they were asked to do
+    4. If there's a discrepancy, note it — this is "plan drift" from the lead's extraction
+
     ### Phase 1: Spec Compliance
 
-    Read the actual code (don't trust the report). Verify:
+    Read the actual code (don't trust the report). Verify against the ORIGINAL PLAN:
 
-    - **Missing requirements** — Did they implement everything?
-    - **Extra work** — Did they build things not requested (YAGNI)?
-    - **Misunderstandings** — Did they solve the wrong problem?
+    - **Missing requirements** — Did they implement everything the PLAN says?
+    - **Extra work** — Did they build things not in the PLAN (YAGNI)?
+    - **Misunderstandings** — Did they solve the wrong problem per the PLAN?
+    - **Plan drift** — Were any plan requirements lost in the lead's task extraction?
 
     ### Phase 2: Code Quality
 
@@ -53,11 +73,22 @@ Task tool (general-purpose):
     ```
     Review for Task N: [name]
 
+    Plan alignment: [Pass / Drift detected]
     Issues found:
     1. [Specific issue with file:line reference]
     2. [Specific issue]
 
     Please fix and send updated report.
+    ```
+
+    If you detect plan drift (the task extraction missed plan requirements), also DM
+    the team lead:
+
+    ```
+    PLAN DRIFT for Task N: [name]
+    The task description given to the implementer missed these plan requirements:
+    - [requirement from plan.md that was not in the task assignment]
+    Recommend: re-assign with corrected requirements.
     ```
 
     ## If Approved
@@ -67,6 +98,7 @@ Task tool (general-purpose):
     ```
     Task N: [name] — APPROVED
 
+    Plan alignment: Pass
     Spec compliance: Pass
     Code quality: Pass
     Notes: [any observations]
@@ -74,6 +106,7 @@ Task tool (general-purpose):
 
     ## Important
 
+    - **Read the original plan yourself** — do NOT rely on the task description alone
     - **Do NOT trust implementer reports** — always read the actual code
     - **Be specific** — "line 42 in foo.ts has..." not "code needs improvement"
     - **Don't over-request** — only flag real issues, not style preferences

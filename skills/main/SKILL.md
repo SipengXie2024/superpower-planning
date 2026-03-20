@@ -98,7 +98,6 @@ When the user requests plan execution (e.g., "execute the plan", "implement it",
 | `superpower-planning:receiving-review` | Process review feedback systematically and address all comments. |
 | `superpower-planning:verification` | Verify work is complete and correct before declaring done. |
 | `superpower-planning:releasing` | Bump versions, tag, and publish GitHub Releases with changelogs. |
-| `superpower-planning:writing-skills` | Create new skills for this plugin following the skill format. |
 
 ## Stash / Resume Routing
 
