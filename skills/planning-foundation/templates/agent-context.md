@@ -9,8 +9,8 @@ You have a planning directory at: `{AGENT_PLANNING_DIR}`
    - **Discoveries, decisions, surprises** → `{AGENT_PLANNING_DIR}/findings.md`
    - **Status changes, actions taken, errors, test results** → `{AGENT_PLANNING_DIR}/progress.md`
 3. **Log errors** — Every error goes in `{AGENT_PLANNING_DIR}/progress.md` Error Log table
-4. **Never repeat failures** — If an action failed, track it and try a different approach
-5. **3-Strike Protocol** — After 3 failed attempts at the same thing, escalate to the orchestrator
+4. **Never repeat failures** — If an action failed, log it and escalate to the orchestrator. Do NOT independently try alternative approaches — the plan was designed intentionally, and changing direction without alignment creates workarounds
+5. **Escalate early** — After the first failed fix attempt, report to the orchestrator: what failed, what you tried, what you observed. Wait for direction before proceeding
 6. **Update progress** — After completing major steps, update Task Status Dashboard and append to `{AGENT_PLANNING_DIR}/progress.md`
 
 ## Critical for Orchestrator

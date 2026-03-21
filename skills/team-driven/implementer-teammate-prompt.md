@@ -38,7 +38,7 @@ Task tool (general-purpose):
     1. Use the Read tool to read this file:
        `{CLAUDE_PLUGIN_ROOT}/skills/planning-foundation/templates/agent-context.md`
        This contains the 6 planning rules you MUST follow. Replace `{AGENT_PLANNING_DIR}` with your planning dir path.
-       For rule 5 (3-Strike Protocol): DM the team lead instead of just escalating.
+       For rule 5 (Escalate early): DM the team lead with what failed and what you observed.
 
     2. Initialize your planning dir by copying the templates:
        - Read `{CLAUDE_PLUGIN_ROOT}/skills/planning-foundation/templates/findings.md` → write to `{AGENT_PLANNING_DIR}/findings.md`

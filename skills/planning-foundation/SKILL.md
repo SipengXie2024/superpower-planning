@@ -107,11 +107,12 @@ Every error goes in the plan file. This builds knowledge and prevents repetition
 ### 6. Never Repeat Failures
 ```
 if action_failed:
-    next_action != same_action
+    log what you tried and observed
+    escalate to user for direction
 ```
-Track what you tried. Mutate the approach.
+Do NOT independently try alternative approaches. Log the failure and follow the Error Escalation Protocol.
 
-## The 3-Strike Error Protocol
+## Error Escalation Protocol
 
 ```
 ATTEMPT 1: Diagnose & Fix
@@ -119,21 +120,19 @@ ATTEMPT 1: Diagnose & Fix
   -> Identify root cause
   -> Apply targeted fix
 
-ATTEMPT 2: Alternative Approach
-  -> Same error? Try different method
-  -> Different tool? Different library?
-  -> NEVER repeat exact same failing action
+ATTEMPT 1 FAILED: Escalate to User
+  -> Show: what failed, what you tried, what you observed
+  -> Ask: is this a bug? a plan gap? an environment issue?
+  -> Align on direction BEFORE proceeding
 
-ATTEMPT 3: Broader Rethink
-  -> Question assumptions
-  -> Search for solutions
-  -> Consider updating the plan
-
-AFTER 3 FAILURES: Escalate to User
-  -> Explain what you tried
-  -> Share the specific error
-  -> Ask for guidance
+AFTER ALIGNMENT (based on user's judgment):
+  -> Bug           → use systematic debugging skill
+  -> Plan gap      → update plan with user
+  -> Environment   → fix environment
+  -> Architecture  → broader rethink with user
 ```
+
+**Why escalate early:** The plan was carefully designed. Self-directed alternative approaches bypass plan intent and create workarounds. Always align with the user before changing direction.
 
 ## Read vs Write Decision Matrix
 
@@ -228,5 +227,5 @@ The orchestrator aggregates agent findings into top-level `.planning/findings.md
 | Hide errors and retry silently | Log errors to plan file |
 | Stuff everything in context | Store large content in files |
 | Start executing immediately | Create plan file FIRST |
-| Repeat failed actions | Track attempts, mutate approach |
+| Repeat failed actions or independently try alternatives | Log failure, escalate to user for direction |
 | Let subagent findings disappear | Aggregate into top-level findings.md |

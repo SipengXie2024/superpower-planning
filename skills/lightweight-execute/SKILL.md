@@ -128,7 +128,7 @@ Implement tasks one at a time in the current session. For each task:
 3. Follow the 2-Action Dispatch Rule — save findings every 2 operations
 4. Commit after each meaningful unit of work
 5. Mark as `✅ complete` in Dashboard and via TaskUpdate
-6. If stuck: follow the 3-Strike Error Protocol (from planning-foundation)
+6. If stuck: follow the Error Escalation Protocol (from planning-foundation) — escalate to user after first failed fix, do NOT independently try alternative approaches
 
 ### Step 6: Final Verification
 
