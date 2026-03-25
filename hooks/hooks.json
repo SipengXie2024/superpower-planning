@@ -24,11 +24,11 @@
     ],
     "PreToolUse": [
       {
-        "matcher": "Bash",
+        "matcher": "Bash|Write|Edit",
         "hooks": [
           {
             "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/pre-bash-dashboard.sh"
+            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/attention-refocus.sh"
           }
         ]
       }
