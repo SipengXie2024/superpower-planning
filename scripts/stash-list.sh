@@ -56,7 +56,7 @@ for f in "$STASH_DIR"/*.md; do
     fi
 done
 
-if [ ${#entries[@]} -eq 0 ]; then
+if [ "${#entries[@]}" -eq 0 ]; then
     echo "none"
 else
     echo "Available stashes:"

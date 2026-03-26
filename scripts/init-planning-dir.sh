@@ -47,7 +47,7 @@ fi
 if [ ! -f "${PLANNING_DIR}/progress.md" ]; then
     TEMPLATE_DIR="${SCRIPT_DIR}/../skills/planning-foundation/templates"
     if [ -f "${TEMPLATE_DIR}/progress.md" ]; then
-        sed "s/\[DATE\]/$DATE/g" "${TEMPLATE_DIR}/progress.md" > "${PLANNING_DIR}/progress.md"
+        sed "s|\[DATE\]|$DATE|g" "${TEMPLATE_DIR}/progress.md" > "${PLANNING_DIR}/progress.md"
     else
         cat > "${PLANNING_DIR}/progress.md" << EOF
 # Progress Log

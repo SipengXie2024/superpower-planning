@@ -24,7 +24,8 @@ run_or_print() {
         echo "$cmd"
     else
         echo "[detect-project-setup] Running: $cmd"
-        cd "$PROJECT_ROOT" && eval "$cmd"
+        # shellcheck disable=SC2086
+        cd "$PROJECT_ROOT" && $cmd
     fi
 }
 

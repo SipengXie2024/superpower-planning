@@ -38,7 +38,7 @@ fi
 
 # Check if all tasks are complete (reuse check-complete logic)
 if [ -f "$PROGRESS" ]; then
-    TOTAL=$(grep -c '^| Task [^|]' "$PROGRESS" 2>/dev/null || true)
+    TOTAL=$(grep -cE '\| (✅ )?(complete|in_progress|pending|blocked|skipped) \|' "$PROGRESS" 2>/dev/null || true)
     COMPLETE=$(grep -cE '\| (✅ )?complete \|' "$PROGRESS" 2>/dev/null || true)
 
     if [ "${TOTAL:-0}" -gt 0 ] && [ "$COMPLETE" -eq "$TOTAL" ]; then
@@ -59,14 +59,14 @@ if [ -f "$PROGRESS" ]; then
             has_content=true
         else
             # Check for actual task rows in dashboard (not empty table)
-            task_rows=$(grep -c '^| Task [^|]' "$PROGRESS" 2>/dev/null || true)
+            task_rows=$(grep -cE '\| (✅ )?(complete|in_progress|pending|blocked|skipped) \|' "$PROGRESS" 2>/dev/null || true)
             if [ "${task_rows:-0}" -gt 0 ]; then
                 has_content=true
             fi
         fi
     else
         # No template to compare against — check for task rows
-        task_rows=$(grep -c '^| Task [^|]' "$PROGRESS" 2>/dev/null || true)
+        task_rows=$(grep -cE '\| (✅ )?(complete|in_progress|pending|blocked|skipped) \|' "$PROGRESS" 2>/dev/null || true)
         if [ "${task_rows:-0}" -gt 0 ]; then
             has_content=true
         fi

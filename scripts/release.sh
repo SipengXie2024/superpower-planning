@@ -40,12 +40,17 @@ done
 
 echo "Releasing v${VERSION}..."
 
+# Detect base branch
+BASE_BRANCH=$("${SCRIPT_DIR}/detect-base-branch.sh" "$PLUGIN_ROOT")
+
 # 1. Update plugin.json
-jq --arg v "$VERSION" '.version = $v' "$PLUGIN_JSON" > "${PLUGIN_JSON}.tmp" && mv "${PLUGIN_JSON}.tmp" "$PLUGIN_JSON"
+TMPFILE=$(mktemp)
+jq --arg v "$VERSION" '.version = $v' "$PLUGIN_JSON" > "$TMPFILE" && mv "$TMPFILE" "$PLUGIN_JSON"
 echo "  Updated plugin.json"
 
 # 2. Update marketplace.json
-jq --arg v "$VERSION" '.plugins[0].version = $v' "$MARKETPLACE_JSON" > "${MARKETPLACE_JSON}.tmp" && mv "${MARKETPLACE_JSON}.tmp" "$MARKETPLACE_JSON"
+TMPFILE=$(mktemp)
+jq --arg v "$VERSION" '.plugins[0].version = $v' "$MARKETPLACE_JSON" > "$TMPFILE" && mv "$TMPFILE" "$MARKETPLACE_JSON"
 echo "  Updated marketplace.json"
 
 # 3. Commit
@@ -55,7 +60,7 @@ echo "  Committed version bump"
 
 # 4. Tag and push
 git -C "$PLUGIN_ROOT" tag "v${VERSION}"
-git -C "$PLUGIN_ROOT" push origin main --tags
+git -C "$PLUGIN_ROOT" push origin "$BASE_BRANCH" --tags
 echo "  Pushed commit and tag v${VERSION}"
 
 # 5. Create GitHub Release

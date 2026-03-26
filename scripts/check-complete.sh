@@ -11,8 +11,8 @@ if [ ! -f "$PROGRESS_FILE" ]; then
     exit 0
 fi
 
-# Count total tasks: lines matching "| Task " pattern but excluding the header row
-TOTAL=$(grep -c '^| Task [^|]' "$PROGRESS_FILE" || true)
+# Count total tasks: any row with a known status keyword (excludes header and separator)
+TOTAL=$(grep -cE '\| (✅ )?(complete|in_progress|pending|blocked|skipped) \|' "$PROGRESS_FILE" || true)
 
 # Count complete tasks (match with or without emoji prefix)
 COMPLETE=$(grep -cE '\| (✅ )?complete \|' "$PROGRESS_FILE" || true)
