@@ -102,6 +102,7 @@ digraph brainstorming {
 - Design for **clear boundaries and isolated responsibilities**
 - Prefer smaller, focused files over large do-everything files
 - If a file has grown unwieldy, include a split in the design when it directly serves the current task
+- **Evidence-first design:** Every design decision (architecture choice, performance assumption, complexity trade-off, interface contract) should be backed by evidence — benchmarks, data, reference implementations, or reasoned analysis. When evidence is not yet available, mark the decision with `[NEEDS-EVIDENCE]` inline and continue. Do NOT block design progress to gather evidence, but do NOT silently assume either.
 
 ## After the Design
 
@@ -135,6 +136,7 @@ After the spec review loop passes, ask the user to review the written spec befor
 - **One question per call** — don't overwhelm; break complex topics into multiple calls
 - **Multiple choice preferred** — easier to answer than open-ended when possible
 - **YAGNI ruthlessly** — remove unnecessary features from all designs
+- **Evidence-first** — every design decision needs evidence (data, benchmarks, analysis, references). No evidence yet? Mark `[NEEDS-EVIDENCE]` and move on — don't block, don't silently assume
 - **Explore alternatives** — always propose 2-3 approaches before settling
 - **Incremental validation** — present design, get approval before moving on
 - **Be flexible** — go back and clarify when something doesn't make sense

@@ -168,6 +168,28 @@ The reviewer should focus on:
 - task granularity
 - missing verification steps
 - over-scoping or under-scoping
+- evidence gaps: are `[NEEDS-EVIDENCE]` items from the design tracked and properly timed?
+
+## Evidence Tracking
+
+Before writing tasks, scan the design doc (`.planning/design.md`) for all `[NEEDS-EVIDENCE]` markers. For each one:
+
+1. **Classify timing:** before implementation (blocking) / during implementation / after MVP
+2. **Define what's needed:** benchmark, data analysis, reference check, prototype, etc.
+3. **Assign to a task:** "before implementation" items become prerequisite tasks in the plan; others are noted inline in the relevant task
+
+Include an **Evidence Gap Summary** section in the plan:
+
+````markdown
+### Evidence Gap Summary
+
+| # | Decision | Evidence Needed | Timing | Task |
+|---|----------|----------------|--------|------|
+| 1 | ... | ... | Before impl | Task 0 |
+| 2 | ... | ... | During impl | Task 3 |
+````
+
+If no `[NEEDS-EVIDENCE]` markers exist in the design, skip this section silently.
 
 ## Remember
 - Exact file paths always
