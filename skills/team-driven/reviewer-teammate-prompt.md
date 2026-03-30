@@ -3,7 +3,7 @@
 Use this template when spawning the reviewer teammate via Task tool with `team_name`.
 
 ```
-Task tool (general-purpose):
+Task tool (superpower-planning:code-reviewer):
   team_name: "plan-execution"
   name: "reviewer"
   prompt: |

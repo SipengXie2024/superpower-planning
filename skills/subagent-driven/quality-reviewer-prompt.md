@@ -7,7 +7,7 @@ Use this template when dispatching a code quality reviewer subagent.
 **Only dispatch after spec compliance review passes.**
 
 ```
-Task tool (superpower-planning:requesting-review):
+Task tool (superpower-planning:quality-reviewer):
   Use template at requesting-review/code-reviewer.md
 
   WHAT_WAS_IMPLEMENTED: [from implementer's report]

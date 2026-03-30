@@ -169,7 +169,7 @@ Task(team_name="plan-execution", name="implementer-2", subagent_type="general-pu
 ...
 
 # Spawn reviewer
-Task(team_name="plan-execution", name="reviewer", subagent_type="general-purpose")
+Task(team_name="plan-execution", name="reviewer", subagent_type="superpower-planning:code-reviewer")
 ```
 
 **Implementer teammate prompt:** Use `./implementer-teammate-prompt.md` template.
