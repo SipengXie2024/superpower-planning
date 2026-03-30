@@ -118,6 +118,16 @@ git commit -m "feat: add specific feature"
 > **Note:** Log unexpected discoveries, technical decisions, and implementation insights to `.planning/findings.md` after each task.
 ````
 
+## No Placeholders
+
+Every step must contain the actual content an engineer needs. These are **plan failures** — never write them:
+- "TBD", "TODO", "implement later", "fill in details"
+- "Add appropriate error handling" / "add validation" / "handle edge cases"
+- "Write tests for the above" (without actual test code)
+- "Similar to Task N" (repeat the code — the engineer may be reading tasks out of order)
+- Steps that describe what to do without showing how (code blocks required for code steps)
+- References to types, functions, or methods not defined in any task
+
 ## Auto-Create `.planning/` Directory
 
 When writing a plan, **automatically create** the `.planning/` directory if it does not already exist by running:
@@ -152,23 +162,19 @@ This creates `progress.md` and `findings.md`. The canonical template is at `plan
 
 The parallelism score helps the user choose the right execution mode.
 
-## Plan Review Loop
+## Self-Review
 
-After writing the complete plan:
+After writing the complete plan, review it yourself with fresh eyes. This is a checklist you run inline — not a subagent dispatch.
 
-1. Dispatch a single plan reviewer subagent using `skills/writing-plans/plan-reviewer-prompt.md`
-2. Use a low-freedom dispatch shape with: spec path, plan path, review scope, and planning dir
-3. If issues are found: fix them, then re-dispatch reviewer for the whole plan
-4. If approved: proceed to execution handoff
-5. Maximum 3 review iterations; if still unresolved, surface to the user
+**1. Spec coverage:** Skim each section/requirement in the spec. Can you point to a task that implements it? List any gaps.
 
-The reviewer should focus on:
-- plan alignment with the approved spec
-- file decomposition quality
-- task granularity
-- missing verification steps
-- over-scoping or under-scoping
-- evidence gaps: are `[NEEDS-EVIDENCE]` items from the design tracked and properly timed?
+**2. Placeholder scan:** Search your plan for red flags — any of the patterns from the "No Placeholders" section above. Fix them.
+
+**3. Type consistency:** Do the types, method signatures, and property names you used in later tasks match what you defined in earlier tasks? A function called `clearLayers()` in Task 3 but `clearFullLayers()` in Task 7 is a bug.
+
+**4. Evidence gaps:** Are `[NEEDS-EVIDENCE]` items from the design tracked and properly timed in the Evidence Gap Summary?
+
+If you find issues, fix them inline. No need to re-review — just fix and move on. If you find a spec requirement with no task, add the task.
 
 ## Evidence Tracking
 
@@ -193,7 +199,7 @@ If no `[NEEDS-EVIDENCE]` markers exist in the design, skip this section silently
 
 ## Remember
 - Exact file paths always
-- Complete code in plan (not "add validation")
+- Complete code in every step — no placeholders (see "No Placeholders" section)
 - Exact commands with expected output
 - Reference relevant skills with @ syntax
 - DRY, YAGNI, TDD, frequent commits
@@ -203,7 +209,7 @@ If no `[NEEDS-EVIDENCE]` markers exist in the design, skip this section silently
 
 ## Execution Handoff
 
-After saving the plan and passing the plan review loop, you MUST present exactly these three options using `AskUserQuestion`. Do NOT omit, replace, or invent options. All three MUST always be shown regardless of your analysis.
+After saving the plan and completing the self-review, you MUST present exactly these three options using `AskUserQuestion`. Do NOT omit, replace, or invent options. All three MUST always be shown regardless of your analysis.
 
 **Use `AskUserQuestion` with these exact options:**
 

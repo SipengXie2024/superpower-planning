@@ -29,7 +29,7 @@ You MUST create a task for each of these items and complete them in order:
 4. **Propose 2-3 approaches** — with trade-offs and your recommendation, presented via `AskUserQuestion` for user to choose.
 5. **Present design** — in sections scaled to complexity, get user approval after each section via `AskUserQuestion`.
 6. **Write design doc** — save to `.planning/design.md` (initialize `.planning/` first if needed).
-7. **Spec review loop** — run one reviewer subagent against the written spec. If issues are found, fix and re-run. Maximum 3 rounds.
+7. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below).
 8. **Spec interview** — ask: "Do you want to run a spec interview to refine details in the design?" (default: yes). If yes, invoke `superpower-planning:spec-interview` with the design doc as target. If user skips, proceed.
 9. **User review gate** — explicitly ask the user to review the written spec before planning.
 10. **Ask about worktree** — use `AskUserQuestion` to ask whether to create an isolated git worktree for implementation (invoke `superpower-planning:git-worktrees` if yes, skip if no).
@@ -47,7 +47,7 @@ digraph brainstorming {
     "Present design sections" [shape=box];
     "User approves design?" [shape=diamond];
     "Write design doc to .planning/" [shape=box];
-    "Spec review loop (max 3)" [shape=box];
+    "Spec self-review\n(fix inline)" [shape=box];
     "Run spec interview?" [shape=diamond];
     "Invoke spec-interview skill" [shape=box];
     "User reviews spec?" [shape=diamond];
@@ -64,8 +64,8 @@ digraph brainstorming {
     "Present design sections" -> "User approves design?";
     "User approves design?" -> "Present design sections" [label="no, revise"];
     "User approves design?" -> "Write design doc to .planning/" [label="yes"];
-    "Write design doc to .planning/" -> "Spec review loop (max 3)";
-    "Spec review loop (max 3)" -> "Run spec interview?";
+    "Write design doc to .planning/" -> "Spec self-review\n(fix inline)";
+    "Spec self-review\n(fix inline)" -> "Run spec interview?";
     "Run spec interview?" -> "Invoke spec-interview skill" [label="yes"];
     "Run spec interview?" -> "User reviews spec?" [label="skip"];
     "Invoke spec-interview skill" -> "User reviews spec?";
@@ -115,16 +115,18 @@ digraph brainstorming {
 - Populate the Task Status Dashboard in `progress.md` with tasks derived from the design
 - Move any design exploration findings (rejected approaches, discovered constraints, useful references) into `.planning/findings.md`
 
-**Spec Review Loop:**
-After writing the spec document:
-1. Dispatch one reviewer subagent using `skills/subagent-driven/spec-reviewer-prompt.md` as the review template
-2. Prefer the standard dispatch shape in `skills/subagent-driven/spec-review-dispatch-template.md`
-3. If issues are found: fix the spec, re-dispatch, and repeat
-4. Maximum 3 iterations; if still unresolved, surface the conflict to the user
-5. Reviewer findings should be recorded in an agent-specific planning dir under `.planning/agents/`
+**Spec Self-Review:**
+After writing the spec document, review it yourself with fresh eyes:
+
+1. **Placeholder scan:** Any "TBD", "TODO", incomplete sections, or vague requirements? Fix them.
+2. **Internal consistency:** Do any sections contradict each other? Does the architecture match the feature descriptions?
+3. **Scope check:** Is this focused enough for a single implementation plan, or does it need decomposition?
+4. **Ambiguity check:** Could any requirement be interpreted two different ways? If so, pick one and make it explicit.
+
+Fix any issues inline. No need to re-review — just fix and move on.
 
 **User Review Gate:**
-After the spec review loop passes, ask the user to review the written spec before proceeding.
+After the self-review, ask the user to review the written spec before proceeding.
 
 **Implementation:**
 - Invoke the writing-plans skill to create a detailed implementation plan
