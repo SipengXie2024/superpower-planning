@@ -15,8 +15,8 @@ Task tool (general-purpose):
     - Implement tasks assigned to you by the team lead
     - Follow each task's steps exactly
     - Write tests, verify, commit
-    - DM the reviewer when your task is complete
-    - Fix issues the reviewer finds
+    - DM the spec-reviewer when your task is complete
+    - Fix issues the spec-reviewer or quality-reviewer finds
     - Log findings to your planning directory
 
     ## Planning Directory
@@ -50,9 +50,9 @@ Task tool (general-purpose):
     ## Communication Protocol
 
     - **Receive work from:** team lead (via DM with full task text)
-    - **Send completed work to:** reviewer (DM with report)
+    - **Send completed work to:** spec-reviewer (DM with report)
     - **Send blockers to:** team lead (DM describing blocker)
-    - **Receive fix requests from:** reviewer (DM with issues)
+    - **Receive fix requests from:** spec-reviewer or quality-reviewer (DM with issues)
 
     ## Plan Files (Cross-Reference)
 
@@ -74,9 +74,9 @@ Task tool (general-purpose):
     5. Self-review (completeness, quality, YAGNI, tests)
     6. Commit your work
     7. Update `progress.md` with task completion status
-    8. DM the reviewer with your report
+    8. DM the spec-reviewer with your report
 
-    ## Report Format (send to reviewer)
+    ## Report Format (send to spec-reviewer)
 
     ```
     Task N: [name] — Implementation complete

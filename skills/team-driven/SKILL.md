@@ -5,31 +5,35 @@ description: Use when executing implementation plans with parallel task groups o
 
 # Team-Driven Development
 
-Execute plan by creating an Agent Team with persistent implementer teammates and a dedicated reviewer. Teammates work in parallel on independent tasks, with the reviewer providing continuous quality gates.
+Execute plan by creating an Agent Team with persistent implementer teammates and dedicated spec and quality reviewers. Teammates work in parallel on independent tasks, with two-stage review providing continuous quality gates.
 
-**Core principle:** Persistent teammates + parallel execution + dedicated reviewer = high throughput, context resilience, quality assurance
+**Core principle:** Persistent teammates + parallel execution + two-stage review (spec then quality) = high throughput, context resilience, quality assurance
 
 **Announce at start:** "I'm using the team-driven skill to execute this plan with an Agent Team."
 
-## NON-NEGOTIABLE: Reviewer Must Review Every Task
+## NON-NEGOTIABLE: Two-Stage Review Gate
 
 <EXTREMELY-IMPORTANT>
-The reviewer teammate MUST perform BOTH spec compliance and code quality review for every task before it can be marked complete.
+Every task MUST pass TWO independent reviews before it can be marked complete:
 
-**A task is NOT complete until the reviewer DMs the lead with APPROVED.**
+1. **Spec Compliance Review** — spec-reviewer teammate verifies code matches the original plan
+2. **Code Quality Review** — quality-reviewer teammate verifies code is well-built (only after spec review passes)
+
+**A task is NOT complete until the quality-reviewer DMs the lead with APPROVED.**
 
 You MUST NOT:
-- Skip the reviewer for ANY reason ("task was simple", "just a config change")
-- Mark a task complete without reviewer approval
+- Skip either reviewer for ANY reason ("task was simple", "just a config change")
+- Mark a task complete without BOTH reviewers approving
+- Start quality review before spec review passes
 - Proceed to the next parallelism group while any task has open review issues
 
 The Task Status Dashboard in `.planning/progress.md` has `Spec Review`, `Quality Review`, and `Plan Align` columns.
 A task row MUST show `PASS` in ALL THREE columns before you can set its status to `complete`.
 </EXTREMELY-IMPORTANT>
 
-## Review Loop Cap
+## Review Loop Caps
 
-The reviewer's fix-review loop is capped at **3 rounds** per task.
+Each review stage has its own cap of **3 fix-review rounds**.
 
 **Round counting:** The initial review does not count as a round. A "round" is one fix-then-re-review cycle: initial review → DM implementer to fix → re-review (round 1) → DM fix → re-review (round 2) → DM fix → re-review (round 3) → STOP.
 
@@ -77,15 +81,17 @@ digraph when_to_use {
 
 ```
 Team Lead (you, current session)
-├── implementer-1 (teammate)  ──→ Task A ─┐
-├── implementer-2 (teammate)  ──→ Task B ──┤── parallel
-├── implementer-N (teammate)  ──→ Task C ─┘
-└── reviewer (teammate)       ──→ reviews completed tasks
+├── implementer-1 (teammate)     ──→ Task A ─┐
+├── implementer-2 (teammate)     ──→ Task B ──┤── parallel
+├── implementer-N (teammate)     ──→ Task C ─┘
+├── spec-reviewer (teammate)     ──→ spec compliance review
+└── quality-reviewer (teammate)  ──→ code quality review
 ```
 
-- **Team lead:** Reads plan, creates tasks, assigns work, aggregates findings, updates progress.md
-- **Implementers:** Persistent teammates, each works on assigned tasks, DMs reviewer when done
-- **Reviewer:** Dedicated teammate for spec compliance + code quality review. DMs implementer for fixes, DMs lead when approved.
+- **Team lead:** Reads plan, creates tasks, assigns work, orchestrates review handoffs, aggregates findings, updates progress.md
+- **Implementers:** Persistent teammates, each works on assigned tasks, DMs spec-reviewer when done
+- **Spec-reviewer:** Verifies code matches the original plan. DMs implementer for spec fixes, DMs lead when spec passes.
+- **Quality-reviewer:** Verifies code is well-built. Activated by lead after spec passes. DMs implementer for quality fixes, DMs lead when approved.
 
 ## The Process
 
@@ -94,35 +100,46 @@ digraph process {
     rankdir=TB;
 
     "Read plan, identify parallelism groups" [shape=box];
-    "TeamCreate + spawn implementers + reviewer" [shape=box];
+    "TeamCreate + spawn implementers + spec-reviewer + quality-reviewer" [shape=box];
     "Create tasks via TaskCreate with dependencies" [shape=box];
     "Assign Group N tasks to available implementers" [shape=box];
 
     subgraph cluster_per_task {
         label="Per Task (parallel within group)";
         "Implementer works on task" [shape=box];
-        "Implementer DMs reviewer" [shape=box];
-        "Reviewer reviews (spec + quality)" [shape=box];
-        "Issues found?" [shape=diamond];
-        "Reviewer DMs implementer to fix" [shape=box];
-        "Reviewer DMs lead: approved" [shape=box];
+        "Implementer DMs spec-reviewer" [shape=box];
+        "Spec-reviewer reviews" [shape=box];
+        "Spec issues?" [shape=diamond];
+        "Spec-reviewer DMs implementer to fix" [shape=box];
+        "Spec-reviewer DMs lead: spec passed" [shape=box];
+        "Lead DMs quality-reviewer to review" [shape=box];
+        "Quality-reviewer reviews" [shape=box];
+        "Quality issues?" [shape=diamond];
+        "Quality-reviewer DMs implementer to fix" [shape=box];
+        "Quality-reviewer DMs lead: approved" [shape=box];
     }
 
     "Lead: aggregate findings, update progress.md" [shape=box style=filled fillcolor=lightyellow];
     "More groups?" [shape=diamond];
     "Shutdown team, use finishing-branch" [shape=box style=filled fillcolor=lightgreen];
 
-    "Read plan, identify parallelism groups" -> "TeamCreate + spawn implementers + reviewer";
-    "TeamCreate + spawn implementers + reviewer" -> "Create tasks via TaskCreate with dependencies";
+    "Read plan, identify parallelism groups" -> "TeamCreate + spawn implementers + spec-reviewer + quality-reviewer";
+    "TeamCreate + spawn implementers + spec-reviewer + quality-reviewer" -> "Create tasks via TaskCreate with dependencies";
     "Create tasks via TaskCreate with dependencies" -> "Assign Group N tasks to available implementers";
     "Assign Group N tasks to available implementers" -> "Implementer works on task";
-    "Implementer works on task" -> "Implementer DMs reviewer";
-    "Implementer DMs reviewer" -> "Reviewer reviews (spec + quality)";
-    "Reviewer reviews (spec + quality)" -> "Issues found?";
-    "Issues found?" -> "Reviewer DMs implementer to fix" [label="yes"];
-    "Reviewer DMs implementer to fix" -> "Reviewer reviews (spec + quality)" [label="re-review\n(max 3 rounds)"];
-    "Issues found?" -> "Reviewer DMs lead: approved" [label="no"];
-    "Reviewer DMs lead: approved" -> "Lead: aggregate findings, update progress.md";
+    "Implementer works on task" -> "Implementer DMs spec-reviewer";
+    "Implementer DMs spec-reviewer" -> "Spec-reviewer reviews";
+    "Spec-reviewer reviews" -> "Spec issues?";
+    "Spec issues?" -> "Spec-reviewer DMs implementer to fix" [label="yes"];
+    "Spec-reviewer DMs implementer to fix" -> "Spec-reviewer reviews" [label="re-review\n(max 3 rounds)"];
+    "Spec issues?" -> "Spec-reviewer DMs lead: spec passed" [label="no"];
+    "Spec-reviewer DMs lead: spec passed" -> "Lead DMs quality-reviewer to review";
+    "Lead DMs quality-reviewer to review" -> "Quality-reviewer reviews";
+    "Quality-reviewer reviews" -> "Quality issues?";
+    "Quality issues?" -> "Quality-reviewer DMs implementer to fix" [label="yes"];
+    "Quality-reviewer DMs implementer to fix" -> "Quality-reviewer reviews" [label="re-review\n(max 3 rounds)"];
+    "Quality issues?" -> "Quality-reviewer DMs lead: approved" [label="no"];
+    "Quality-reviewer DMs lead: approved" -> "Lead: aggregate findings, update progress.md";
     "Lead: aggregate findings, update progress.md" -> "Plan Alignment Gate: re-read plan.md, verify group results";
     "Plan Alignment Gate: re-read plan.md, verify group results" -> "More groups?";
     "More groups?" -> "Assign Group N tasks to available implementers" [label="yes - next group"];
@@ -139,7 +156,7 @@ When extracting tasks from `plan.md` to send to implementer teammates:
 3. **Include cross-task constraints** — If `plan.md` or `design.md` has global constraints (shared interfaces, naming conventions, performance requirements), include them
 4. **Pass plan file paths** — Always mention that `.planning/plan.md` and `.planning/design.md` are available for cross-reference
 
-**Why:** The lead's extraction is the #1 source of plan drift. Verbatim copying + plan references let implementers and the reviewer independently verify against the source of truth.
+**Why:** The lead's extraction is the #1 source of plan drift. Verbatim copying + plan references let implementers and reviewers independently verify against the source of truth.
 
 ## Step-by-Step
 
@@ -168,13 +185,18 @@ Task(team_name="plan-execution", name="implementer-1", subagent_type="general-pu
 Task(team_name="plan-execution", name="implementer-2", subagent_type="general-purpose")
 ...
 
-# Spawn reviewer
-Task(team_name="plan-execution", name="reviewer", subagent_type="superpower-planning:code-reviewer")
+# Spawn spec-reviewer
+Task(team_name="plan-execution", name="spec-reviewer", subagent_type="superpower-planning:spec-reviewer")
+
+# Spawn quality-reviewer
+Task(team_name="plan-execution", name="quality-reviewer", subagent_type="superpower-planning:quality-reviewer")
 ```
 
 **Implementer teammate prompt:** Use `./implementer-teammate-prompt.md` template.
 
-**Reviewer teammate prompt:** Use `./reviewer-teammate-prompt.md` template.
+**Spec-reviewer teammate prompt:** Use `./spec-reviewer-teammate-prompt.md` template.
+
+**Quality-reviewer teammate prompt:** Use `./quality-reviewer-teammate-prompt.md` template.
 
 <EXTREMELY-IMPORTANT>
 **FIXED POOL — No New Implementers After Setup**
@@ -217,16 +239,24 @@ SendMessage: type="message", recipient="implementer-2", content="Please work on 
 
 **IMPORTANT:** Include the full task text in the message. Don't make teammates read the plan file.
 
-### Step 5: Monitor and Aggregate
+### Step 5: Monitor and Orchestrate Reviews
 
-As teammates complete tasks:
+As teammates complete tasks, the lead orchestrates the two-stage review flow:
 
-1. **Reviewer approves** → lead receives DM notification
-2. **Reviewer escalates** (after 3 rounds) → lead presents unresolved issues to user for decision
-3. **Reviewer reports plan drift** → lead corrects the task extraction and re-assigns with accurate requirements
-4. **Lead updates progress.md Dashboard** — mark task complete, note key outcome
-5. **Lead aggregates findings:** `${CLAUDE_PLUGIN_ROOT}/scripts/aggregate-agent-findings.sh "<role>" "Task N: <name>"`
-6. **Lead assigns next tasks** to the **same teammate that just finished** if unblocked tasks exist — reuse the existing implementer pool, NEVER spawn new ones
+1. **Implementer completes task** → DMs spec-reviewer with report
+2. **Spec-reviewer reviews** → if issues, DMs implementer to fix (max 3 rounds) → if passes, DMs lead
+3. **Lead receives spec pass** → DMs quality-reviewer to start quality review for this task
+4. **Quality-reviewer reviews** → if issues, DMs implementer to fix (max 3 rounds) → if passes, DMs lead
+5. **Lead receives quality pass** → task is approved
+
+**On escalation** (after 3 rounds without approval from either reviewer): lead presents unresolved issues to user for decision.
+
+**On plan drift** (spec-reviewer reports): lead corrects the task extraction and re-assigns with accurate requirements.
+
+**After approval:**
+- **Lead updates progress.md Dashboard** — mark task complete, note key outcome
+- **Lead aggregates findings:** `${CLAUDE_PLUGIN_ROOT}/scripts/aggregate-agent-findings.sh "<role>" "Task N: <name>"`
+- **Lead assigns next tasks** to the **same teammate that just finished** if unblocked tasks exist — reuse the existing implementer pool, NEVER spawn new ones
 
 ### Step 5.5: Plan Alignment Gate (After Each Parallelism Group)
 
@@ -259,7 +289,8 @@ Each **persistent teammate** maintains a single planning directory across all ta
 ```bash
 mkdir -p .planning/agents/implementer-1/
 mkdir -p .planning/agents/implementer-2/
-mkdir -p .planning/agents/reviewer/
+mkdir -p .planning/agents/spec-reviewer/
+mkdir -p .planning/agents/quality-reviewer/
 ```
 
 Implementers update the same `findings.md` and `progress.md` as they work on successive tasks. This keeps context continuous rather than fragmented across per-task folders.
@@ -269,7 +300,8 @@ Implementers update the same `findings.md` and `progress.md` as they work on suc
 ## Prompt Templates
 
 - `./implementer-teammate-prompt.md` — Initial prompt for spawning implementer teammates
-- `./reviewer-teammate-prompt.md` — Initial prompt for spawning the reviewer teammate
+- `./spec-reviewer-teammate-prompt.md` — Initial prompt for spawning the spec-reviewer teammate
+- `./quality-reviewer-teammate-prompt.md` — Initial prompt for spawning the quality-reviewer teammate
 
 ## Example Workflow
 
@@ -281,7 +313,7 @@ You: I'm using Team-Driven Development to execute this plan.
 [MAX_PARALLEL = 3]
 
 [TeamCreate: "plan-execution"]
-[Spawn: implementer-1, implementer-2, implementer-3, reviewer]
+[Spawn: implementer-1, implementer-2, implementer-3, spec-reviewer, quality-reviewer]
 [Create all 6 tasks via TaskCreate with group dependencies]
 
 === Group A (parallel) ===
@@ -293,17 +325,26 @@ You: I'm using Team-Driven Development to execute this plan.
 [implementer-2 working on Task 2...]
 [implementer-3 working on Task 3...]
 
-implementer-2 → reviewer: "Task 2 done. [report]"
-reviewer → implementer-2: "Missing error handling for edge case X"
+implementer-2 → spec-reviewer: "Task 2 done. [report]"
+spec-reviewer → implementer-2: "Missing error handling for edge case X (spec requires it)"
 implementer-2: fixes issue
-implementer-2 → reviewer: "Fixed. [updated report]"
-reviewer → lead: "Task 2 approved"
+implementer-2 → spec-reviewer: "Fixed. [updated report]"
+spec-reviewer → lead: "Task 2 spec review passed"
+lead → quality-reviewer: "Please review Task 2 for code quality"
+quality-reviewer → lead: "Task 2 quality review passed"
 
-implementer-1 → reviewer: "Task 1 done. [report]"
-reviewer → lead: "Task 1 approved"
+implementer-1 → spec-reviewer: "Task 1 done. [report]"
+spec-reviewer → lead: "Task 1 spec review passed"
+lead → quality-reviewer: "Please review Task 1 for code quality"
+quality-reviewer → implementer-1: "Magic number on line 42, extract constant"
+implementer-1: fixes
+implementer-1 → quality-reviewer: "Fixed."
+quality-reviewer → lead: "Task 1 quality review passed"
 
-implementer-3 → reviewer: "Task 3 done. [report]"
-reviewer → lead: "Task 3 approved"
+implementer-3 → spec-reviewer: "Task 3 done. [report]"
+spec-reviewer → lead: "Task 3 spec review passed"
+lead → quality-reviewer: "Please review Task 3 for code quality"
+quality-reviewer → lead: "Task 3 quality review passed"
 
 [Lead: aggregate findings, update progress.md, unblock Group B]
 
@@ -317,7 +358,7 @@ reviewer → lead: "Task 3 approved"
 === Group C ===
 
 [Assign Task 6 → implementer-1]
-... reviewer approves ...
+... spec-reviewer approves, quality-reviewer approves ...
 
 [All tasks complete]
 [Shutdown team]
@@ -331,17 +372,18 @@ reviewer → lead: "Task 3 approved"
 | Parallelism | Serial only | Parallel within groups |
 | Context lifetime | One-shot (dies after task) | Persistent (survives across tasks) |
 | Context limit | Shares parent's limit | Own full context window |
-| Review | New reviewer subagent per task | Persistent reviewer teammate |
-| Communication | Through lead only | Peer DM (implementer ↔ reviewer) |
+| Review model | Two-stage: new spec + quality subagent per task | Two-stage: persistent spec-reviewer + quality-reviewer teammates |
+| Communication | Through lead only | Peer DM (implementer ↔ reviewers) |
 | Cost | Lower (serial execution) | Higher (parallel agents) |
 | Best for | Light serial tasks | Heavy tasks, parallelizable work |
 
 ## Red Flags
 
 **Never:**
-- **Skip the reviewer for any task — this is the #1 rule. NO EXCEPTIONS. Every task MUST be reviewed (spec + quality) before it can be marked complete.**
+- **Skip either reviewer for any task — this is the #1 rule. NO EXCEPTIONS. Every task MUST pass both spec review and quality review before it can be marked complete.**
+- **Start quality review before spec review passes** — spec compliance is a prerequisite for quality review.
 - **Create new implementers after initial setup** — the implementer pool is fixed at Step 2. If all are busy, WAIT. Never spawn `implementer-task6`, `implementer-taskN`, or any ad-hoc implementer.
-- Loop reviews more than 3 rounds without escalating to the user
+- Loop reviews more than 3 rounds per stage without escalating to the user
 - Assign two implementers to tasks that edit the same files
 - Let implementers communicate directly with each other (use lead as coordinator for cross-task concerns)
 - Proceed to next group before current group is fully reviewed and approved
