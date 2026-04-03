@@ -23,7 +23,27 @@ Every project goes through this process. A todo list, a single-function utility,
 
 You MUST create a task for each of these items and complete them in order:
 
-1. **Explore project context** — check files, docs, recent commits. Save initial findings (project structure, relevant patterns, constraints discovered) to `.planning/findings.md`. Also check `.planning/archive/*.md` for relevant historical archives — if found, read related archives and note relevant Key Decisions and Lessons Learned in `.planning/findings.md` under a `## Historical Context` section.
+1. **Explore project context (Iterative Retrieval)** — don't just scan files once. Use a structured loop to progressively discover relevant context:
+
+   **Cycle 1 — Broad Sweep:**
+   - Scan project structure (Glob for key directories and file patterns)
+   - Search for keywords related to the user's request (Grep)
+   - Read project docs, README, CLAUDE.md, recent commits
+   - Check `.planning/archive/*.md` for relevant historical archives — if found, read related archives and note relevant Key Decisions and Lessons Learned under a `## Historical Context` section
+   - Save initial findings to `.planning/findings.md`
+
+   **Evaluate & Identify Gaps:**
+   - Score each discovered file/component: **High** (directly implements target functionality), **Medium** (contains related patterns or types), **Low** (tangentially related — exclude from further exploration)
+   - Identify missing context: "What do I still not understand about how this will integrate?"
+   - Note terminology the codebase actually uses (it may differ from the user's request wording)
+
+   **Cycle 2–3 — Targeted Refinement (only if gaps remain):**
+   - Search using codebase-native terminology discovered in previous cycles
+   - Follow imports, type definitions, and call chains from high-relevance files
+   - Read complete implementations of the most relevant files (not just grep snippets)
+   - Update `.planning/findings.md` with new discoveries after each cycle (2-Action Rule)
+
+   **Stop when:** 3+ high-relevance files identified AND no critical context gaps remain, OR 3 cycles completed. Don't over-explore — 3 deeply understood files beats 10 skimmed ones.
 2. **Scope check** — before refining details, determine whether the request actually describes multiple independent subsystems. If yes, propose decomposition first.
 3. **Ask clarifying questions** — ask one question at a time via `AskUserQuestion` to understand purpose, constraints, success criteria. Record key user answers and decisions to `.planning/findings.md`.
 4. **Propose 2-3 approaches** — with trade-offs and your recommendation, presented via `AskUserQuestion` for user to choose.
@@ -139,6 +159,7 @@ After the self-review, ask the user to review the written spec before proceeding
 - **Multiple choice preferred** — easier to answer than open-ended when possible
 - **YAGNI ruthlessly** — remove unnecessary features from all designs
 - **Evidence-first** — every design decision needs evidence (data, benchmarks, analysis, references). No evidence yet? Mark `[NEEDS-EVIDENCE]` and move on — don't block, don't silently assume
+- **Iterative retrieval** — start broad, evaluate relevance, refine search terms using codebase-native terminology, repeat (max 3 cycles). Stop at "good enough" — depth over breadth
 - **Explore alternatives** — always propose 2-3 approaches before settling
 - **Incremental validation** — present design, get approval before moving on
 - **Be flexible** — go back and clarify when something doesn't make sense
