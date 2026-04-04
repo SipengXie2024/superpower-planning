@@ -22,17 +22,6 @@
         ]
       }
     ],
-    "PreToolUse": [
-      {
-        "matcher": "Bash|Write|Edit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/attention-refocus.sh"
-          }
-        ]
-      }
-    ],
     "Stop": [
       {
         "matcher": "",

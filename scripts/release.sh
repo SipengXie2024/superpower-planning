@@ -20,9 +20,12 @@ VERSION="${1:?Usage: release.sh <version> <changelog>}"
 CHANGELOG="${2:?Usage: release.sh <version> <changelog>}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
-PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
-PLUGIN_JSON="${PLUGIN_ROOT}/.claude-plugin/plugin.json"
-MARKETPLACE_JSON="${PLUGIN_ROOT}/.claude-plugin/marketplace.json"
+REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)" || {
+    echo "Error: must be run from within a git repository" >&2
+    exit 1
+}
+PLUGIN_JSON="${REPO_ROOT}/.claude-plugin/plugin.json"
+MARKETPLACE_JSON="${REPO_ROOT}/.claude-plugin/marketplace.json"
 
 # Validate version format
 if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
@@ -41,7 +44,7 @@ done
 echo "Releasing v${VERSION}..."
 
 # Detect base branch
-BASE_BRANCH=$("${SCRIPT_DIR}/detect-base-branch.sh" "$PLUGIN_ROOT")
+BASE_BRANCH=$("${SCRIPT_DIR}/detect-base-branch.sh" "$REPO_ROOT")
 
 # 1. Update plugin.json
 TMPFILE=$(mktemp)
@@ -54,13 +57,13 @@ jq --arg v "$VERSION" '.plugins[0].version = $v' "$MARKETPLACE_JSON" > "$TMPFILE
 echo "  Updated marketplace.json"
 
 # 3. Commit
-git -C "$PLUGIN_ROOT" add "$PLUGIN_JSON" "$MARKETPLACE_JSON"
-git -C "$PLUGIN_ROOT" commit -m "chore: bump version to ${VERSION}"
+git -C "$REPO_ROOT" add "$PLUGIN_JSON" "$MARKETPLACE_JSON"
+git -C "$REPO_ROOT" commit -m "chore: bump version to ${VERSION}"
 echo "  Committed version bump"
 
 # 4. Tag and push
-git -C "$PLUGIN_ROOT" tag "v${VERSION}"
-git -C "$PLUGIN_ROOT" push origin "$BASE_BRANCH" --tags
+git -C "$REPO_ROOT" tag "v${VERSION}"
+git -C "$REPO_ROOT" push origin "$BASE_BRANCH" --tags
 echo "  Pushed commit and tag v${VERSION}"
 
 # 5. Create GitHub Release
