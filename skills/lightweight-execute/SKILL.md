@@ -34,7 +34,7 @@ digraph when_to_use {
 | Planning | Task checklist in `progress.md` | Design doc + formal plan in `.planning/` |
 | Review loops | None (self-review only) | Two-stage per-task (spec + quality) |
 | Execution | Direct in current session | Subagent-driven, team-driven, or batch |
-| Subagents | None | Fresh subagent per task or agent team |
+| Subagents | None | One new subagent invocation per task or agent team |
 | `.planning/` | Yes | Yes |
 | TDD | Yes | Yes |
 | Verification | Yes | Yes |

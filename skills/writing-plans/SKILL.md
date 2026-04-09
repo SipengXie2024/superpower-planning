@@ -213,7 +213,7 @@ After saving the plan and completing the self-review, you MUST present exactly t
 
 **Use `AskUserQuestion` with these exact options:**
 
-**1. Subagent-Driven (this session, sequential)** — Fresh subagent per task, two-stage review, serial execution. Best for light tasks with serial dependencies.
+**1. Subagent-Driven (this session, sequential)** — One new subagent invocation per task, two-stage review, serial execution. Best for light tasks with serial dependencies.
 
 **2. Team-Driven (this session, parallel)** — Agent Team with parallel implementers + dedicated reviewer. Best when tasks are heavy or parallelizable. Also prevents context-limit crashes on complex tasks.
 
@@ -229,7 +229,7 @@ Include your recommendation in the question text based on the logic below, but n
 **If Subagent-Driven chosen:**
 - **REQUIRED SUB-SKILL:** Use `superpower-planning:subagent-driven`
 - Stay in this session
-- Fresh subagent per task + code review
+- One new subagent invocation per task + code review
 
 **If Team-Driven chosen:**
 - **REQUIRED SUB-SKILL:** Use `superpower-planning:team-driven`

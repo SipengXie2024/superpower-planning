@@ -5,9 +5,9 @@ description: Use when executing implementation plans with independent tasks in t
 
 # Subagent-Driven Development
 
-Execute plan by dispatching fresh subagent per task, with two-stage review after each: spec compliance review first, then code quality review. Each subagent gets its own planning directory for structured knowledge capture.
+Execute plan by dispatching one new subagent invocation per task, with two-stage review after each: spec compliance review first, then code quality review. Each subagent gets its own planning directory for structured knowledge capture.
 
-**Core principle:** Fresh subagent per task + per-agent planning dir + two-stage review (spec then quality) = high quality, fast iteration
+**Core principle:** One new subagent invocation per task + per-agent planning dir + two-stage review (spec then quality) = high quality, fast iteration
 
 **Announce at start:** "I'm using the subagent-driven skill to execute this plan."
 
@@ -63,7 +63,7 @@ digraph when_to_use {
 
 **vs. Executing Plans (parallel session):**
 - Same session (no context switch)
-- Fresh subagent per task (no context pollution)
+- One new subagent invocation per task (no context pollution)
 - Per-agent planning directories (structured knowledge capture)
 - Two-stage review after each task: spec compliance first, then code quality
 - Faster iteration (no human-in-loop between tasks)

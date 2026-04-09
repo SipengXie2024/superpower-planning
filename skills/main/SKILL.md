@@ -85,7 +85,7 @@ When the user requests plan execution (e.g., "execute the plan", "implement it",
 | `superpower-planning:spec-interview` | Refine design docs through systematic deep questioning. Auto-invoked after brainstorming. |
 | `superpower-planning:writing-plans` | Write detailed implementation plans with phases and checkpoints. |
 | `superpower-planning:executing-plans` | Execute plans in a **separate session** with batch execution and human checkpoints. One of 3 execution strategies — see Execution Routing. |
-| `superpower-planning:subagent-driven` | Execute plans in **this session, sequentially** via fresh subagents with two-stage review. One of 3 execution strategies — see Execution Routing. |
+| `superpower-planning:subagent-driven` | Execute plans in **this session, sequentially** with one new subagent invocation per task and two-stage review. One of 3 execution strategies — see Execution Routing. |
 | `superpower-planning:team-driven` | Execute plans in **this session, in parallel** via Agent Team with dedicated reviewer. One of 3 execution strategies — see Execution Routing. |
 | `superpower-planning:parallel-agents` | Run multiple subagents in parallel for independent tasks. |
 | `superpower-planning:tdd` | Test-driven development: write tests first, then make them pass. |

@@ -13,7 +13,7 @@ Before invoking any execution skill, you MUST:
 
 4. **Present the execution strategy** — Use `AskUserQuestion` with exactly these three options:
 
-   **1. Subagent-Driven (this session, sequential)** — Fresh subagent per task, two-stage review, serial execution. Best for light tasks with serial dependencies.
+   **1. Subagent-Driven (this session, sequential)** — One new subagent invocation per task, two-stage review, serial execution. Best for light tasks with serial dependencies.
 
    **2. Team-Driven (this session, parallel)** — Agent Team with parallel implementers + dedicated reviewer. Best when tasks are heavy or parallelizable.
 
