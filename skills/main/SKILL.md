@@ -70,10 +70,11 @@ When the user requests plan execution (e.g., "execute the plan", "implement it",
 
 1. If no plan exists at `.planning/plan.md`, invoke `superpower-planning:writing-plans` first.
 2. If a plan exists, present the execution strategy choice via `AskUserQuestion`:
-   - **Subagent-Driven** (this session, sequential) → `superpower-planning:subagent-driven`
+   - **Subagent-Driven** (this session, sequential, Claude subagents) → `superpower-planning:subagent-driven`
+   - **Subagent-Driven Codex** (this session, sequential, Codex CLI executors) → `superpower-planning:subagent-driven-codex`
    - **Team-Driven** (this session, parallel) → `superpower-planning:team-driven`
    - **Parallel Session** (separate session) → `superpower-planning:executing-plans`
-3. Recommend based on: high parallelism + heavy tasks → Team-Driven; light serial → Subagent-Driven; manual checkpoints → Parallel Session.
+3. Recommend based on: high parallelism + heavy tasks → Team-Driven; light serial with Claude subagents → Subagent-Driven; light serial where you want a second model writing the code and reviewing → Subagent-Driven Codex; manual checkpoints → Parallel Session.
 
 ## Available Skills
 
@@ -84,9 +85,11 @@ When the user requests plan execution (e.g., "execute the plan", "implement it",
 | `superpower-planning:brainstorming` | Structured brainstorming before implementation. Think before you code. |
 | `superpower-planning:spec-interview` | Refine design docs through systematic deep questioning. Auto-invoked after brainstorming. |
 | `superpower-planning:writing-plans` | Write detailed implementation plans with phases and checkpoints. |
-| `superpower-planning:executing-plans` | Execute plans in a **separate session** with batch execution and human checkpoints. One of 3 execution strategies — see Execution Routing. |
-| `superpower-planning:subagent-driven` | Execute plans in **this session, sequentially** with one new subagent invocation per task and two-stage review. One of 3 execution strategies — see Execution Routing. |
-| `superpower-planning:team-driven` | Execute plans in **this session, in parallel** via Agent Team with dedicated reviewer. One of 3 execution strategies — see Execution Routing. |
+| `superpower-planning:executing-plans` | Execute plans in a **separate session** with batch execution and human checkpoints. One of 4 execution strategies — see Execution Routing. |
+| `superpower-planning:subagent-driven` | Execute plans in **this session, sequentially** with one new Claude subagent invocation per task and two-stage review. One of 4 execution strategies — see Execution Routing. |
+| `superpower-planning:subagent-driven-codex` | Execute plans in **this session, sequentially** by delegating every implementer/reviewer role to **Codex CLI** via the bridge script. Same two-stage review as `subagent-driven`. One of 4 execution strategies — see Execution Routing. |
+| `superpower-planning:team-driven` | Execute plans in **this session, in parallel** via Agent Team with dedicated reviewer. One of 4 execution strategies — see Execution Routing. |
+| `superpower-planning:collaborating-with-codex` | Bridge to OpenAI Codex CLI for delegating coding work — prototyping, debugging, code analysis, or full implementation. Required by `subagent-driven-codex`. |
 | `superpower-planning:parallel-agents` | Run multiple subagents in parallel for independent tasks. |
 | `superpower-planning:tdd` | Test-driven development: write tests first, then make them pass. |
 | `superpower-planning:debugging` | Systematic debugging: reproduce, isolate, fix, verify. |

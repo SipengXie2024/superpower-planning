@@ -29,7 +29,7 @@ All workflows share a `.planning/` directory in your project root containing:
 - `archive/` — completed work summaries, lessons learned, and historical context for future tasks
 - `stash/` — paused unfinished work snapshots for later resume
 
-## Skills (21)
+## Skills (23)
 
 | Skill | Description |
 |-------|-------------|
@@ -46,8 +46,10 @@ All workflows share a `.planning/` directory in your project root containing:
 | **requesting-review** | Requests code review with structured context, plan alignment, and severity handling. |
 | **receiving-review** | Technical rigor when processing review feedback. |
 | **parallel-agents** | Dispatches independent tasks to concurrent subagents. |
-| **subagent-driven** | Executes plan tasks via subagents in-session (sequential) with two-stage review. |
+| **subagent-driven** | Executes plan tasks via Claude subagents in-session (sequential) with two-stage review. |
+| **subagent-driven-codex** | Executes plan tasks via **Codex CLI** in-session (sequential) with the same two-stage review. Every implementer and reviewer role goes through the bridge script. |
 | **team-driven** | Executes plan tasks via Agent Team for parallel execution and context resilience. |
+| **collaborating-with-codex** | Bridge to OpenAI Codex CLI for delegating bounded coding work, debugging, or analysis. Provides the `codex_bridge.py` script used by `subagent-driven-codex`. |
 | **git-worktrees** | Isolated feature work via git worktrees. |
 | **finishing-branch** | Guides merge, PR, cleanup, and archive reminder after implementation. |
 | **archiving** | Archives completed plans, consolidates memory, and resets `.planning/` for the next task. |
@@ -84,6 +86,7 @@ All workflows share a `.planning/` directory in your project root containing:
 |------|---------|----------|
 | `jq` | PreToolUse dashboard hook, `release.sh` | Dashboard hook silently degrades; `release.sh` exits with error |
 | `gh` | `release.sh` | Exits with error if missing |
+| `codex` CLI | `collaborating-with-codex`, `subagent-driven-codex` | Both skills are unusable without the Codex CLI on PATH |
 
 ## Lifecycle Model
 
@@ -105,7 +108,7 @@ When resuming a stash, the workflow explicitly checks whether saved findings are
 - `.planning/` is long-lived working memory, not a temporary scratchpad
 - `archive/` preserves historical context across sessions
 - `stash/` supports switching between unfinished projects safely
-- execution routing remains explicit: **Subagent-Driven**, **Team-Driven**, or **Parallel Session**
+- execution routing remains explicit: **Subagent-Driven** (Claude), **Subagent-Driven Codex** (Codex CLI), **Team-Driven**, or **Parallel Session**
 - specs and plans are now both guarded by review loops before execution proceeds
 
 ## License
