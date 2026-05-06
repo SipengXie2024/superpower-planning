@@ -1,6 +1,6 @@
 ---
 name: subagent-driven
-description: Use when executing implementation plans with independent tasks in the current session
+description: Use when executing an implementation plan in this session, sequentially, dispatching one Claude subagent per task with two-stage review.
 ---
 
 # Subagent-Driven Development

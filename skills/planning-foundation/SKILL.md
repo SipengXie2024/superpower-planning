@@ -1,6 +1,6 @@
 ---
 name: planning-foundation
-description: Use when starting complex multi-step tasks, research projects, or any task requiring >5 tool calls. Foundation layer inherited by all other skills — provides persistent .planning/ directory as working memory on disk.
+description: Use when starting complex multi-step tasks, research projects, or anything needing >5 tool calls. Provides the persistent .planning/ directory used as on-disk working memory across sessions.
 ---
 
 # Planning Foundation

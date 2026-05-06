@@ -1,6 +1,6 @@
 ---
 name: session-handoff-audit
-description: Generate a self-contained audit prompt for a fresh session to independently verify the implementation state of a long-running project. Use whenever the user asks to "start a new session", "hand off to next session", "audit what we've done", "verify implementation state", "check for drift", "防止幻觉", "跨会话交接", "核实实现状态", "新会话审计", "生成交接提示词", or is wrapping up a long development session and wants a fresh context-free session to independently verify the work against design specs. Trigger proactively after multi-commit implementation sessions where hallucination risk is high, even if user only says "下一个会话怎么接". Generates a copy-paste prompt; does NOT perform the audit itself.
+description: Use when wrapping up a long multi-commit session, handing off to a new session, or the user asks to "audit what we've done", "verify implementation state", "check for drift", "防止幻觉", or "跨会话交接". Generates a self-contained prompt that a fresh, context-free session uses to independently verify the work against design specs. Generates the prompt only — does not perform the audit itself.
 ---
 
 # Session Handoff Audit Prompt Generator

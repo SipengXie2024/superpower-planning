@@ -1,6 +1,6 @@
 ---
 name: dual-review
-description: Run `simplify` (reuse/quality/efficiency lens) and Codex (external second opinion via collaborating-with-codex) in parallel to review recent code changes, consolidate both reports, then block on explicit user approval before any edits. Use whenever the user asks for "dual review", "simplify + codex review", "double check", "review before commit", wants two independent perspectives on a change, or asks to review code with both internal heuristics and an external model. Especially useful before risky merges, refactors, or when the user distrusts a single reviewer's judgment.
+description: Use when the user asks for a "dual review", "double check", "second opinion", "review before commit/merge", or wants two independent reads on a code change. Runs an internal simplify lens and Codex in parallel review-only, then gates every edit on explicit user approval.
 ---
 
 # Dual Review (simplify + codex)

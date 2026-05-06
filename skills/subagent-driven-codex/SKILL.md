@@ -1,6 +1,6 @@
 ---
 name: subagent-driven-codex
-description: Use when executing implementation plans in this session, sequentially, by delegating every implementer and reviewer role to Codex CLI (instead of Claude subagents). Same two-stage review and per-agent planning dirs as `subagent-driven`, but every dispatch goes through the Codex bridge.
+description: Use when executing an implementation plan in this session, sequentially, by routing every implementer and reviewer dispatch through Codex CLI instead of Claude subagents. Two-stage review per task.
 ---
 
 # Subagent-Driven Development (Codex Variant)
