@@ -99,8 +99,19 @@ When the user requests plan execution (e.g., "execute the plan", "implement it",
 | `superpower-planning:stashing` | Pause unfinished work, save it into `.planning/stash/`, and support later resume with stale-findings check. |
 | `superpower-planning:requesting-review` | Prepare and submit code for review with context and rationale. |
 | `superpower-planning:receiving-review` | Process review feedback systematically and address all comments. |
+| `superpower-planning:dual-review` | Run an internal simplify lens and Codex in parallel, consolidate findings, and gate edits on explicit user approval. |
 | `superpower-planning:verification` | Verify work is complete and correct before declaring done. |
+| `superpower-planning:session-handoff-audit` | Generate a self-contained audit prompt for a fresh session to independently verify implementation state against design specs. |
 | `superpower-planning:releasing` | Bump versions, tag, and publish GitHub Releases with changelogs. |
+
+## Review Routing
+
+- When the user asks for a "dual review", "double check", "second opinion", "review before commit", or wants two independent perspectives on a change → `superpower-planning:dual-review`
+- For single-reviewer flows tied to plan execution → use `requesting-review` / `receiving-review` as before
+
+## Session Handoff
+
+- When wrapping up a long, multi-commit session, transitioning to a new session, or the user wants an independent verification of implementation state ("audit what we've done", "防止幻觉", "新会话审计") → `superpower-planning:session-handoff-audit`. It generates the prompt; it does not perform the audit.
 
 ## Stash / Resume Routing
 

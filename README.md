@@ -11,6 +11,14 @@ A unified Claude Code plugin that combines persistent file-based planning with s
 
 Then restart Claude Code.
 
+### Optional companion plugin
+
+`dual-review` prefers the `code-simplifier:code-simplifier` agent for its internal "simplify" review lens. If that plugin is installed, `dual-review` uses it directly; otherwise it falls back to a `general-purpose` subagent with an inlined simplify-style prompt. Install it for slightly sharper reuse/quality findings:
+
+```bash
+/plugin install code-simplifier
+```
+
 ## What It Does
 
 This plugin gives Claude Code a disciplined workflow system. Instead of jumping straight into code, it enforces structured phases:
@@ -29,7 +37,7 @@ All workflows share a `.planning/` directory in your project root containing:
 - `archive/` — completed work summaries, lessons learned, and historical context for future tasks
 - `stash/` — paused unfinished work snapshots for later resume
 
-## Skills (23)
+## Skills (24)
 
 | Skill | Description |
 |-------|-------------|
@@ -45,6 +53,8 @@ All workflows share a `.planning/` directory in your project root containing:
 | **verification** | Evidence-based completion checks before claiming "done". |
 | **requesting-review** | Requests code review with structured context, plan alignment, and severity handling. |
 | **receiving-review** | Technical rigor when processing review feedback. |
+| **dual-review** | Runs an internal simplify lens and Codex in parallel review-only, consolidates findings, then gates edits on explicit user approval. |
+| **session-handoff-audit** | Generates a self-contained audit prompt for a fresh session to independently verify implementation state against design specs. |
 | **parallel-agents** | Dispatches independent tasks to concurrent subagents. |
 | **subagent-driven** | Executes plan tasks via Claude subagents in-session (sequential) with two-stage review. |
 | **subagent-driven-codex** | Executes plan tasks via **Codex CLI** in-session (sequential) with the same two-stage review. Every implementer and reviewer role goes through the bridge script. |
