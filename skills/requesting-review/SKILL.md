@@ -5,9 +5,11 @@ description: Use when completing plan-driven tasks, implementing major features,
 
 # Requesting Code Review
 
-Dispatch `superpower-planning:code-reviewer` subagent to catch issues before they cascade.
+Dispatch `superpower-planning:code-reviewer` before defects or plan drift compound.
 
 **Core principle:** Review early, review often.
+
+This skill defines when review is required and what context must be sent. The authoritative detailed reviewer contract lives in `skills/requesting-review/code-reviewer.md`. Do not maintain competing detailed review checklists elsewhere.
 
 ## When to Request Review
 
@@ -18,60 +20,55 @@ Dispatch `superpower-planning:code-reviewer` subagent to catch issues before the
 - When implementation may have drifted from the approved plan
 
 **Optional but valuable:**
-- When stuck (fresh perspective)
-- Before refactoring (baseline check)
+- When stuck and a fresh technical read would help
+- Before refactoring
 - After fixing a complex bug
-- After making architecture-affecting changes
+- After architecture-affecting changes
 
-## Review Priorities
+## What Every Review Must Cover
 
-Every requested review should explicitly cover:
-1. **Plan alignment** — does the implementation match the approved plan/spec?
-2. **Code quality** — error handling, maintainability, naming, structure, tests
-3. **Architecture** — boundaries, coupling, integration, unnecessary complexity
-4. **Documentation and standards** — comments/docs/conventions where relevant
+Every review request must ask for:
+1. **Plan/spec alignment** — compare the implementation against the approved task, plan, or requirements
+2. **Code quality** — error handling, maintainability, naming, structure, and tests
+3. **Architecture** — boundaries, coupling, integration, and unnecessary complexity
+4. **Documentation and standards** — only where relevant
 5. **Severity semantics** — Critical / Important / Minor
 
-## Standard Dispatch Template
+## Required Review Context
 
-Use the detailed template at `skills/requesting-review/code-reviewer.md`, but gather the following inputs first.
+The review request must be diff-bounded and include:
+- `{WHAT_WAS_IMPLEMENTED}`
+- `{PLAN_OR_REQUIREMENTS}`
+- `{BASE_SHA}`
+- `{HEAD_SHA}`
+- `{DESCRIPTION}`
 
-### Required Inputs
-- `{WHAT_WAS_IMPLEMENTED}` — what was just built
-- `{PLAN_OR_REQUIREMENTS}` — task text, plan section, or approved requirements
-- `{BASE_SHA}` — start of the diff range
-- `{HEAD_SHA}` — end of the diff range
-- `{DESCRIPTION}` — brief summary of the change set
+When a plan or spec file exists, also provide:
+- `PLAN_PATH`
+- `SPEC_PATH`
+- exact task number or task heading
+- `REVIEW_MODE`
+- `FOCUS` when a specific check deserves extra attention
 
-### Recommended Inputs
-- plan file path
-- spec file path
-- task number / task heading
-- whether this is an intermediate task review or final implementation review
+Local policy: prefer exact plan/spec file paths and task text over paraphrased summaries. Do not weaken review context to a generic request.
 
 ## How to Request
 
-### 1. Get git SHAs
+### 1. Get the review range
 ```bash
 BASE_SHA=$(git rev-parse HEAD~1)  # or origin/main / last reviewed commit
 HEAD_SHA=$(git rev-parse HEAD)
 ```
 
-### 2. Dispatch code-reviewer subagent
+### 2. Fill the single source-of-truth template
 
-Use Task tool with `superpower-planning:code-reviewer` and fill the template at `skills/requesting-review/code-reviewer.md`.
+Use `skills/requesting-review/code-reviewer.md` as the request body and replace its placeholders with the current change context.
 
-### 3. Minimum Dispatch Shape
+### 3. Dispatch the reviewer
 
-```text
-WHAT_WAS_IMPLEMENTED: [brief statement]
-PLAN_OR_REQUIREMENTS: [exact task text / plan section / requirements]
-BASE_SHA: [sha]
-HEAD_SHA: [sha]
-DESCRIPTION: [brief summary]
-```
+Dispatch `superpower-planning:code-reviewer` with the filled template. If the environment routes through `agents/code-reviewer.md`, treat that file as a compatibility entrypoint only; the detailed review contract still comes from `skills/requesting-review/code-reviewer.md`.
 
-### 4. Preferred Dispatch Shape
+### Canonical Request Shape
 
 ```text
 WHAT_WAS_IMPLEMENTED: Task 3 - verification and repair functions
@@ -89,91 +86,47 @@ FOCUS: plan alignment, tests, error handling
 
 ### Critical
 - Must fix before proceeding or merging
-- Includes broken functionality, data loss risk, security issues, severe requirement misses
+- Includes broken functionality, data loss risk, security issues, or severe requirement misses
 
 ### Important
 - Should fix before proceeding when practical
-- Includes architecture gaps, weak tests, bad error handling, missing requirement edges
+- Includes architecture gaps, weak tests, bad error handling, or missing requirement edges
 
 ### Minor
 - Nice to have
-- Includes readability, polish, documentation cleanup, non-blocking refactors
+- Includes readability, polish, documentation cleanup, or non-blocking refactors
 
 ## Acting on Feedback
 
-1. Fix **Critical** issues immediately
-2. Fix **Important** issues before proceeding unless you have a strong technical reason not to
-3. Note **Minor** issues for later if time-sensitive
-4. If reviewer is wrong, push back with reasoning and evidence
-5. If reviewer identifies plan drift, either:
-   - fix implementation to match the plan, or
+1. Fix **Critical** issues immediately.
+2. Fix **Important** issues before proceeding unless there is strong technical evidence not to.
+3. Note **Minor** issues for later if time-sensitive.
+4. Push back when the reviewer is wrong; use code, tests, or requirements as evidence.
+5. If review finds plan/spec drift, either:
+   - fix the implementation to match the plan, or
    - explicitly update the plan/spec if the deviation is justified
 
 ## After Review Results
 
-- **Append review outcome** (approved / changes-requested, issues fixed, issues deferred) to `.planning/progress.md` session log
-- **Append technical insights** (patterns learned, architectural feedback worth remembering) to `.planning/findings.md` under `## Code Review Findings`
-- If the review surfaced plan/spec drift, record that explicitly in `.planning/findings.md`
-
-## Example
-
-```text
-[Just completed Task 2: Add verification function]
-
-You: Let me request code review before proceeding.
-
-BASE_SHA=$(git log --oneline | grep "Task 1" | head -1 | awk '{print $1}')
-HEAD_SHA=$(git rev-parse HEAD)
-
-[Dispatch superpower-planning:code-reviewer subagent]
-  WHAT_WAS_IMPLEMENTED: Verification and repair functions for conversation index
-  PLAN_OR_REQUIREMENTS: Task 2 from .planning/plan.md
-  PLAN_PATH: .planning/plan.md
-  SPEC_PATH: .planning/design.md
-  BASE_SHA: a7981ec
-  HEAD_SHA: 3df7661
-  DESCRIPTION: Added verifyIndex() and repairIndex() with 4 issue types
-  REVIEW_MODE: intermediate task review
-  FOCUS: plan alignment, tests, error handling
-
-[Subagent returns]:
-  Strengths: Clean architecture, real tests
-  Issues:
-    Important: Missing progress indicators
-    Minor: Magic number (100) for reporting interval
-  Assessment: Ready to proceed with fixes
-
-You: [Fix progress indicators]
-[Continue to Task 3]
-```
+- Append review outcome (approved / changes-requested, issues fixed, issues deferred) to `.planning/progress.md`
+- Append durable technical insights to `.planning/findings.md`
+- If the review surfaced plan/spec drift, record that explicitly
 
 ## Integration with Workflows
 
 **Subagent-Driven:**
 - Review after each task
-- Use review output as a hard quality gate before marking task complete
+- Use review output as a hard gate before marking the task complete
 
-**Executing Plans:**
-- Review after each batch or major milestone
-- Apply fixes before continuing
-
-**Ad-Hoc Development:**
-- Review before merge
-- Review when stuck
+**Executing Plans / Ad-Hoc Development:**
+- Review after each major milestone or before merge
+- Apply required fixes before continuing
 
 ## Red Flags
 
 **Never:**
-- Skip review because "it's simple"
+- Skip review because "it’s simple"
 - Ignore Critical issues
-- Proceed with unfixed Important issues casually
-- Ask for review without giving plan/requirements context
-- Treat code review as style-only; plan alignment matters too
-
-**If reviewer seems wrong:**
-- Push back with technical reasoning
-- Show code/tests that prove it works
-- Request clarification
-- Update plan/spec if the implementation is intentionally better than the original plan
-
-See template at: `skills/requesting-review/code-reviewer.md`
+- Proceed casually with unfixed Important issues
+- Request review without plan/requirements context
+- Treat review as style-only; plan alignment matters

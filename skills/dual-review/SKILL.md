@@ -103,8 +103,7 @@ Bash({
   command: """
 python3 "${PLUGIN_ROOT}/skills/collaborating-with-codex/scripts/codex_bridge.py" \\
   --cd "<absolute project root>" \\
-  --sandbox read-only \\
-  --PROMPT "REVIEW-ONLY. Do not propose a patch — return findings only.
+  --PROMPT "REVIEW-ONLY MODE. Do NOT edit, write, or commit any files. Return findings only; do not propose or apply a patch.
 
 Scope to review:
 <same list / range as simplify>
@@ -116,14 +115,14 @@ Output format:
 - Each entry: file:line + what + why
 - If nothing to flag, say 'No issues'
 
-Under 400 words."
+Under 400 words. Stay in scope."
 """,
   run_in_background: true,
-  description: "Codex review (read-only)"
+  description: "Codex review (prompt-enforced review-only)"
 })
 ```
 
-`run_in_background: true` is required — Codex blocks for 60-120s and running it foreground freezes the conversation. See `collaborating-with-codex` skill for details.
+`run_in_background: true` is required — Codex blocks for 60-120s and running it foreground freezes the conversation. `collaborating-with-codex` explicitly rejects `--sandbox read-only`, so review-only behavior here is enforced by prompt wording rather than by assuming a read-only sandbox.
 
 ### 3. Wait for both, then collect
 
@@ -134,7 +133,7 @@ If either reviewer fails, surface the failure to the user and ask whether to ret
 Specific failure modes to handle (each with a user-facing message, not a silent retry):
 
 - **Codex bridge timeout** (>120s without response from `codex_bridge.py`) — show "Codex did not respond within 120s. The simplify reviewer returned: [summary]. Retry Codex, proceed with simplify only, or abort?"
-- **Codex sandbox rejection** (e.g. the bridge returned "sandbox blocked Read on /path") — note that Codex may not have the same file access as the main session. Tell the user which paths Codex could not read and ask whether to (a) re-dispatch with `--sandbox workspace-write` (only if the user explicitly confirms — that escalates Codex's permissions), (b) run only simplify, or (c) provide the missing files inline in the Codex prompt.
+- **Codex workspace-write sandbox failure or missing-file access issue** (for example, the bridge reports sandbox failure, auto-downgrade warnings, or Codex could not read required paths) — tell the user which paths or sandbox assumptions failed and ask whether to (a) re-dispatch with the current bridge defaults after clarifying the prompt, (b) run only simplify, or (c) provide the missing files inline in the Codex prompt.
 - **Codex non-zero exit with stderr** — surface the stderr verbatim. Do NOT swallow it.
 - **Empty Codex output** (process exited 0 but `agent_messages` was empty) — usually means Codex declined to engage, often due to prompt phrasing or sandbox confusion. Show a one-line note and ask whether to rephrase or skip.
 - **Simplify subagent timeout / unavailable** — the in-session Agent dispatch should respond in seconds; if it errors with "subagent_type not found" or similar, fall back to the `general-purpose` template from Step 2.

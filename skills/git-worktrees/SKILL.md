@@ -9,13 +9,36 @@ description: Use when starting feature work that needs isolation from current wo
 
 Git worktrees create isolated workspaces sharing the same repository, allowing work on multiple branches simultaneously without switching.
 
-**Core principle:** Systematic directory selection + safety verification = reliable isolation.
+**Core principle:** Detect isolation first + prefer Claude Code's native worktree primitive + safety verification = reliable isolation.
 
 **Announce at start:** "I'm using the git-worktrees skill to set up an isolated workspace."
 
+## Detect Existing Isolation First
+
+Before creating anything, check whether you are already in an isolated workspace.
+
+```bash
+git_dir=$(git rev-parse --git-dir)
+git_common=$(git rev-parse --git-common-dir)
+superproject=$(git rev-parse --show-superproject-working-tree 2>/dev/null)
+```
+
+Decision rules:
+- If `git_dir != git_common` and `superproject` is empty, you are already in a linked worktree. Report the current path and do not create another worktree.
+- If `superproject` is non-empty, you are inside a submodule. `GIT_DIR != GIT_COMMON` can also be true there, so do not treat that check alone as proof that you already have an isolated workspace.
+- Only continue to directory selection and creation when a new isolated workspace is still needed.
+
+## Native Tool First
+
+**Rule:** Never fight the harness.
+
+- Prefer Claude Code's native worktree primitive when available.
+- Let Claude Code own the path and lifecycle when it can create the isolated workspace for you.
+- Fall back to raw `git worktree add` only when no native Claude Code path applies and you still need a new workspace.
+
 ## Directory Selection Process
 
-Follow this priority order:
+Follow this priority order when you need the manual `git worktree add` fallback:
 
 ### 1. Check Existing Directories
 
@@ -74,13 +97,19 @@ No .gitignore verification needed - outside project entirely.
 
 ## Creation Steps
 
-### 1. Detect Project Name
+### 1. Choose Creation Path
+
+- If Claude Code's native worktree primitive is available, use it first and stop here once the isolated workspace is ready.
+- In Claude Code, this means using the native worktree tool rather than `git worktree add` so Claude Code owns the path and lifecycle.
+- Only use the manual steps below when that native path is unavailable.
+
+### 2. Detect Project Name
 
 ```bash
 project=$(basename "$(git rev-parse --show-toplevel)")
 ```
 
-### 2. Create Worktree
+### 3. Create Worktree
 
 ```bash
 # Determine full path
@@ -98,7 +127,7 @@ git worktree add "$path" -b "$BRANCH_NAME"
 cd "$path"
 ```
 
-### 3. Run Project Setup
+### 4. Run Project Setup
 
 Auto-detect and run appropriate setup:
 
@@ -106,7 +135,7 @@ Auto-detect and run appropriate setup:
 ${CLAUDE_PLUGIN_ROOT}/scripts/detect-project-setup.sh "$path"
 ```
 
-### 4. Verify Clean Baseline
+### 5. Verify Clean Baseline
 
 Run tests to ensure worktree starts clean:
 
@@ -119,7 +148,7 @@ eval "$TEST_CMD"
 
 **If tests pass:** Report ready.
 
-### 5. Report Location
+### 6. Report Location
 
 ```
 Worktree ready at <full-path>
@@ -131,6 +160,9 @@ Ready to implement <feature-name>
 
 | Situation | Action |
 |-----------|--------|
+| Already in isolated workspace | Reuse it; do not create another |
+| Inside submodule | Do not treat `GIT_DIR != GIT_COMMON` alone as worktree proof |
+| Native Claude Code worktree path available | Use it before manual git fallback |
 | `.worktrees/` exists | Use it (verify ignored) |
 | `worktrees/` exists | Use it (verify ignored) |
 | Both exist | Use `.worktrees/` |
@@ -151,6 +183,16 @@ Ready to implement <feature-name>
 - **Problem:** Creates inconsistency, violates project conventions
 - **Fix:** Follow priority: existing > CLAUDE.md > ask
 
+### Creating before checking current isolation
+
+- **Problem:** Nests unnecessary worktrees or duplicates an already isolated workspace
+- **Fix:** Detect whether the current workspace is already isolated before selecting directories or creating anything
+
+### Treating submodules as worktrees
+
+- **Problem:** `GIT_DIR != GIT_COMMON` can be true in submodules too, causing false positives
+- **Fix:** Check submodule state before using that comparison as worktree evidence
+
 ### Proceeding with failing tests
 
 - **Problem:** Can't distinguish new bugs from pre-existing issues
@@ -166,6 +208,8 @@ Ready to implement <feature-name>
 ```
 You: I'm using the git-worktrees skill to set up an isolated workspace.
 
+[Detect current isolation - plain repo, not existing linked worktree]
+[Prefer native Claude Code worktree path - unavailable, so continue]
 [Check .worktrees/ - exists]
 [Verify ignored - git check-ignore confirms .worktrees/ is ignored]
 [Create worktree: git worktree add .worktrees/auth -b feature/auth]
@@ -180,6 +224,8 @@ Ready to implement auth feature
 ## Red Flags
 
 **Never:**
+- Create anything before checking whether the current workspace is already isolated
+- Mistake a submodule for an existing linked worktree
 - Create worktree without verifying it's ignored (project-local)
 - Skip baseline test verification
 - Proceed with failing tests without asking
@@ -187,10 +233,11 @@ Ready to implement auth feature
 - Skip CLAUDE.md check
 
 **Always:**
+- Prefer Claude Code's native worktree primitive before manual git fallback
 - Follow directory priority: existing > CLAUDE.md > ask
 - Verify directory is ignored for project-local
 - Auto-detect and run project setup
-- Verify clean test baseline
+- Verify clean baseline test state
 
 ## Integration
 

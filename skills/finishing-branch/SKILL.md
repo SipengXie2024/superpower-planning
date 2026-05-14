@@ -9,7 +9,7 @@ description: Use when implementation is complete, all tests pass, and integratio
 
 Guide completion of development work by presenting clear options and handling chosen workflow.
 
-**Core principle:** Verify tests -> Present options -> Execute choice -> Clean up.
+**Core principle:** Verify tests -> Present options -> Execute choice -> Clean up only when the chosen option requires it.
 
 **Announce at start:** "I'm using the finishing-branch skill to complete this work."
 
@@ -67,24 +67,50 @@ Which option?
 
 #### Option 1: Merge Locally
 
+For local merge flows, keep the safety order explicit: tests were already verified in Step 1, then the merge must succeed, then the merged result must pass verification, and only then may cleanup happen.
+
+Before switching branches, capture the feature branch name and any matching worktree path so cleanup targets stay bound to the feature branch. For worktree-based feature flows, complete the merge from the worktree that already owns `<base-branch>` rather than trying to check out `<base-branch>` inside the feature worktree.
+
 ```bash
-# Switch to base branch
-git checkout <base-branch>
+FEATURE_BRANCH=<feature-branch>
+FEATURE_WORKTREE=$(git worktree list | grep "$FEATURE_BRANCH" | awk '{print $1}')
+BASE_BRANCH=<base-branch>
+BASE_WORKTREE=$(git worktree list --porcelain | awk -v b="refs/heads/$BASE_BRANCH" '
+  /^worktree / { w=$2 }
+  /^branch / && $2==b { print w; exit }
+')
+
+if test -z "$BASE_WORKTREE"; then
+  BASE_WORKTREE=$(cd "$(git rev-parse --git-common-dir)/.." && pwd)
+fi
+
+# Return to the worktree that should own the base branch before touching it
+cd "$BASE_WORKTREE"
+git checkout "$BASE_BRANCH"
 
 # Pull latest
 git pull
 
 # Merge feature branch
-git merge <feature-branch>
+git merge "$FEATURE_BRANCH"
 
 # Verify tests on merged result
 <test command>
-
-# If tests pass
-git branch -d <feature-branch>
 ```
 
-Then: Cleanup worktree (Step 5)
+If the merge fails or merged-result verification fails, stop. Do not remove the worktree or delete the branch.
+
+If the merge succeeds and merged-result verification passes:
+```bash
+# Remove the feature worktree first if it exists; only then delete the merged branch
+if test -n "$FEATURE_WORKTREE"; then
+  git worktree remove "$FEATURE_WORKTREE"
+fi
+
+git branch -d "$FEATURE_BRANCH"
+```
+
+Then: Cleanup is complete for this path unless additional local cleanup is needed.
 
 #### Option 2: Push and Create PR
 
@@ -103,13 +129,13 @@ EOF
 )"
 ```
 
-Then: Keep worktree (may need for PR revisions)
+Then: Keep branch and worktree as-is for PR revisions. No cleanup.
 
 #### Option 3: Keep As-Is
 
 Report: "Keeping branch <name>. Worktree preserved at <path>."
 
-**Don't cleanup worktree.**
+Keep branch and worktree as-is. No cleanup.
 
 #### Option 4: Discard
 
@@ -127,27 +153,39 @@ Wait for exact confirmation.
 
 If confirmed:
 ```bash
-git checkout <base-branch>
-git branch -D <feature-branch>
+FEATURE_BRANCH=<feature-branch>
+FEATURE_WORKTREE=$(git worktree list | grep "$FEATURE_BRANCH" | awk '{print $1}')
+BASE_BRANCH=<base-branch>
+BASE_WORKTREE=$(git worktree list --porcelain | awk -v b="refs/heads/$BASE_BRANCH" '
+  /^worktree / { w=$2 }
+  /^branch / && $2==b { print w; exit }
+')
+
+if test -z "$BASE_WORKTREE"; then
+  BASE_WORKTREE=$(cd "$(git rev-parse --git-common-dir)/.." && pwd)
+fi
+
+# Return to the worktree that should own the base branch before deleting the feature worktree/branch
+cd "$BASE_WORKTREE"
+
+if test -n "$FEATURE_WORKTREE"; then
+  git worktree remove "$FEATURE_WORKTREE"
+fi
+
+git branch -D "$FEATURE_BRANCH"
 ```
 
-Then: Cleanup worktree (Step 5)
+Then: Cleanup is complete for this discard path unless additional local cleanup is needed.
 
 ### Step 5: Cleanup Worktree
 
-**For Options 1 and 4:**
+Only run cleanup for options that truly require it.
 
-Check if in worktree:
-```bash
-git worktree list | grep $(git branch --show-current)
-```
+- **Option 1:** If a feature worktree exists, remove it after merge success and merged-result verification, then delete the merged branch. Do not try to delete a branch that is still attached to a linked worktree.
+- **Option 4:** If a feature worktree exists, remove it from the main repository worktree after typed `discard` confirmation, then force-delete the feature branch.
+- **Options 2 and 3:** Non-cleanup paths. Keep the branch and worktree.
 
-If yes:
-```bash
-git worktree remove <worktree-path>
-```
-
-**For Option 3:** Keep worktree.
+If no feature worktree exists, skip cleanup. Do not assume every branch path has a removable worktree.
 
 ## Quick Reference
 
@@ -198,7 +236,7 @@ After cleanup, if `.planning/findings.md` or `.planning/progress.md` has meaning
 2. **Prompt the user explicitly** via `AskUserQuestion`:
 
 ```text
-Implementation is finished. Before we move on, do you want me to archive this session?
+Implementation is finished. Before we move on, do you want me to archive this project now?
 
 1. Yes — run /archive now (recommended)
 2. Not now — remind me next time work resumes
@@ -214,13 +252,10 @@ Implementation is finished. Before we move on, do you want me to archive this se
 
 If the user does **not** archive and `.planning/findings.md` still has meaningful content:
 
-6. **Ask the user** if they want to persist key findings to Claude's memory system anyway
-7. If yes: write the valuable, reusable insights (patterns discovered, architectural decisions, debugging lessons) to the project's auto memory files (`~/.claude/projects/.../memory/`)
-8. Skip session-specific details (task status, temporary workarounds) — only persist knowledge that helps future sessions
+6. Report that long-term memory consolidation belongs to `superpower-planning:archiving`
+7. Encourage the user to run `/archive` later rather than persisting project findings through this skill
 
-**This step is main-agent only.** Subagents do not persist findings to memory.
-
-**Default bias:** Prefer `/archive` over ad-hoc memory writes when a meaningful task has just finished.
+**Default bias:** Prefer `/archive` over ad-hoc memory writes when a meaningful project has just finished.
 
 ## Integration
 
