@@ -1,15 +1,15 @@
 ---
 name: executing-plans
-description: Use when executing a written implementation plan in a separate session with batch execution and human review checkpoints between batches
+description: Use when executing a written implementation plan in a separate session with batch execution and an automatic dual-review checkpoint between batches
 ---
 
 # Executing Plans
 
 ## Overview
 
-Load plan, review critically, execute tasks in batches, report for review between batches.
+Load plan, review critically, execute tasks in batches, auto-run dual-review between batches.
 
-**Core principle:** Batch execution with checkpoints for architect review.
+**Core principle:** Batch execution with an automatic dual-review checkpoint between batches.
 
 **Announce at start:** "I'm using the executing-plans skill to implement this plan."
 
@@ -39,15 +39,23 @@ When batch complete:
   - Mark completed tasks as `complete` in the Task Status Dashboard
   - Append batch summary to the session log section
 - **Update `.planning/findings.md`** — Consolidate any discoveries, decisions, or surprises from this batch
-- Say: "Ready for feedback."
 
-### Step 4: Continue
-Based on feedback:
-- Apply changes if needed
-- Execute next batch
-- Repeat until complete
+### Step 4: Dual-Review the Batch (automatic)
 
-### Step 5: Complete Development
+Every batch is reviewed before moving on. This **replaces the old "Ready for feedback" pause** — the dual-review approval gate is now the human checkpoint, so you still decide which fixes land.
+
+1. **Enumerate the batch scope** — the files this batch created or modified. Derive from git: capture the ref/HEAD before Step 2, then `git diff --name-only <pre-batch-ref>` (or the diff since the last reviewed point). This concrete file list is the review scope.
+2. Announce: "Batch complete — running dual-review on this batch's changes before continuing."
+3. **REQUIRED SUB-SKILL:** Use superpower-planning:dual-review, passing the enumerated scope so it **skips its own scope-confirmation step**. It runs simplify + Codex in parallel (review-only), consolidates findings, gates on your approval for which fixes to apply, then applies approved fixes via a fresh subagent.
+4. **Exception:** if the batch is purely trivial (docs / formatting / comments only), you may skip dual-review with a one-line note rather than spending review time — this matches dual-review's own "When NOT to use".
+
+### Step 5: Continue
+After the batch's review and any approved fixes land:
+- Execute the next batch (return to Step 2)
+- Repeat until all tasks complete
+- If review revealed the approach needs rethinking, see "When to Revisit Earlier Steps"
+
+### Step 6: Complete Development
 
 After all tasks complete and verified:
 - **Read `.planning/progress.md`** to compile a full summary of all batches, test results, and verification evidence before presenting final status
@@ -78,7 +86,7 @@ After all tasks complete and verified:
 - Follow plan steps exactly
 - Don't skip verifications
 - Reference skills when plan says to
-- Between batches: just report and wait
+- After each batch: report, then auto-run dual-review on the batch (its approval gate is the checkpoint — don't wait for a manual review request)
 - Stop when blocked, don't guess
 - Never start implementation on main/master branch without explicit user consent
 - After each task, record discoveries to `.planning/findings.md`
@@ -90,4 +98,5 @@ After all tasks complete and verified:
 **Required workflow skills:**
 - **superpower-planning:git-worktrees** - RECOMMENDED: Set up isolated workspace unless already on a feature branch
 - **superpower-planning:writing-plans** - Creates the plan this skill executes
+- **superpower-planning:dual-review** - Auto-invoked after each batch (Step 4) to review that batch's changes; its approval gate is the between-batch checkpoint
 - **superpower-planning:finishing-branch** - Complete development after all tasks

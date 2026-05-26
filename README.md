@@ -47,7 +47,7 @@ All workflows share a `.planning/` directory in your project root containing:
 | **brainstorming** | Explores intent, requirements, decomposition, and design before implementation. |
 | **spec-interview** | Refines design docs through systematic deep questioning. Auto-invoked after brainstorming. |
 | **writing-plans** | Creates detailed implementation plans before touching code, including plan review loop and execution handoff. |
-| **executing-plans** | Executes plans in batches with review checkpoints in a separate session. |
+| **executing-plans** | Executes plans in batches in a separate session, auto-running dual-review between batches. |
 | **tdd** | Test-driven development: write tests before implementation. |
 | **debugging** | Root-cause analysis before proposing fixes. |
 | **verification** | Evidence-based completion checks before claiming "done". |

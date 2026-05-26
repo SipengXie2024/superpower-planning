@@ -17,7 +17,7 @@ Before invoking any execution skill, you MUST:
 
    **2. Team-Driven (this session, parallel)** — Agent Team with parallel implementers + dedicated reviewer. Best when tasks are heavy or parallelizable.
 
-   **3. Parallel Session (separate session)** — Open new session with executing-plans, batch execution with human checkpoints.
+   **3. Parallel Session (separate session)** — Open new session with executing-plans, batch execution with an automatic dual-review checkpoint between batches.
 
    Include your recommendation based on the plan's parallelism score and task weight.
 

@@ -21,13 +21,15 @@ The rules below are non-negotiable because violating any of them defeats the ski
 - **Review-only mode.** Neither reviewer writes code. They return findings only. If the reviewer's own instructions say it can edit (e.g. `code-simplifier` agent), override explicitly in the prompt.
 - **Approval gate is mandatory.** After both reports return, use `AskUserQuestion` to ask which fixes to apply. An implicit "sounds good" from surrounding conversation does not count — ask the question.
 - **Fixes run in a fresh subagent.** After approval, dispatch a new implementer subagent with the consolidated fix list. This isolates context and prevents the reviewer's reasoning from contaminating the implementation.
-- **Scope is always confirmed.** Before dispatching, ask the user what to review. Do not default to "recently changed files" or "last commit" silently.
+- **Scope is explicit.** Before dispatching, the scope is either confirmed by the user or supplied by a caller as a concrete file list / revision range (e.g. `executing-plans` passing a batch's changed files). Never silently default to "recently changed files" or "last commit".
 
 ## Procedure
 
 ### 1. Confirm scope
 
-Ask the user what to review. Use `AskUserQuestion` with options such as:
+**If a caller already supplied the scope** (e.g. `executing-plans` invokes this skill with a batch's changed files), skip the question and use that scope verbatim. Only run the prompt below when scope was not provided.
+
+Otherwise, ask the user what to review. Use `AskUserQuestion` with options such as:
 
 - Uncommitted changes (`git diff HEAD`)
 - Last N commits (prompt for N)
