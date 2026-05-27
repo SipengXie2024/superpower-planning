@@ -1,6 +1,6 @@
 ---
 name: collaborating-with-codex
-description: Use when delegating coding work — prototyping, debugging, analysis, review, or implementation — to Codex CLI instead of a Claude subagent. Supports multi-turn sessions via SESSION_ID.
+description: Use when delegating coding work — prototyping, debugging, analysis, review, implementation, or generating publication-quality scientific/architecture diagrams — to Codex CLI instead of a Claude subagent. Supports multi-turn sessions via SESSION_ID.
 ---
 
 > **MANDATORY: ALWAYS run codex_bridge.py in the background.**
@@ -83,3 +83,9 @@ Note: the sandbox still defaults to `danger-full-access`. Enforce read-only beha
 ```bash
 python3 scripts/codex_bridge.py --cd "/project" --PROMPT "Debug this error" --return-all-messages
 ```
+
+**Generate publication-quality figures (Claude can't render raster images — Codex can):**
+```bash
+python3 scripts/codex_bridge.py --cd "/project" --PROMPT "Use your imagegen-scientific-schematics skill to create a publication-style architecture diagram. Components: API gateway, auth service, Postgres. Solid arrows for sync calls, dashed for async. Save the final PNG to docs/figures/arch.png in this workspace and report the path."
+```
+Codex runs its `imagegen-scientific-schematics` skill (built-in `image_gen`) for scientific schematics, architecture/data-flow diagrams, and paper figures — work Claude has no native tool for. Two musts in the prompt: (1) name the skill and spell out exact labels, layout, and arrow semantics; (2) tell Codex to save the final image into the `--cd` workspace, otherwise it stays under `~/.codex/generated_images/` where Claude can't read it. Reuse `SESSION_ID` to iterate on the same figure.

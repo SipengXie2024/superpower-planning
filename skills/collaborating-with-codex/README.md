@@ -4,7 +4,7 @@ A Claude Code **Agent Skill** that bridges Claude with OpenAI Codex CLI for mult
 
 ## Overview
 
-This Skill enables Claude to delegate coding tasks to Codex CLI, combining the strengths of multiple AI models. Codex handles algorithm implementation, debugging, and code analysis while Claude orchestrates the workflow and refines the output.
+This Skill enables Claude to delegate coding tasks to Codex CLI, combining the strengths of multiple AI models. Codex handles algorithm implementation, debugging, code analysis, and publication-quality figure generation (via its `imagegen-scientific-schematics` skill, which Claude has no native equivalent for) while Claude orchestrates the workflow and refines the output.
 
 ## Features
 
