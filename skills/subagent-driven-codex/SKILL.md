@@ -1,11 +1,11 @@
 ---
 name: subagent-driven-codex
-description: Use when executing an implementation plan in this session, sequentially, by routing every implementer and reviewer dispatch through Codex CLI instead of Claude subagents. Two-stage review per task.
+description: Use when executing an implementation plan in this session, sequentially, by routing implementer and reviewer roles through Codex CLI. Two-stage Codex review per task.
 ---
 
 # Subagent-Driven Development (Codex Variant)
 
-Execute a plan by dispatching every role — implementer, spec reviewer, quality reviewer — to **Codex CLI via the bridge script**, not to Claude subagents. The orchestrator (you) stays in this session, plans tasks, ferries context between Codex sessions, and gates progress on the same two-stage review used by `subagent-driven`.
+Execute a plan by dispatching every role — implementer, spec reviewer, quality reviewer — to **Codex CLI via the bridge script**. The orchestrator (you) stays in this session, plans tasks, ferries context between Codex sessions, and gates progress on a Codex-specific two-stage review.
 
 **Core principle:** One Codex SESSION_ID per role per task + per-agent planning dir + two-stage review (spec then quality) = high-quality delegation to a second model, all from a single Claude session.
 
@@ -13,15 +13,15 @@ Execute a plan by dispatching every role — implementer, spec reviewer, quality
 
 ## Why This Exists
 
-`subagent-driven` dispatches Claude subagents through the Task tool. `subagent-driven-codex` is the same workflow, but every dispatch goes to Codex through `${CLAUDE_PLUGIN_ROOT}/skills/collaborating-with-codex/scripts/codex_bridge.py`.
+This skill is retained because it uses an external Codex CLI executor/reviewer path. For Claude-native high-parallelism work, prefer Claude Code dynamic workflows instead of rebuilding orchestration in plugin skills.
 
 Use this variant when:
 - You want a second model's eyes on every line of generated code without you reviewing each diff manually.
 - The work is bounded and verifiable from disk (Codex's sweet spot per the user's collaboration policy).
-- You want fresh, isolated executor context per role without spending Claude subagent quota.
+- You want fresh, isolated executor context per role without spending Claude dynamic-workflow worker budget.
 - You want the orchestrator's conversation context kept clean — the bridge runs in the background and only returns the final reply.
 
-Stick with plain `subagent-driven` when the task needs the Claude subagents' richer tooling (Skill tool, Agent forks) or when interactive back-and-forth with the orchestrator beats Codex's batch model. Codex CLI does support MCP if the user has it configured — that is not a reason to avoid Codex.
+Prefer a Claude Code dynamic workflow when the task needs many Claude agents, broad parallel review, large migrations, or cross-checked research. Codex CLI does support MCP if the user has it configured — that is not a reason to avoid Codex.
 
 ## Hard Requirements (Non-Negotiable)
 
@@ -32,7 +32,7 @@ Stick with plain `subagent-driven` when the task needs the Claude subagents' ric
 4. **Capture base git SHA before dispatching the implementer.** Reviewers need the diff range. See "Per-task loop" step 1.
 5. **Capture `SESSION_ID` from the first call to each role.** Reuse it on follow-up calls so Codex keeps context across fix-rounds within the SAME task. The SESSION_ID is per-task; it gets overwritten when the next task starts. Store IDs in `.planning/agents/<role>/session.txt`.
 6. **Do NOT pass `--model` or `--profile`** unless the user explicitly named one. Reserved for user direction.
-7. **Two-stage review is still mandatory** (spec, then quality). Three round cap per stage. Same as `subagent-driven`.
+7. **Two-stage Codex review is still mandatory** (spec, then quality). Three round cap per stage.
 8. **Verify Codex's output yourself before declaring the task done.** Codex's summary describes intent, not proof — read the diff, run the test, check the output.
 9. **A reviewer Codex that modifies files invalidates its own review.** The bridge defaults to `danger-full-access`, so review prompts can only restrain Codex through wording. If a reviewer touches the workspace, discard the review, revert the unauthorized edits, and re-dispatch a fresh reviewer session with stronger language.
 </EXTREMELY-IMPORTANT>
@@ -81,22 +81,22 @@ Track round count in the Task Status Dashboard (e.g. `FAIL (round 2/3)`).
 ```dot
 digraph when_to_use {
     "Have implementation plan?" [shape=diamond];
-    "Tasks mostly independent?" [shape=diamond];
     "Stay in this session?" [shape=diamond];
     "Want Codex as executor?" [shape=diamond];
+    "Needs broad parallelism?" [shape=diamond];
     "subagent-driven-codex" [shape=box];
-    "subagent-driven" [shape=box];
+    "Claude Code dynamic workflow" [shape=box];
     "executing-plans" [shape=box];
     "Manual execution or brainstorm first" [shape=box];
 
-    "Have implementation plan?" -> "Tasks mostly independent?" [label="yes"];
+    "Have implementation plan?" -> "Needs broad parallelism?" [label="yes"];
     "Have implementation plan?" -> "Manual execution or brainstorm first" [label="no"];
-    "Tasks mostly independent?" -> "Stay in this session?" [label="yes"];
-    "Tasks mostly independent?" -> "Manual execution or brainstorm first" [label="no - tightly coupled"];
+    "Needs broad parallelism?" -> "Claude Code dynamic workflow" [label="yes"];
+    "Needs broad parallelism?" -> "Stay in this session?" [label="no"];
     "Stay in this session?" -> "Want Codex as executor?" [label="yes"];
-    "Stay in this session?" -> "executing-plans" [label="no - parallel session"];
+    "Stay in this session?" -> "executing-plans" [label="no - manual batch"];
     "Want Codex as executor?" -> "subagent-driven-codex" [label="yes"];
-    "Want Codex as executor?" -> "subagent-driven" [label="no - use Claude subagents"];
+    "Want Codex as executor?" -> "executing-plans" [label="no"];
 }
 ```
 
@@ -120,7 +120,7 @@ Each directory contains:
 
 ## Reviewer Session Strategy: Sticky vs. Fresh
 
-This skill defaults to **sticky** reviewers: the spec reviewer and quality reviewer for a given task keep the same SESSION_ID across re-review rounds. The original `subagent-driven` instead spins up a fresh subagent per round.
+This skill defaults to **sticky** reviewers: the spec reviewer and quality reviewer for a given task keep the same SESSION_ID across re-review rounds.
 
 Pick deliberately:
 
@@ -197,12 +197,12 @@ digraph process {
     "Per-task loop" [shape=box style=filled fillcolor=lightyellow];
     "Plan Alignment Gate" [shape=box];
     "Final code review (Codex)" [shape=box];
-    "Use superpower-planning:finishing-branch" [shape=box style=filled fillcolor=lightgreen];
+    "Final verification summary and next-step choice" [shape=box style=filled fillcolor=lightgreen];
 
     "Read plan, extract all tasks with full text, note context, create tasks via TaskCreate" -> "Per-task loop";
     "Per-task loop" -> "Plan Alignment Gate";
     "Plan Alignment Gate" -> "Final code review (Codex)";
-    "Final code review (Codex)" -> "Use superpower-planning:finishing-branch";
+    "Final code review (Codex)" -> "Final verification summary and next-step choice";
 }
 ```
 
@@ -221,7 +221,7 @@ digraph process {
 11. **Quality fix loop:** same shape as step 9, sticky reviewer SESSION_ID, max 3 rounds.
 12. **Aggregate and complete:** run `aggregate-agent-findings.sh` for each role, update Task Status Dashboard, mark task complete via TaskUpdate.
 
-**After all tasks:** Plan Alignment Gate (re-read `plan.md`/`design.md`, check for cumulative drift), then a final whole-implementation Codex review, then `finishing-branch`.
+**After all tasks:** Plan Alignment Gate (re-read `plan.md`/`design.md`, check for cumulative drift), then a final whole-implementation Codex review, then run the plan's final verification commands and ask the user whether to archive, prepare a PR, keep the branch, or do something else.
 
 ## Orchestrator Aggregation Flow
 
@@ -260,17 +260,17 @@ Each template explains exactly what to render, where Codex's output lands, and h
 
 ## Codex-Specific Adjustments
 
-Things `subagent-driven` does that change for Codex:
+Operational differences from Claude-native workflows:
 
-| Concern | subagent-driven (Claude) | subagent-driven-codex |
+| Concern | Claude-native workflow | subagent-driven-codex |
 |---------|--------------------------|------------------------|
-| Dispatch | Task tool, general-purpose subagent | `codex_bridge.py` background bash |
-| Tooling inside agent | Skill tool, Agent forks, MCP | Codex CLI's native tools — no Skill tool, no Agent fork. MCP works if the user has it configured for Codex. |
-| Reading plugin instructions | `Read` of `${CLAUDE_PLUGIN_ROOT}/...` paths | Same — BUT all `${CLAUDE_PLUGIN_ROOT}` references in the prompt MUST be substituted with the absolute path before sending; Codex treats placeholders literally. See Render Step. |
-| Multi-turn within a task | Same subagent invocation re-dispatched | Same Codex SESSION_ID re-used (per task; overwritten when next task starts) |
-| Asking the orchestrator a question | Subagent text reply | Codex `agent_messages` text — read it and follow up via SESSION_ID |
-| "Critical for orchestrator" markers | Subagent writes to `findings.md` | Same — Codex writes to the same `findings.md` paths because it can edit files |
-| Cost model | Claude credits | OpenAI Codex credits |
+| Dispatch | Claude Code workflow runtime | `codex_bridge.py` background bash |
+| Tooling inside worker | Claude Code subagent tools | Codex CLI's native tools — no Skill tool, no Claude Agent fork. MCP works if configured for Codex. |
+| Reading plugin instructions | Workflow prompt and repo files | Prompt must substitute `${CLAUDE_PLUGIN_ROOT}` with the absolute path before sending; Codex treats placeholders literally. See Render Step. |
+| Multi-turn within a task | Workflow script state | Same Codex SESSION_ID re-used per task; overwritten when the next task starts |
+| Asking the orchestrator a question | Workflow/subagent result | Codex `agent_messages` text — read it and follow up via SESSION_ID |
+| "Critical for orchestrator" markers | Workflow report or file writes | Codex writes to the same `findings.md` paths because it can edit files |
+| Cost model | Claude usage | OpenAI Codex usage |
 
 ## Example Workflow
 
@@ -340,12 +340,12 @@ Task 2: Recovery modes
 
 ## Advantages
 
-**vs. subagent-driven (Claude subagents):**
-- Second-model independence on every dispatch — code is generated and reviewed without ever leaving Claude's session and without Claude doing the writing itself.
-- Cheaper Claude context: bridge runs in background, only the final reply lands in conversation.
-- Fits the user's "default to Codex over a subagent for bounded work" policy in CLAUDE.md.
+**vs. Claude Code dynamic workflows:**
+- Uses Codex as an external second model for both implementation and review.
+- Keeps Claude context small: bridge runs in background, only the final reply lands in conversation.
+- Useful for bounded serial work where second-model independence matters more than large-scale parallelism.
 
-**vs. executing-plans (parallel session):**
+**vs. executing-plans (manual batch session):**
 - Same session, no handoff.
 - Continuous progress, no waiting for human checkpoints between batches.
 
@@ -358,9 +358,9 @@ Task 2: Recovery modes
 ## Costs
 
 - More bridge invocations per task (implementer + 2 reviewers, plus fix rounds).
-- Codex spend instead of Claude subagent spend — track per-task by saving `agent_messages` size and SESSION_IDs.
+- Codex spend instead of Claude usage — track per-task by saving `agent_messages` size and SESSION_IDs.
 - Orchestrator does more prep work (extracting all tasks upfront, rendering prompts, reading JSON outputs).
-- Lower interactivity than Claude subagents — Codex is asynchronous; round-trips cost ~60–120s each.
+- Lower interactivity than direct Claude execution — Codex is asynchronous; round-trips cost ~60–120s each.
 
 ## Red Flags
 
@@ -395,17 +395,15 @@ Task 2: Recovery modes
 
 ## Integration
 
-**Required workflow skills:**
+**Required related skills:**
 - `superpower-planning:collaborating-with-codex` — provides the bridge script. This skill cannot work without it.
 - `superpower-planning:git-worktrees` — RECOMMENDED: set up isolated workspace unless already on a feature branch (Codex commits into the workspace it sees).
 - `superpower-planning:writing-plans` — creates the plan this skill executes.
 - `superpower-planning:requesting-review` — code review template referenced by reviewer prompts.
-- `superpower-planning:finishing-branch` — complete development after all tasks.
 
 **Codex follows internally:**
 - The implementer prompt instructs Codex to follow TDD when the task says to.
 
 **Alternative workflows:**
-- `superpower-planning:subagent-driven` — same flow, Claude subagents instead of Codex.
-- `superpower-planning:team-driven` — parallel execution via Agent Team.
-- `superpower-planning:executing-plans` — parallel session with batched human checkpoints.
+- Claude Code dynamic workflows — preferred for large parallel work, migrations, and cross-checked audits.
+- `superpower-planning:executing-plans` — manual batch execution with checkpoints.

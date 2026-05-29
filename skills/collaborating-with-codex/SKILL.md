@@ -1,6 +1,6 @@
 ---
 name: collaborating-with-codex
-description: Use when delegating coding work — prototyping, debugging, analysis, review, implementation, or generating publication-quality scientific/architecture diagrams — to Codex CLI instead of a Claude subagent. Supports multi-turn sessions via SESSION_ID.
+description: Use when delegating coding work — prototyping, debugging, analysis, review, implementation, or generating publication-quality scientific/architecture diagrams — to Codex CLI. Supports multi-turn sessions via SESSION_ID.
 ---
 
 > **MANDATORY: ALWAYS run codex_bridge.py in the background.**

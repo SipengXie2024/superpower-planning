@@ -293,7 +293,6 @@ These techniques are part of systematic debugging and available in this director
 
 **Related skills:**
 - **superpower-planning:tdd** - For creating failing test case (Phase 4, Step 1)
-- **superpower-planning:verification** - Verify fix worked before claiming success
 
 ## Real-World Impact
 

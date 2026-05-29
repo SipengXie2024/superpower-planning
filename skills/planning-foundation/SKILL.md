@@ -7,7 +7,7 @@ description: Use when starting complex multi-step tasks, research projects, or a
 
 Work like Manus: Use persistent markdown files as your "working memory on disk."
 
-Every workflow skill in superpower-planning inherits this foundation. `.planning/` is the "RAM on disk" for the current work session.
+Every planning skill in superpower-planning inherits this foundation. `.planning/` is the "RAM on disk" for the current work session.
 
 ## Planning Directory Convention
 
@@ -17,7 +17,7 @@ Every workflow skill in superpower-planning inherits this foundation. `.planning
 ├── plan.md                    # implementation plan (created by writing-plans)
 ├── findings.md                # aggregated findings
 ├── progress.md                # Task Status Dashboard + session log
-├── agents/                    # created on demand by subagents
+├── agents/                    # created on demand by delegated roles
 │   ├── implementer/           # one dir per role, reused across tasks
 │   │   ├── findings.md        # this agent's discoveries (appended across tasks)
 │   │   └── progress.md        # this agent's action log (appended across tasks)
@@ -33,7 +33,7 @@ Every workflow skill in superpower-planning inherits this foundation. `.planning
         └── summary.md
 ```
 
-All project documents live in `.planning/`. The `agents/` directory is NOT created at init — each subagent creates its own subdirectory when dispatched.
+All project documents live in `.planning/`. The `agents/` directory is NOT created at init — delegated roles create their own subdirectory when dispatched.
 
 Lifecycle directories:
 - `.planning/stash/` — paused projects (each entry is a subdirectory with all active files)
@@ -164,7 +164,7 @@ If you can answer these, your context management is solid:
 - Research tasks
 - Building/creating projects
 - Tasks spanning many tool calls
-- Subagent orchestration
+- Delegated execution or dynamic-workflow orchestration
 
 **Skip for:**
 - Simple questions
@@ -173,7 +173,7 @@ If you can answer these, your context management is solid:
 
 ## Per-Agent Planning Directories
 
-When dispatching subagents, each gets its own planning dir:
+When dispatching delegated roles such as Codex implementers/reviewers, each gets its own planning dir:
 
 ```
 .planning/agents/{role}/
@@ -183,13 +183,13 @@ When dispatching subagents, each gets its own planning dir:
 
 **Do NOT create per-task directories** like `implementer-task-1/`. One directory per role, updated continuously.
 
-The orchestrator aggregates agent findings into top-level `.planning/findings.md` and `.planning/progress.md` after each task completes.
+The orchestrator aggregates delegated-role findings into top-level `.planning/findings.md` and `.planning/progress.md` after each task completes.
 
 ## Templates
 
 - [templates/findings.md](templates/findings.md) — Research storage
 - [templates/progress.md](templates/progress.md) — Session logging
-- [templates/agent-context.md](templates/agent-context.md) — Planning rules to inject into subagent prompts
+- [templates/agent-context.md](templates/agent-context.md) — Planning rules to inject into delegated-role prompts
 
 ## Scripts
 
@@ -207,7 +207,7 @@ The orchestrator aggregates agent findings into top-level `.planning/findings.md
 - `scripts/unique-filename.sh` — Generate unique dated filename/dirname
 
 **Agent orchestration:**
-- `scripts/aggregate-agent-findings.sh` — Merge agent "Critical for Orchestrator" items into top-level files
+- `scripts/aggregate-agent-findings.sh` — Merge delegated-role "Critical for Orchestrator" items into top-level files
 
 **Project detection:**
 - `scripts/detect-base-branch.sh` — Detect main/master/develop
@@ -228,4 +228,4 @@ The orchestrator aggregates agent findings into top-level `.planning/findings.md
 | Stuff everything in context | Store large content in files |
 | Start executing immediately | Create plan file FIRST |
 | Repeat failed actions or independently try alternatives | Log failure, escalate to user for direction |
-| Let subagent findings disappear | Aggregate into top-level findings.md |
+| Let delegated findings disappear | Aggregate into top-level findings.md |

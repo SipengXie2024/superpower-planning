@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Stop hook: Check if top-level findings.md and progress.md are stale when agent stops
 #
-# Architecture: subagents write to their own .planning/agents/{role}/ files.
+# Architecture: delegated roles write to their own .planning/agents/{role}/ files.
 # The orchestrator/main agent aggregates into .planning/findings.md and .planning/progress.md.
 # This hook only checks the top-level files — it's a reminder for the main agent.
-# Subagents are guided by agent-context.md rules (2-Action Dispatch Rule) instead.
+# Delegated roles are guided by agent-context.md rules (2-Action Dispatch Rule) instead.
 set -e
 
 FINDINGS_FILE=".planning/findings.md"
@@ -13,7 +13,7 @@ PROGRESS_FILE=".planning/progress.md"
 # Only active during planning sessions
 [ -f "$FINDINGS_FILE" ] || exit 0
 
-# Skip if this looks like a subagent (has an agent planning dir env var)
+# Skip if this looks like a delegated role (has an agent planning dir env var)
 [ -n "$AGENT_PLANNING_DIR" ] && exit 0
 
 NOW=$(date +%s)

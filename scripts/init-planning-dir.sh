@@ -13,7 +13,7 @@ PROJECT_ROOT="${1:-.}"
 PLANNING_DIR="${PROJECT_ROOT}/.planning"
 DATE=$(date +%Y-%m-%d)
 
-# Create .planning directory (agents/ subdirs are created by subagents on demand)
+# Create .planning directory (agents/ subdirs are created by delegated roles on demand)
 mkdir -p "${PLANNING_DIR}"
 
 echo "Initializing .planning/ directory at: ${PLANNING_DIR}"

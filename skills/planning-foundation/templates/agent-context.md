@@ -1,4 +1,4 @@
-# Planning Rules for Subagents
+# Planning Rules for Delegated Roles
 
 You have a planning directory at: `{AGENT_PLANNING_DIR}`
 

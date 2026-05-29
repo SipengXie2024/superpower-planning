@@ -136,7 +136,7 @@ When writing a plan, **automatically create** the `.planning/` directory if it d
 ${CLAUDE_PLUGIN_ROOT}/scripts/init-planning-dir.sh
 ```
 
-This creates `progress.md` and `findings.md`. The canonical template is at `planning-foundation/templates/progress.md`. Subagent planning directories (`agents/`) are created by each subagent when needed.
+This creates `progress.md` and `findings.md`. The canonical template is at `planning-foundation/templates/progress.md`. Delegated role planning directories (`agents/`) are created when needed.
 
 > **Note:** The plan in `.planning/plan.md` is the single source of truth for plan content. Execution status is tracked via the Task Status Dashboard in `progress.md`.
 
@@ -164,7 +164,7 @@ The parallelism score helps the user choose the right execution mode.
 
 ## Self-Review
 
-After writing the complete plan, review it yourself with fresh eyes. This is a checklist you run inline — not a subagent dispatch.
+After writing the complete plan, review it yourself with fresh eyes. This is a checklist you run inline — not delegated dispatch.
 
 **1. Spec coverage:** Skim each section/requirement in the spec. Can you point to a task that implements it? List any gaps.
 
@@ -213,29 +213,29 @@ After saving the plan and completing the self-review, you MUST present exactly t
 
 **Use `AskUserQuestion` with these exact options:**
 
-**1. Subagent-Driven (this session, sequential)** — One new subagent invocation per task, two-stage review, serial execution. Best for light tasks with serial dependencies.
+**1. Claude Code Dynamic Workflow** — Native workflow execution for large, parallel, or cross-checked work. Best when the plan has independent task groups, broad review/audit needs, or would otherwise require many Claude workers.
 
-**2. Team-Driven (this session, parallel)** — Agent Team with parallel implementers + dedicated reviewer. Best when tasks are heavy or parallelizable. Also prevents context-limit crashes on complex tasks.
+**2. Codex-Driven (this session, sequential)** — `superpower-planning:subagent-driven-codex`. Best when the user wants a second model to implement and review bounded tasks through Codex CLI.
 
-**3. Parallel Session (separate session)** — Open new session with executing-plans, batch execution with human checkpoints.
+**3. Manual Batch Session** — `superpower-planning:executing-plans`. Best when dynamic workflows are unavailable or the user wants explicit checkpoint summaries between batches.
 
 Include your recommendation in the question text based on the logic below, but never remove options.
 
 **Recommendation logic (add "(Recommended)" to the best option's label):**
-- High parallelism score + heavy tasks → recommend Team-Driven
-- Light serial tasks → recommend Subagent-Driven
-- User wants manual checkpoints → recommend Parallel Session
+- High parallelism score + heavy tasks or review/audit fan-out → recommend Claude Code Dynamic Workflow
+- User wants a second-model executor/reviewer → recommend Codex-Driven
+- User wants manual checkpoints or workflow support is unavailable → recommend Manual Batch Session
 
-**If Subagent-Driven chosen:**
-- **REQUIRED SUB-SKILL:** Use `superpower-planning:subagent-driven`
+**If Claude Code Dynamic Workflow chosen:**
+- Ask Claude to run a workflow that executes `.planning/plan.md` (include the word "workflow" in the request so Claude writes one), or switch to `/effort ultracode` when the user wants automatic workflow orchestration.
+- Make the workflow read `.planning/design.md`, `.planning/plan.md`, and `.planning/findings.md` as source context.
+- Ask the workflow to write durable discoveries and final execution evidence back into `.planning/findings.md` and `.planning/progress.md`.
+
+**If Codex-Driven chosen:**
+- **REQUIRED SUB-SKILL:** Use `superpower-planning:subagent-driven-codex`
 - Stay in this session
-- One new subagent invocation per task + code review
+- Route implementer and reviewer roles through Codex CLI via the bridge.
 
-**If Team-Driven chosen:**
-- **REQUIRED SUB-SKILL:** Use `superpower-planning:team-driven`
-- Stay in this session
-- Agent Team with parallel implementers + dedicated reviewer
-
-**If Parallel Session chosen:**
-- Guide them to open new session in worktree
-- **REQUIRED SUB-SKILL:** New session uses `superpower-planning:executing-plans`
+**If Manual Batch Session chosen:**
+- Guide them to open a new session in a worktree if needed
+- **REQUIRED SUB-SKILL:** New/manual session uses `superpower-planning:executing-plans`

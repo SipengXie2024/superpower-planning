@@ -1,6 +1,6 @@
 {
   "name": "superpower-planning",
-  "description": "Unified skill suite: persistent file-based planning + structured execution workflows. Merges planning-with-files and superpowers into a single system where every workflow inherits file-based working memory.",
+  "description": "Focused skill suite for persistent file-based planning, durable .planning context, Codex delegation, stashing, and archiving.",
   "version": "1.24.0",
   "author": {
     "name": "sipeng"
@@ -12,7 +12,7 @@
     "planning",
     "tdd",
     "debugging",
-    "subagents",
+    "codex",
     "workflows",
     "best-practices"
   ]

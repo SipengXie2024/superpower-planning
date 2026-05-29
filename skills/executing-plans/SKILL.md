@@ -1,102 +1,111 @@
 ---
 name: executing-plans
-description: Use when executing a written implementation plan in a separate session with batch execution and an automatic dual-review checkpoint between batches
+description: Use when executing a written implementation plan in a separate or manual session with batch checkpoints and .planning updates.
 ---
 
 # Executing Plans
 
 ## Overview
 
-Load plan, review critically, execute tasks in batches, auto-run dual-review between batches.
+Load a written plan, review it critically, execute tasks in manageable batches, and keep `.planning/` current. This is the manual fallback path when Claude Code dynamic workflows are unavailable or the user wants explicit checkpoints.
 
-**Core principle:** Batch execution with an automatic dual-review checkpoint between batches.
+**Core principle:** Follow the plan exactly, verify each batch with evidence, and stop at checkpoints rather than silently drifting.
 
-**Announce at start:** "I'm using the executing-plans skill to implement this plan."
+**Announce at start:** "I'm using the executing-plans skill to implement this plan in batches."
 
 ## The Process
 
 ### Step 1: Load and Review Plan
-1. Read plan file
-2. Review critically - identify any questions or concerns about the plan
-3. If concerns: Raise them with user before starting
-4. If no concerns: Create tasks via TaskCreate and proceed
+
+1. Read `.planning/plan.md`
+2. Read `.planning/design.md` and `.planning/findings.md` if they exist
+3. Review critically for missing files, ambiguous requirements, unsafe branch state, and unclear verification commands
+4. If concerns block execution, raise them with the user before starting
+5. If no blocking concerns, create session-scoped tasks if the task tool is available, and proceed
 
 ### Step 2: Execute Batch
-**Default: First 3 tasks**
+
+Default batch size: first 3 plan tasks, or fewer if tasks are large or tightly coupled.
 
 For each task:
-1. Mark as in_progress
-2. Follow each step exactly (plan has bite-sized steps)
-3. Run verifications as specified
-4. **Record discoveries** — After each task, append any unexpected findings, decisions, or technical insights to `.planning/findings.md`
-5. Mark as completed
 
-### Step 3: Report and Update Progress
-When batch complete:
+1. Mark it `in_progress` in `.planning/progress.md`
+2. Follow the plan steps exactly
+3. Run the verification command specified by the plan
+4. Record unexpected discoveries, decisions, or technical insights in `.planning/findings.md`
+5. Record verification output and status in `.planning/progress.md`
+6. Mark the task `complete` only when the task's checks have actually passed
+
+### Step 3: Batch Checkpoint
+
+When a batch completes:
+
 - Show what was implemented
-- Show verification output
-- **Update `.planning/progress.md`** (if `.planning/` exists):
-  - Mark completed tasks as `complete` in the Task Status Dashboard
-  - Append batch summary to the session log section
-- **Update `.planning/findings.md`** — Consolidate any discoveries, decisions, or surprises from this batch
+- Show verification commands and key output
+- Update `.planning/progress.md` Task Status Dashboard and session log
+- Update `.planning/findings.md` with durable discoveries
+- Ask the user whether to continue, revise the plan, request a review, or stop
 
-### Step 4: Dual-Review the Batch (automatic)
+If the user wants a review, invoke `superpower-planning:requesting-review` with a concrete diff range and the relevant plan task text.
 
-Every batch is reviewed before moving on. This **replaces the old "Ready for feedback" pause** — the dual-review approval gate is now the human checkpoint, so you still decide which fixes land.
+### Step 4: Continue
 
-1. **Enumerate the batch scope** — the files this batch created or modified. Derive from git: capture the ref/HEAD before Step 2, then `git diff --name-only <pre-batch-ref>` (or the diff since the last reviewed point). This concrete file list is the review scope.
-2. Announce: "Batch complete — running dual-review on this batch's changes before continuing."
-3. **REQUIRED SUB-SKILL:** Use superpower-planning:dual-review, passing the enumerated scope so it **skips its own scope-confirmation step**. It runs simplify + Codex in parallel (review-only), consolidates findings, gates on your approval for which fixes to apply, then applies approved fixes via a fresh subagent.
-4. **Exception:** if the batch is purely trivial (docs / formatting / comments only), you may skip dual-review with a one-line note rather than spending review time — this matches dual-review's own "When NOT to use".
+After the checkpoint:
 
-### Step 5: Continue
-After the batch's review and any approved fixes land:
-- Execute the next batch (return to Step 2)
+- Execute the next batch
 - Repeat until all tasks complete
-- If review revealed the approach needs rethinking, see "When to Revisit Earlier Steps"
+- If the user changes direction, update the plan before continuing
+- If the approach needs broad cross-checking, recommend switching to a Claude Code dynamic workflow
 
-### Step 6: Complete Development
+### Step 5: Complete Development
 
-After all tasks complete and verified:
-- **Read `.planning/progress.md`** to compile a full summary of all batches, test results, and verification evidence before presenting final status
-- Announce: "I'm using the finishing-branch skill to complete this work."
-- **REQUIRED SUB-SKILL:** Use superpower-planning:finishing-branch
-- Follow that skill to verify tests, present options, execute choice
+After all tasks complete:
+
+1. Re-read `.planning/plan.md`
+2. Check every task row in `.planning/progress.md`
+3. Run the final verification command(s) specified by the plan
+4. Record final evidence in `.planning/progress.md`
+5. Present a concise completion summary, remaining risks, and recommended next action (archive, PR, or keep branch)
+
+Do not perform branch merge, PR creation, or destructive cleanup unless the user explicitly asks in the current session.
 
 ## When to Stop and Ask for Help
 
-**STOP executing immediately when:**
-- Hit a blocker mid-batch (missing dependency, test fails, instruction unclear)
-- Plan has critical gaps preventing starting
-- You don't understand an instruction
-- Verification fails repeatedly
+STOP executing immediately when:
 
-**Ask for clarification rather than guessing.**
+- A blocker appears mid-batch
+- A verification command fails and the root cause is not obvious
+- The plan has critical gaps preventing the next task
+- You do not understand an instruction
+- The implementation would require changing the approved design
+
+Ask for clarification rather than guessing.
 
 ## When to Revisit Earlier Steps
 
-**Return to Review (Step 1) when:**
-- Partner updates the plan based on your feedback
-- Fundamental approach needs rethinking
+Return to plan review when:
 
-**Don't force through blockers** - stop and ask.
+- The user updates the plan
+- A batch reveals a fundamental approach issue
+- The task list no longer matches the codebase
+- Verification evidence contradicts an assumption in the plan
 
 ## Remember
-- Review plan critically first
+
+- Review the plan critically before editing
 - Follow plan steps exactly
-- Don't skip verifications
-- Reference skills when plan says to
-- After each batch: report, then auto-run dual-review on the batch (its approval gate is the checkpoint — don't wait for a manual review request)
-- Stop when blocked, don't guess
-- Never start implementation on main/master branch without explicit user consent
+- Do not skip verification commands
 - After each task, record discoveries to `.planning/findings.md`
 - After each batch, update both `.planning/progress.md` and `.planning/findings.md`
-- Before final report, read `.planning/progress.md` for full summary
+- Before final report, read `.planning/progress.md` for the full status
+- Never start implementation on `main`/`master` without explicit user consent
 
 ## Integration
 
-**Required workflow skills:**
-- **superpower-planning:git-worktrees** - RECOMMENDED: Set up isolated workspace unless already on a feature branch
-- **superpower-planning:writing-plans** - Creates the plan this skill executes
-- **superpower-planning:dual-review** - Auto-invoked after each batch (Step 4) to review that batch's changes; its approval gate is the between-batch checkpoint
-- **superpower-planning:finishing-branch** - Complete development after all tasks
+**Related skills:**
+
+- `superpower-planning:git-worktrees` — recommended when starting from a shared or risky branch
+- `superpower-planning:writing-plans` — creates the plan this skill executes
+- `superpower-planning:requesting-review` — optional checkpoint or pre-merge review
+- `superpower-planning:receiving-review` — process review feedback
+- `superpower-planning:archiving` — archive the completed planning state when the work is done

@@ -14,7 +14,7 @@ This skill defines when review is required and what context must be sent. The au
 ## When to Request Review
 
 **Mandatory:**
-- After each task in subagent-driven development
+- After each major task in Codex-driven or manual plan execution when review is part of the checkpoint
 - After completing a major project step
 - Before merge to main
 - When implementation may have drifted from the approved plan
@@ -114,13 +114,17 @@ FOCUS: plan alignment, tests, error handling
 
 ## Integration with Workflows
 
-**Subagent-Driven:**
-- Review after each task
-- Use review output as a hard gate before marking the task complete
+**Codex-Driven:**
+- Reviewer prompt templates use this skill's rubric for plan/spec-aligned review
+- Use review output as a hard gate before marking a task complete
 
 **Executing Plans / Ad-Hoc Development:**
 - Review after each major milestone or before merge
 - Apply required fixes before continuing
+
+**Claude Code Dynamic Workflows:**
+- Use this review contract as the rubric if a workflow needs a single final code review
+- For broad fan-out or adversarial review, prefer the native workflow's cross-checking rather than invoking this skill repeatedly
 
 ## Red Flags
 

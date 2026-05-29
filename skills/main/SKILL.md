@@ -17,11 +17,9 @@ If there is even a 1% chance a skill applies to your task, you MUST invoke it. N
 
 ## The Rule
 
-**Invoke relevant or requested skills BEFORE any response or action.** Even a 1% chance a skill might apply means you should invoke the skill to check. If an invoked skill turns out to be wrong for the situation, you don't need to use it.
+Invoke relevant or requested skills BEFORE any response or action. Even a 1% chance a skill might apply means you should invoke the skill to check. If an invoked skill turns out to be wrong for the situation, you don't need to use it.
 
-When multiple skills could apply: process skills first (brainstorming, debugging), then implementation skills (executing-plans, tdd).
-
-If you're thinking "this doesn't need a skill" — it probably does. Check BEFORE any action.
+When multiple skills could apply: process skills first (brainstorming, debugging), then implementation support skills (executing-plans, tdd, requesting-review).
 
 ## Planning Context
 
@@ -31,7 +29,7 @@ When starting a complex task (multi-step, research, >5 tool calls):
 2. If NOT found, run `${CLAUDE_PLUGIN_ROOT}/scripts/init-planning-dir.sh` to initialize it
 3. If FOUND, read the existing planning files to recover context (see Session Recovery below)
 
-The `.planning/` directory is your "RAM on disk" -- persistent working memory that survives context resets.
+The `.planning/` directory is your "RAM on disk" -- persistent working memory that survives context resets and Claude Code session boundaries.
 
 ## Session Recovery
 
@@ -49,69 +47,58 @@ When facing a non-trivial task (multi-step, architectural decisions, multi-file 
 
 **Option 1: Quick Planning (Plan Mode)** — Lightweight read-only exploration. Best for medium-scope tasks with known approach, quick alignment before implementation.
 
-**Option 2: Lightweight Execution** — Fast structured execution with `.planning/` tracking but no review loops or formal plans. Best for clear requirements, 2-5 files, <10 tasks. Code gets written in this session.
+**Option 2: Structured Brainstorming** — Full brainstorming pipeline with design doc, spec interview, implementation plan. Best for complex features, creative design decisions, multi-file refactors.
 
-**Option 3: Structured Brainstorming** — Full brainstorming pipeline with design doc, spec interview, implementation plan. Best for complex features, creative design decisions, multi-file refactors.
-
-**Option 4: Stash Current Work** — Pause unfinished work safely, save current `.planning/` context into `.planning/stash/`, and switch away cleanly. Best when changing projects or waiting on external input.
+**Option 3: Stash Current Work** — Pause unfinished work safely, save current `.planning/` context into `.planning/stash/`, and switch away cleanly. Best when changing projects or waiting on external input.
 
 **When to skip this choice:**
 - Trivial tasks (typo, single-line fix) → just do it, no planning needed
+- Clear small implementation tasks → implement directly in the current session, but still initialize `.planning/` if the work becomes multi-step
 - User explicitly requests one mode (e.g., "let's brainstorm", "/plan") → use what they asked for
 - Already inside plan mode or brainstorming → continue the current flow
 
 **After Plan Mode completes:** If the approved plan reveals complex work (3+ tasks, multiple files), suggest transitioning to brainstorming/writing-plans for a formal implementation plan. Plan mode output can inform writing-plans — reference it, don't re-derive.
 
-**When Lightweight Execution is chosen:** Invoke `superpower-planning:lightweight-execute`. This skill handles everything: `.planning/` init, exploration, task checklist, implementation, verification, and finishing-branch. No further routing is needed.
-
 ## Execution Routing
 
-When the user requests plan execution (e.g., "execute the plan", "implement it", "start building"), do NOT directly invoke a single execution skill. Instead:
+When the user requests plan execution (e.g., "execute the plan", "implement it", "start building"), do NOT route to removed manual orchestration skills. Instead:
 
 1. If no plan exists at `.planning/plan.md`, invoke `superpower-planning:writing-plans` first.
 2. If a plan exists, present the execution strategy choice via `AskUserQuestion`:
-   - **Subagent-Driven** (this session, sequential, Claude subagents) → `superpower-planning:subagent-driven`
-   - **Subagent-Driven Codex** (this session, sequential, Codex CLI executors) → `superpower-planning:subagent-driven-codex`
-   - **Team-Driven** (this session, parallel) → `superpower-planning:team-driven`
-   - **Parallel Session** (separate session) → `superpower-planning:executing-plans`
-3. Recommend based on: high parallelism + heavy tasks → Team-Driven; light serial with Claude subagents → Subagent-Driven; light serial where you want a second model writing the code and reviewing → Subagent-Driven Codex; manual checkpoints → Parallel Session.
+   - **Claude Code Dynamic Workflow** — recommended for large, parallel, or cross-checked work. Ask Claude to run a workflow for this plan (include the word "workflow" in the request so Claude writes one), or turn on `/effort ultracode` for automatic workflow orchestration.
+   - **Codex-Driven** — `superpower-planning:subagent-driven-codex`, for sequential second-model implementation/review through Codex CLI.
+   - **Manual Batch Session** — `superpower-planning:executing-plans`, for a separate/manual session that executes plan batches and stops at checkpoints.
+3. Recommend based on: high parallelism + heavy tasks → Dynamic Workflow; need second-model executor → Codex-Driven; user wants manual checkpoints or workflow is unavailable → Manual Batch Session.
 
 ## Available Skills
 
 | Skill | Purpose |
 |-------|---------|
-| `superpower-planning:planning-foundation` | Persistent file-based planning with .planning/ directory. Foundation layer inherited by all other skills. |
-| `superpower-planning:lightweight-execute` | Fast structured execution for clear, medium-scope tasks (2-5 files). Skips formal plans and review loops, keeps `.planning/` tracking and verification. |
+| `superpower-planning:planning-foundation` | Persistent file-based planning with `.planning/` directory. Foundation layer inherited by all other skills. |
 | `superpower-planning:brainstorming` | Structured brainstorming before implementation. Think before you code. |
 | `superpower-planning:spec-interview` | Refine design docs through systematic deep questioning. Auto-invoked after brainstorming. |
-| `superpower-planning:writing-plans` | Write detailed implementation plans with phases and checkpoints. |
-| `superpower-planning:executing-plans` | Execute plans in a **separate session** with batch execution and human checkpoints. One of 4 execution strategies — see Execution Routing. |
-| `superpower-planning:subagent-driven` | Execute plans in **this session, sequentially** with one new Claude subagent invocation per task and two-stage review. One of 4 execution strategies — see Execution Routing. |
-| `superpower-planning:subagent-driven-codex` | Execute plans in **this session, sequentially** by delegating every implementer/reviewer role to **Codex CLI** via the bridge script. Same two-stage review as `subagent-driven`. One of 4 execution strategies — see Execution Routing. |
-| `superpower-planning:team-driven` | Execute plans in **this session, in parallel** via Agent Team with dedicated reviewer. One of 4 execution strategies — see Execution Routing. |
-| `superpower-planning:collaborating-with-codex` | Bridge to OpenAI Codex CLI for delegating coding work — prototyping, debugging, code analysis, or full implementation. Required by `subagent-driven-codex`. |
-| `superpower-planning:parallel-agents` | Run multiple subagents in parallel for independent tasks. |
+| `superpower-planning:writing-plans` | Write detailed implementation plans with phases, commands, and execution handoff. |
+| `superpower-planning:executing-plans` | Execute written plans in a separate/manual batch session with `.planning/` updates and checkpoints. |
+| `superpower-planning:subagent-driven-codex` | Execute plans in this session by delegating implementer/reviewer roles to Codex CLI via the bridge script. |
+| `superpower-planning:collaborating-with-codex` | Bridge to OpenAI Codex CLI for bounded coding work, debugging, code analysis, or review. |
 | `superpower-planning:tdd` | Test-driven development: write tests first, then make them pass. |
 | `superpower-planning:debugging` | Systematic debugging: reproduce, isolate, fix, verify. |
-| `superpower-planning:git-worktrees` | Use git worktrees for parallel branch work without stashing. |
-| `superpower-planning:finishing-branch` | Clean up and finalize a development branch before merge/PR. |
-| `superpower-planning:archiving` | Archive completed plans, consolidate memory, and reset .planning/ for the next task. |
+| `superpower-planning:git-worktrees` | Use Claude Code native worktree isolation before implementation when needed. |
+| `superpower-planning:archiving` | Archive completed plans, consolidate memory, and reset `.planning/` for the next task. |
 | `superpower-planning:stashing` | Pause unfinished work, save it into `.planning/stash/`, and support later resume with stale-findings check. |
 | `superpower-planning:requesting-review` | Prepare and submit code for review with context and rationale. |
 | `superpower-planning:receiving-review` | Process review feedback systematically and address all comments. |
-| `superpower-planning:dual-review` | Run an internal simplify lens and Codex in parallel, consolidate findings, and gate edits on explicit user approval. |
-| `superpower-planning:verification` | Verify work is complete and correct before declaring done. |
-| `superpower-planning:session-handoff-audit` | Generate a self-contained audit prompt for a fresh session to independently verify implementation state against design specs. |
 | `superpower-planning:releasing` | Bump versions, tag, and publish GitHub Releases with changelogs. |
 
 ## Review Routing
 
-- When the user asks for a "dual review", "double check", "second opinion", "review before commit", or wants two independent perspectives on a change → `superpower-planning:dual-review`
-- For single-reviewer flows tied to plan execution → use `requesting-review` / `receiving-review` as before
+- For bounded code review tied to a plan, milestone, or merge readiness → use `requesting-review` / `receiving-review`.
+- For large parallel review or adversarial cross-checking, prefer a Claude Code dynamic workflow rather than a plugin skill.
 
 ## Session Handoff
 
-- When wrapping up a long, multi-commit session, transitioning to a new session, or the user wants an independent verification of implementation state ("audit what we've done", "防止幻觉", "新会话审计") → `superpower-planning:session-handoff-audit`. It generates the prompt; it does not perform the audit.
+- For long-session independent audits, prefer a Claude Code dynamic workflow that dispatches multiple read-only agents and cross-checks their findings against source code.
+- Keep `.planning/progress.md` and `.planning/findings.md` current so a fresh session or workflow has reliable file-based context.
 
 ## Stash / Resume Routing
 

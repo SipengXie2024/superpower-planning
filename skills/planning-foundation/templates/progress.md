@@ -2,13 +2,12 @@
 
 ## Task Status Dashboard
 <!-- Quick-scan execution status. Update after each task/phase completes. -->
-<!-- For subagent-driven / team-driven: Spec Review, Quality Review, and Plan Align MUST all show PASS before Status can be ✅ complete. For executing-plans or other modes, these columns may be left as "-". -->
-<!-- Plan Align is checked per-task by the spec reviewer (against original plan.md) and per-group/final by the orchestrator (Plan Alignment Gate). -->
+<!-- For Codex-driven execution: Spec Review, Quality Review, and Plan Align MUST all show PASS before Status can be ✅ complete. For manual execution or native dynamic workflows, these columns may be left as "-" when no explicit review gate applies. -->
+<!-- Plan Align is checked per-task by the reviewer/agent when present and per-group/final by the orchestrator (Plan Alignment Gate). -->
 <!-- Cell notation for Spec Review / Quality Review:
-       PASS                — single-reviewer setup or scaled with M=1
-       PASS [r2]           — scaled setup, passed by reviewer index 2 (e.g. spec-reviewer-2)
-       FAIL [r1] (round 2/3) — fix loop in progress on reviewer index 1, round 2 of 3
-       -                   — review not applicable (e.g. lightweight-execute, executing-plans modes)
+       PASS                — review passed
+       FAIL (round 2/3)    — fix loop in progress, round 2 of 3
+       -                   — review not applicable for this execution mode
      The "PASS" prefix is preserved so `grep -E '^\s*\|.*PASS\b'` style scans keep working. -->
 | Task | Status | Spec Review | Quality Review | Plan Align | Agent/Batch | Key Outcome |
 |------|--------|-------------|----------------|------------|-------------|-------------|
@@ -36,7 +35,6 @@
 |      |       |          |        |        |
 
 ## Verification Evidence
-<!-- Added by verification skill -->
 | Claim | Command | Exit Code | Key Output | Verified |
 |-------|---------|-----------|------------|----------|
 |       |         |           |            |          |
