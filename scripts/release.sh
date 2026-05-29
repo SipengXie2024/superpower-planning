@@ -41,10 +41,32 @@ for cmd in jq gh git; do
     fi
 done
 
-echo "Releasing v${VERSION}..."
+# Pre-flight guards — run before any file mutation so a failed check leaves no half-done state
 
-# Detect base branch
+# Tag must not already exist (otherwise the bump commit lands but tagging fails mid-run)
+if git -C "$REPO_ROOT" rev-parse -q --verify "refs/tags/v${VERSION}" >/dev/null; then
+    echo "Error: tag v${VERSION} already exists" >&2
+    exit 1
+fi
+
+# Must be on the branch we push to (we commit to HEAD but push BASE_BRANCH)
 BASE_BRANCH=$("${SCRIPT_DIR}/detect-base-branch.sh" "$REPO_ROOT")
+CURRENT_BRANCH=$(git -C "$REPO_ROOT" rev-parse --abbrev-ref HEAD)
+if [ "$CURRENT_BRANCH" != "$BASE_BRANCH" ]; then
+    echo "Error: on branch '$CURRENT_BRANCH' but release pushes '$BASE_BRANCH'." >&2
+    echo "Checkout $BASE_BRANCH (or merge there) before releasing." >&2
+    exit 1
+fi
+
+# Working tree must be clean — this script commits only the version bump, so any
+# other uncommitted change would be silently left out of the tagged release.
+if ! git -C "$REPO_ROOT" diff --quiet --ignore-submodules HEAD; then
+    echo "Error: working tree has uncommitted changes." >&2
+    echo "Commit or stash them first; release.sh only commits the version bump." >&2
+    exit 1
+fi
+
+echo "Releasing v${VERSION}..."
 
 # 1. Update plugin.json
 TMPFILE=$(mktemp)
