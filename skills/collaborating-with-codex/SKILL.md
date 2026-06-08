@@ -32,6 +32,18 @@ Always use that absolute path when invoking the bridge from another skill in thi
 
 **Output:** JSON with `success`, `SESSION_ID`, `agent_messages`, and optional `error`.
 
+## Workflow
+
+1. **Scope.** Decide what to delegate and the workspace root. In → the user's ask; out → one task and a `--cd` path. If a path looks wrong or may not exist, keep it as an assumption to flag (step 3), not a reason to stall.
+2. **Confirm if it can write.** In → the planned dispatch; out → user go-ahead, or a skip when work is clearly read-only / already authorized this turn (see "Confirm before a destructive run" below).
+3. **Dispatch in background.** In → task + `--cd` (+ `--skip-git-repo-check` for non-repo dirs); out → run `codex_bridge.py` with `run_in_background: true`. Name any path/topology assumption alongside the call.
+4. **Capture `SESSION_ID`.** In → the JSON response; out → the `SESSION_ID` string, kept for every follow-up turn on this task (see Multi-turn Sessions).
+5. **Verify, then report.** In → `agent_messages` / returned diff; out → a checked result. Verify before treating it as done; never apply unreviewed changes. Report only what the bridge actually returned, in plain prose.
+
+**Confirm before a destructive run.** Codex executes with `danger-full-access` by default, so it can edit, delete, or run arbitrary commands in `--cd`. Before the first dispatch that can write the user's tree — and always before `--yolo` or before applying a returned diff — state in one line what you're about to delegate and where, then get the user's go-ahead. Skip the gate only for clearly read-only work (analysis, review, "return a diff only / do not modify files" prompts) or when the user already authorized the action this turn. After Codex returns, verify the diff or result before treating it as done; never apply unreviewed changes.
+
+**Grounding (never fabricate an outcome):** Only report what the bridge actually returned. Do not claim Codex "ran", "failed", or hit a specific error (e.g. "No such file or directory") before you have invoked the bridge and read its output — manufacturing a failure to justify stalling is worse than proceeding (see steps 1 and 3 on flagging a doubtful path instead of blocking). When you report, address the user directly in plain prose; do not surface flag names, `SESSION_ID` UUIDs, or other bridge machinery as user-facing meta.
+
 ## Parameters
 
 ```
