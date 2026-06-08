@@ -64,9 +64,11 @@ HEAD_SHA=$(git rev-parse HEAD)
 
 Use `skills/requesting-review/code-reviewer.md` as the request body and replace its placeholders with the current change context.
 
-### 3. Dispatch the reviewer
+### 3. Confirm scope, then dispatch
 
-Dispatch `superpower-planning:code-reviewer` with the filled template. If the environment routes through `agents/code-reviewer.md`, treat that file as a compatibility entrypoint only; the detailed review contract still comes from `skills/requesting-review/code-reviewer.md`.
+**Checkpoint — confirm before dispatching:** show the user the resolved `BASE_SHA..HEAD_SHA` range, the file count it covers, and the plan/task being verified. Proceed only on explicit go-ahead; if the range or scope looks wrong, fix it first. Skip this checkpoint only when an automated workflow (Codex-driven, executing-plans) has already fixed the range as part of its checkpoint.
+
+Then dispatch `superpower-planning:code-reviewer` with the filled template. If the environment routes through `agents/code-reviewer.md`, treat that file as a compatibility entrypoint only; the detailed review contract still comes from `skills/requesting-review/code-reviewer.md`.
 
 ### Canonical Request Shape
 
@@ -98,7 +100,7 @@ FOCUS: plan alignment, tests, error handling
 
 ## Acting on Feedback
 
-1. Fix **Critical** issues immediately.
+1. Fix **Critical** issues immediately. Before applying any fix that rewrites unrelated code, changes a public interface, or touches files outside the reviewed range, surface the proposed change and confirm with the user first.
 2. Fix **Important** issues before proceeding unless there is strong technical evidence not to.
 3. Note **Minor** issues for later if time-sensitive.
 4. Push back when the reviewer is wrong; use code, tests, or requirements as evidence.
