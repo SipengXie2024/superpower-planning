@@ -8,7 +8,7 @@
     {
       "name": "superpower-planning",
       "description": "Persistent file-based planning, Codex delegation, stashing, and archiving",
-      "version": "2.1.0",
+      "version": "2.2.0",
       "source": "./"
     }
   ]
