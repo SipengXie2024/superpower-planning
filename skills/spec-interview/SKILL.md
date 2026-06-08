@@ -9,7 +9,7 @@ Refine draft specs and design docs into complete technical documents through dee
 
 ## When This Runs
 
-- **Automatically** after brainstorming produces a design doc (user can skip)
+- **Automatically** after brainstorming produces a design doc — first confirm with `AskUserQuestion` ("Run a deep interview now?" / "Skip to implementation"); only proceed if the user opts in
 - **Manually** when user says "help me refine this plan/spec" or "ask me about the project"
 - When a draft spec or plan.md is missing critical details
 
@@ -18,6 +18,16 @@ Refine draft specs and design docs into complete technical documents through dee
 ```
 Read target doc → Identify gaps → Ask deep questions (AskUserQuestion) → Iterate → Update doc
 ```
+
+### Step 0: Check Preconditions
+
+The interview needs a real draft to probe. Before anything else, locate the target doc and branch:
+
+- **Doc missing or empty** — do NOT fabricate a spec to interview against. Use `AskUserQuestion` to offer: option 1 "(Recommended) Point me at the draft file", option 2 "Brainstorm first to produce one", option 3 "Paste the rough idea and I'll draft, then interview". Stop until one is chosen.
+- **Doc already complete** (no real gaps across the seven dimensions) — say so plainly and exit; don't manufacture questions to justify running. Offer to proceed to implementation instead.
+- **User declines to answer / gives no useful input** — record the gap as an open question in the doc and move on rather than blocking.
+
+Match the user's language (e.g. reply in Chinese to a Chinese trigger). Address the user directly: don't name this skill, its steps, or the tools you're using.
 
 ### Step 1: Read and Analyze
 
@@ -78,8 +88,9 @@ After the interview is complete, integrate all clarifications back into the orig
 - Preserve existing structure, fill in missing details
 - Annotate key decisions with their rationale
 - List identified risks and mitigations
-- Commit the updated document
 - Also persist key findings (rejected alternatives, risk assessments, non-obvious decisions) to `.planning/findings.md`
+
+**Confirmation gate (required before any commit).** Updating the doc and committing are mutating actions — never auto-commit. After writing the edits, summarize the changes and use `AskUserQuestion` to confirm before running git: option 1 "(Recommended) Commit the updated doc", option 2 "Show me the diff first", option 3 "Don't commit — leave it staged". Only run `git commit` if the user picks option 1.
 
 ## Return to Calling Flow
 
