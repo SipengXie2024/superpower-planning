@@ -38,15 +38,27 @@ Group commits by type when there are enough to justify it:
 
 For small releases (< 5 commits), a flat list is fine.
 
-### 3. Execute release
+### 3. Confirm before publishing
 
-Once version and changelog are determined, run the release script:
+The script pushes to origin and creates a **public** GitHub Release — irreversible. First show the user the final version number and the full changelog text, and get explicit approval before running it. Do not invoke the script autonomously.
+
+### 4. Execute release
+
+After approval, run the release script:
 
 ```bash
 ${CLAUDE_PLUGIN_ROOT}/scripts/release.sh "<version>" "<changelog>"
 ```
 
 This handles all mechanical steps: update both JSONs → commit → tag → push → create GitHub Release.
+
+## Recovery
+
+| Condition | Handling |
+|-----------|----------|
+| `git describe` fails (no prior tag) | First release — pick an initial version (e.g. `0.1.0`); changelog from full `git log --oneline` |
+| `gh` not authenticated | Stop; ask the user to run `gh auth login` before retrying |
+| Script fails mid-run | Inspect what completed (`git tag`, `gh release list`); finish remaining steps manually, don't re-run the whole script |
 
 ## Common Mistakes
 
