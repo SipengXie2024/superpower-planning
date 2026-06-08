@@ -44,6 +44,8 @@ Write code before the test? Delete it. Start over.
 
 Implement fresh from tests. Period.
 
+**Before deleting code the user already wrote, confirm first.** State plainly what will be removed and why (it has no failing test behind it), then wait for a yes. Phrase the confirmation as your own recommendation, not a rule citation — never name this skill, its steps, or any internal tool to the user. Only their own freshly-written, untested code needs this gate; code you wrote earlier in the same session does not.
+
 ## Red-Green-Refactor
 
 ```dot
