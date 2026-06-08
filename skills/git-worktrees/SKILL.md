@@ -1,6 +1,6 @@
 ---
 name: git-worktrees
-description: Use when starting feature work that needs isolation from the current workspace or before executing implementation plans.
+description: Detect existing git worktree isolation and set up an isolated branch checkout (native EnterWorktree or manual git worktree add), distinguishing worktrees from submodules. Use when starting feature work that needs isolation, parallel branches, or a separate workspace, or before executing implementation plans.
 ---
 
 # Using Git Worktrees
@@ -28,6 +28,8 @@ Decision rules:
 - If `git_dir != git_common` and `superproject` is empty, you are already in a linked worktree. Report the current path and do not create another one.
 - If `superproject` is non-empty, you are inside a submodule. Do not treat `git_dir != git_common` alone as proof of worktree isolation.
 - If the repository has no git metadata, do not create a worktree.
+
+**Ground every claim in real state.** Never repeat the user's description of the working tree ("half-done changes", "a typo on line 12") as established fact — run `git status` and read the actual file/line before describing what is there. If reality differs from the claim, say so. Address the user directly; do not narrate which detection block or skill step you ran.
 
 ## Native Claude Code Path
 
