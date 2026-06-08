@@ -23,6 +23,8 @@ Use this variant when:
 
 Prefer a Claude Code dynamic workflow when the task needs many Claude agents, broad parallel review, large migrations, or cross-checked research. Codex CLI does support MCP if the user has it configured — that is not a reason to avoid Codex.
 
+**When NOT to delegate (do it directly instead).** A single trivial edit — a one-line typo, a constant change, a one-character fix — is not worth a Codex round-trip: an implementer dispatch plus two review rounds is 60–120s each, dwarfing the work. Skip the orchestration and make the edit yourself. But "do it directly" still means *actually do it*: Read the file to confirm it exists and the target line matches, apply the edit, and confirm it landed (Hard Requirement #8 applies to your own edits, not just Codex's). If the file or path the user named does not exist in the workspace, do not invent a fix or report phantom success — state that the path is missing and ask for the correct one. Reserve the full implementer + two-stage-review machinery for bounded, plan-driven, multi-step tasks.
+
 ## Hard Requirements (Non-Negotiable)
 
 <EXTREMELY-IMPORTANT>
@@ -33,7 +35,7 @@ Prefer a Claude Code dynamic workflow when the task needs many Claude agents, br
 5. **Capture `SESSION_ID` from the first call to each role.** Reuse it on follow-up calls so Codex keeps context across fix-rounds within the SAME task. The SESSION_ID is per-task; it gets overwritten when the next task starts. Store IDs in `.planning/agents/<role>/session.txt`.
 6. **Do NOT pass `--model` or `--profile`** unless the user explicitly named one. Reserved for user direction.
 7. **Two-stage Codex review is still mandatory** (spec, then quality). Three round cap per stage.
-8. **Verify Codex's output yourself before declaring the task done.** Codex's summary describes intent, not proof — read the diff, run the test, check the output.
+8. **Verify before declaring anything done — Codex's work AND your own.** Codex's summary describes intent, not proof — read the diff, run the test, check the output. The same rule binds the orchestrator: never report an edit, fix, or command as "done" unless you actually performed it and confirmed the result. If you make a change directly (see "When NOT to delegate"), first Read the target file to confirm it exists and the line matches, then apply the edit, then re-Read to confirm it landed. If the file or path cannot be found, say so plainly and ask for the correct path — never fabricate a success report for an action you did not take.
 9. **A reviewer Codex that modifies files invalidates its own review.** The bridge defaults to `danger-full-access`, so review prompts can only restrain Codex through wording. If a reviewer touches the workspace, discard the review, revert the unauthorized edits, and re-dispatch a fresh reviewer session with stronger language.
 </EXTREMELY-IMPORTANT>
 
