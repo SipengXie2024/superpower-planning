@@ -11,7 +11,7 @@ Write comprehensive implementation plans assuming the engineer has zero context 
 
 Assume they are a skilled developer, but know almost nothing about our toolset or problem domain. Assume they don't know good test design very well.
 
-**Announce at start:** "I'm using the writing-plans skill to create the implementation plan."
+Address the user directly; never name this skill, its steps, internal scripts/tools, or named rules ("Scope Check", "no-placeholders rule"). Give the reasoning in plain terms ("this bundles several independent subsystems, so I'll split it") rather than citing the rule.
 
 **Context:** Optionally runs in a dedicated worktree (user chooses during brainstorming).
 
@@ -45,6 +45,8 @@ ${CLAUDE_PLUGIN_ROOT}/scripts/archive-search.sh "<keyword>"
 1. If relevant archives are found, read the full archive directory (especially `summary.md`, `findings.md`) and incorporate relevant lessons into the plan
 2. If none are relevant or no archives exist, skip silently
 
+Run this silently — don't narrate the script path or the search to the user; just fold any findings into the plan.
+
 ## Bite-Sized Task Granularity
 
 **Each step is one action (2-5 minutes):**
@@ -61,7 +63,7 @@ ${CLAUDE_PLUGIN_ROOT}/scripts/archive-search.sh "<keyword>"
 ```markdown
 # [Feature Name] Implementation Plan
 
-> **For Claude:** Execute this plan using the skill chosen during Execution Handoff (see end of plan).
+> **For Claude:** Execute using the chosen execution mode (see end of plan).
 > Planning dir: .planning/
 
 **Goal:** [One sentence describing what this builds]
@@ -128,6 +130,8 @@ Every step must contain the actual content an engineer needs. These are **plan f
 - Steps that describe what to do without showing how (code blocks required for code steps)
 - References to types, functions, or methods not defined in any task
 
+**This bans laziness, not drafting under partial inputs.** When the design is summarized, partial, or some paths/signatures are not yet confirmed, still write the full plan — concrete file map, real test code, real commands — using your best inferred values, and tag each unconfirmed value with a `[VERIFY]` marker plus a one-line note on what to check. A complete plan with explicit `[VERIFY]` markers is the deliverable; refusing to produce plan artifacts because inputs are imperfect is a worse outcome than a clearly-hedged plan. Only stop short of a plan when the spec is genuinely absent (then say what is missing) or the Scope Check fires.
+
 ## Auto-Create `.planning/` Directory
 
 When writing a plan, **automatically create** the `.planning/` directory if it does not already exist by running:
@@ -137,6 +141,8 @@ ${CLAUDE_PLUGIN_ROOT}/scripts/init-planning-dir.sh
 ```
 
 This creates `progress.md` and `findings.md`. The canonical template is at `planning-foundation/templates/progress.md`. Delegated role planning directories (`agents/`) are created when needed.
+
+Run this silently too — don't surface the script path or describe the setup mechanics to the user.
 
 > **Note:** The plan in `.planning/plan.md` is the single source of truth for plan content. Execution status is tracked via the Task Status Dashboard in `progress.md`.
 
@@ -215,9 +221,11 @@ After saving the plan and completing the self-review, you MUST present exactly t
 
 **1. Claude Code Dynamic Workflow** — Native workflow execution for large, parallel, or cross-checked work. Best when the plan has independent task groups, broad review/audit needs, or would otherwise require many Claude workers.
 
-**2. Codex-Driven (this session, sequential)** — `superpower-planning:subagent-driven-codex`. Best when the user wants a second model to implement and review bounded tasks through Codex CLI.
+**2. Codex-Driven (this session, sequential)** — best when the user wants a second model to implement and review bounded tasks through Codex CLI.
 
-**3. Manual Batch Session** — `superpower-planning:executing-plans`. Best when dynamic workflows are unavailable or the user wants explicit checkpoint summaries between batches.
+**3. Manual Batch Session** — best when dynamic workflows are unavailable or the user wants explicit checkpoint summaries between batches.
+
+Keep the option labels and descriptions plain; do not put internal skill identifiers (`superpower-planning:...`) into the text the user reads. The sub-skill to invoke for each choice is named only in the "If X chosen" branches below, which are internal routing notes, not user-facing.
 
 Include your recommendation in the question text based on the logic below, but never remove options.
 
