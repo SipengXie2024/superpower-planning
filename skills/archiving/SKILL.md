@@ -123,11 +123,15 @@ If there are no suggestions in a category, omit that category entirely.
 
 ### Step 5: Reset .planning/
 
+This step is destructive. Before running it, use `AskUserQuestion` to get explicit confirmation, since the reset deletes the live working files. Confirm the archive from Step 3 is on disk first, and surface that the reset removes `design.md`, `plan.md`, `progress.md`, `findings.md`, and `agents/`. Do not proceed if the user declines.
+
+Once confirmed:
+
 ```bash
 ${CLAUDE_PLUGIN_ROOT}/scripts/planning-reset.sh
 ```
 
-This removes `design.md`, `plan.md`, `progress.md`, `findings.md`, and `agents/`, then recreates clean templates from canonical sources. `archive/` and `stash/` are preserved automatically.
+This recreates clean templates from canonical sources. `archive/` and `stash/` are preserved automatically.
 
 ### Step 6: Report Completion
 
