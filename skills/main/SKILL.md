@@ -43,19 +43,17 @@ On session start, check for an existing `.planning/` directory. If found:
 
 ## Planning Approach Routing
 
-When facing a non-trivial task (multi-step, architectural decisions, multi-file changes), do NOT automatically call `EnterPlanMode` or invoke `brainstorming`. Instead, present the choice to the user via `AskUserQuestion`:
+Work through these checks in order; stop at the first that matches.
 
-**Option 1: Quick Planning (Plan Mode)** — Lightweight read-only exploration. Best for medium-scope tasks with known approach, quick alignment before implementation.
+1. **User named a mode** (e.g., "let's brainstorm", "/plan") OR you are already inside plan mode / brainstorming → use that mode, skip the rest.
+2. **Trivial task** (typo, single-line fix) → just do it. No planning, no `AskUserQuestion`.
+3. **Clear small implementation task** → implement directly in the current session. If it turns out to be multi-step, initialize `.planning/` mid-task and continue.
+4. **Non-trivial task** (multi-step, architectural decisions, multi-file changes) → do NOT auto-call `EnterPlanMode` or `brainstorming`. Present the choice via `AskUserQuestion` with these three options:
+   - **Quick Planning (Plan Mode)** — lightweight read-only exploration. Best for medium-scope tasks with a known approach, quick alignment before implementation.
+   - **Structured Brainstorming** — full brainstorming pipeline (design doc, spec interview, implementation plan). Best for complex features, creative design decisions, multi-file refactors.
+   - **Stash Current Work** — pause unfinished work safely, save current `.planning/` context into `.planning/stash/`, switch away cleanly. Best when changing projects or waiting on external input.
 
-**Option 2: Structured Brainstorming** — Full brainstorming pipeline with design doc, spec interview, implementation plan. Best for complex features, creative design decisions, multi-file refactors.
-
-**Option 3: Stash Current Work** — Pause unfinished work safely, save current `.planning/` context into `.planning/stash/`, and switch away cleanly. Best when changing projects or waiting on external input.
-
-**When to skip this choice:**
-- Trivial tasks (typo, single-line fix) → just do it, no planning needed
-- Clear small implementation tasks → implement directly in the current session, but still initialize `.planning/` if the work becomes multi-step
-- User explicitly requests one mode (e.g., "let's brainstorm", "/plan") → use what they asked for
-- Already inside plan mode or brainstorming → continue the current flow
+After the user picks, invoke the matching skill/mode; do not pre-commit to one before they answer.
 
 **After Plan Mode completes:** If the approved plan reveals complex work (3+ tasks, multiple files), suggest transitioning to brainstorming/writing-plans for a formal implementation plan. Plan mode output can inform writing-plans — reference it, don't re-derive.
 
