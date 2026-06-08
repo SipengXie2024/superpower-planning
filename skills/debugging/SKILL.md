@@ -86,6 +86,8 @@ You MUST complete each phase before proceeding to the next.
    THEN investigate that specific component
    ```
 
+   **CHECKPOINT — live/production systems:** If instrumentation would run against a live, shared, or production system (not a local/test environment), pause and get user confirmation before injecting it. State what you'll add, where, and that it's read-only logging. Don't instrument prod autonomously.
+
    **Example (multi-layer system):**
    ```bash
    # Layer 1: Workflow
@@ -191,6 +193,7 @@ You MUST complete each phase before proceeding to the next.
    - ONE change at a time
    - No "while I'm here" improvements
    - No bundled refactoring
+   - **CHECKPOINT before applying:** State the root cause and the single fix in one sentence, then get user confirmation before editing — unless the change is local and trivially reversible (one-line/cosmetic) or the user already approved this fix. For risky edits (touches shared state, migrations, prod config, data-destructive paths), confirmation is mandatory.
 
 3. **Verify Fix**
    - Test passes now?
