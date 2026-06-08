@@ -43,7 +43,7 @@ Lifecycle directories:
 
 Before ANY complex task:
 
-1. **Create `.planning/` directory** with init script or manually
+1. **Create `.planning/` directory** — run `${CLAUDE_PLUGIN_ROOT}/scripts/init-planning-dir.sh`, or `mkdir -p .planning` if the script is unavailable
 2. **Create `progress.md`** — Use [templates/progress.md](templates/progress.md) (includes Task Status Dashboard)
 3. **Create `findings.md`** — Use [templates/findings.md](templates/findings.md) as reference
 4. **Re-read plan before decisions** — Refreshes goals in attention window
@@ -194,29 +194,29 @@ The orchestrator aggregates delegated-role findings into top-level `.planning/fi
 ## Scripts
 
 **Planning lifecycle:**
-- `scripts/init-planning-dir.sh` — Initialize `.planning/` with findings.md and progress.md
-- `scripts/planning-reset.sh` — Reset active state, preserve archive/ and stash/
-- `scripts/check-planning-state.sh` — Check state: missing | empty | active | complete
-- `scripts/check-complete.sh` — Verify all tasks complete
-- `scripts/snapshot-save.sh` — Copy active project files to a target directory (shared by stash/archive)
+- `${CLAUDE_PLUGIN_ROOT}/scripts/init-planning-dir.sh` — Initialize `.planning/` with findings.md and progress.md
+- `${CLAUDE_PLUGIN_ROOT}/scripts/planning-reset.sh` — Reset active state, preserve archive/ and stash/
+- `${CLAUDE_PLUGIN_ROOT}/scripts/check-planning-state.sh` — Check state: missing | empty | active | complete
+- `${CLAUDE_PLUGIN_ROOT}/scripts/check-complete.sh` — Verify all tasks complete
+- `${CLAUDE_PLUGIN_ROOT}/scripts/snapshot-save.sh` — Copy active project files to a target directory (shared by stash/archive)
 
 **Stash/archive:**
-- `scripts/stash-list.sh` — List available stashes (directory + legacy format)
-- `scripts/stash-restore.sh` — Restore stash to active .planning/ state
-- `scripts/archive-search.sh` — Search archives by keyword
-- `scripts/unique-filename.sh` — Generate unique dated filename/dirname
+- `${CLAUDE_PLUGIN_ROOT}/scripts/stash-list.sh` — List available stashes (directory + legacy format)
+- `${CLAUDE_PLUGIN_ROOT}/scripts/stash-restore.sh` — Restore stash to active .planning/ state
+- `${CLAUDE_PLUGIN_ROOT}/scripts/archive-search.sh` — Search archives by keyword
+- `${CLAUDE_PLUGIN_ROOT}/scripts/unique-filename.sh` — Generate unique dated filename/dirname
 
 **Agent orchestration:**
-- `scripts/aggregate-agent-findings.sh` — Merge delegated-role "Critical for Orchestrator" items into top-level files
+- `${CLAUDE_PLUGIN_ROOT}/scripts/aggregate-agent-findings.sh` — Merge delegated-role "Critical for Orchestrator" items into top-level files
 
 **Project detection:**
-- `scripts/detect-base-branch.sh` — Detect main/master/develop
-- `scripts/detect-test-command.sh` — Detect project test command
-- `scripts/detect-project-setup.sh` — Detect and run project setup
+- `${CLAUDE_PLUGIN_ROOT}/scripts/detect-base-branch.sh` — Detect main/master/develop
+- `${CLAUDE_PLUGIN_ROOT}/scripts/detect-test-command.sh` — Detect project test command
+- `${CLAUDE_PLUGIN_ROOT}/scripts/detect-project-setup.sh` — Detect and run project setup
 
 **Other:**
-- `scripts/release.sh` — Version bump, tag, GitHub Release
-- `scripts/session-catchup.py` — Recover context from previous session (manual utility, requires Python)
+- `${CLAUDE_PLUGIN_ROOT}/scripts/release.sh` — Version bump, tag, GitHub Release
+- `${CLAUDE_PLUGIN_ROOT}/scripts/session-catchup.py` — Recover context from previous session (manual utility, requires Python)
 
 ## Anti-Patterns
 
