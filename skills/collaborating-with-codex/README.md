@@ -9,7 +9,8 @@ This Skill enables Claude to delegate coding tasks to Codex CLI, combining the s
 ## Features
 
 - **Multi-turn sessions**: Maintain conversation context across multiple interactions via `SESSION_ID`
-- **Sandboxed execution**: Three security levels (`read-only`, `workspace-write`, `danger-full-access`)
+- **Sandboxed execution**: Two security levels (`workspace-write`, `danger-full-access`, the default); `read-only` has been removed
+- **No assumed success**: Codex's "done" / "all tests pass" replies are treated as claims, not proof — results are double-checked against the actual files, diffs, and test output before being trusted or applied
 - **JSON output**: Structured responses for easy parsing and integration
 - **Image support**: Attach images to prompts for visual context
 - **Cross-platform**: Windows path escaping handled automatically
@@ -46,7 +47,7 @@ python scripts/codex_bridge.py --cd "/project" --SESSION_ID "uuid-from-response"
 |-----------|----------|-------------|
 | `--PROMPT` | Yes | Task instruction |
 | `--cd` | Yes | Workspace root directory |
-| `--sandbox` | No | Security level: `read-only` (default), `workspace-write`, `danger-full-access` |
+| `--sandbox` | No | Security level: `workspace-write` or `danger-full-access` (default); `read-only` is not available |
 | `--SESSION_ID` | No | Resume a previous session |
 | `--return-all-messages` | No | Include full reasoning trace in output |
 | `--image` | No | Attach image files (comma-separated or repeated) |
