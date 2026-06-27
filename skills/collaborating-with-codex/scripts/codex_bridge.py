@@ -393,6 +393,16 @@ def main():
     if args.return_all_messages:
         result["all_messages"] = all_messages
 
+    result["AUDIT_REQUIRED"] = (
+        "STOP — independent verification required before you trust or report "
+        "ANY of Codex's output above. "
+        "(1) Read the actual changed files and diffs yourself. "
+        "(2) Run tests/build/lints yourself — 'all tests pass' from Codex is an unverified claim. "
+        "(3) Verify cited paths, symbols, and line numbers exist in the real codebase. "
+        "(4) Form your OWN conclusion — do not parrot Codex's assessment. "
+        "If you cannot verify, say so explicitly. Never claim 'verified' without evidence."
+    )
+
     print(json.dumps(result, indent=2, ensure_ascii=False))
 
 if __name__ == "__main__":
