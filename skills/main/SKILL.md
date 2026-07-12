@@ -79,6 +79,8 @@ When the user requests plan execution (e.g., "execute the plan", "implement it",
 | `superpower-planning:executing-plans` | Execute written plans in a separate/manual batch session with `.planning/` updates and checkpoints. |
 | `superpower-planning:subagent-driven-codex` | Execute plans in this session by delegating implementer/reviewer roles to Codex CLI via the bridge script. |
 | `superpower-planning:collaborating-with-codex` | Bridge to OpenAI Codex CLI for bounded coding work, debugging, code analysis, or review. |
+| `superpower-planning:collaborating-with-hermes` | Consult Hermes for independent analysis, research, code review, or a second opinion; pair it with Codex consultations. |
+| `superpower-planning:perf-optimization` | Profile first, shrink the largest measured performance bottleneck, then re-profile. |
 | `superpower-planning:tdd` | Test-driven development: write tests first, then make them pass. |
 | `superpower-planning:debugging` | Systematic debugging: reproduce, isolate, fix, verify. |
 | `superpower-planning:git-worktrees` | Use Claude Code native worktree isolation before implementation when needed. |

@@ -11,6 +11,7 @@ This Skill enables Claude to delegate coding tasks to Codex CLI, combining the s
 - **Multi-turn sessions**: Maintain conversation context across multiple interactions via `SESSION_ID`
 - **Sandboxed execution**: Two security levels (`workspace-write`, `danger-full-access`, the default); `read-only` has been removed
 - **No assumed success**: Codex's "done" / "all tests pass" replies are treated as claims, not proof — results are double-checked against the actual files, diffs, and test output before being trusted or applied
+- **Consultation isolation**: Analysis, research, and read-only review save the complete answer privately and return only a validated structured handoff
 - **JSON output**: Structured responses for easy parsing and integration
 - **Image support**: Attach images to prompts for visual context
 - **Cross-platform**: Windows path escaping handled automatically
@@ -24,10 +25,18 @@ This Skill enables Claude to delegate coding tasks to Codex CLI, combining the s
 
 ## Usage
 
-### Basic
+### Consultation (analysis, research, read-only review)
 
 ```bash
-python scripts/codex_bridge.py --cd "/path/to/project" --PROMPT "Analyze the authentication flow"
+python scripts/codex_bridge.py --cd "/path/to/project" --consult-handoff --research-domain general --PROMPT "Analyze the authentication flow"
+```
+
+The complete answer is saved in a private system-temporary file. Bridge stdout contains only the validated `handoff`, artifact metadata, audit instructions, and official fallback guidance. Do not automatically read the raw artifact.
+
+### Direct execution
+
+```bash
+python scripts/codex_bridge.py --cd "/path/to/project" --PROMPT "Implement the approved change and run the focused tests"
 ```
 
 ### Multi-turn Session
@@ -53,17 +62,37 @@ python scripts/codex_bridge.py --cd "/project" --SESSION_ID "uuid-from-response"
 | `--image` | No | Attach image files (comma-separated or repeated) |
 | `--model` | No | Specify model (use only when explicitly requested) |
 | `--yolo` | No | Bypass all approvals (use with caution) |
+| `--consult-handoff` | No | Persist the full consultation answer and return only a validated handoff |
+| `--research-domain` | No | Fallback guidance domain: `general`, `cyber`, or `bio` |
 
-### Output Format
+### Direct output
 
 ```json
 {
   "success": true,
   "SESSION_ID": "uuid",
   "agent_messages": "Codex response text",
-  "all_messages": []
+  "AUDIT_REQUIRED": "..."
 }
 ```
+
+### Consultation output
+
+```json
+{
+  "success": true,
+  "SESSION_ID": "uuid",
+  "consult_handoff": true,
+  "research_domain": "general",
+  "handoff_status": "valid",
+  "handoff": {},
+  "artifact": {"raw_path": "...", "metadata_path": "...", "sha256": "...", "bytes": 123},
+  "AUDIT_REQUIRED": "...",
+  "FALLBACK_GUIDANCE": "..."
+}
+```
+
+Consultation mode never returns `agent_messages` or `all_messages`. Invalid handoff output fails closed while preserving the complete answer in the private artifact.
 
 ## License
 

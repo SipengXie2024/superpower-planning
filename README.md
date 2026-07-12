@@ -29,7 +29,7 @@ All planning workflows share a `.planning/` directory in your project root conta
 - `archive/` — completed work summaries, lessons learned, and historical context for future tasks
 - `stash/` — paused unfinished work snapshots for later resume
 
-## Skills (16)
+## Skills (18)
 
 | Skill | Description |
 |-------|-------------|
@@ -44,7 +44,9 @@ All planning workflows share a `.planning/` directory in your project root conta
 | **requesting-review** | Requests code review with structured context, plan alignment, and severity handling. |
 | **receiving-review** | Technical rigor when processing review feedback. |
 | **subagent-driven-codex** | Executes plan tasks via **Codex CLI** in-session with Codex implementer and reviewer roles. |
-| **collaborating-with-codex** | Bridge to OpenAI Codex CLI for bounded coding work, debugging, analysis, or review. |
+| **collaborating-with-codex** | Bridge to OpenAI Codex CLI for bounded coding work, debugging, analysis, or review. Consultations return a structured handoff while preserving the full answer privately. |
+| **collaborating-with-hermes** | Consults Hermes for an independent second opinion and mirrors Codex reasoning/research/review consultations. |
+| **perf-optimization** | Profiles first, fixes the largest measured bottleneck, then re-profiles. |
 | **git-worktrees** | Thin guidance around Claude Code's native worktree isolation. |
 | **archiving** | Archives completed plans, consolidates memory, and resets `.planning/` for the next task. |
 | **stashing** | Pauses unfinished work into `.planning/stash/` and supports resume with stale-findings checks. |
@@ -80,6 +82,9 @@ All planning workflows share a `.planning/` directory in your project root conta
 | `jq` | `release.sh` | `release.sh` exits with error if missing |
 | `gh` | `release.sh` | Exits with error if missing |
 | `codex` CLI | `collaborating-with-codex`, `subagent-driven-codex` | Both skills are unusable without the Codex CLI on PATH |
+| `hermes` CLI | `collaborating-with-hermes`, dual consultations | Hermes consultation is unavailable; a surviving Codex consultation still stands |
+
+If an older user-level Hermes skill remains at `~/.claude/skills/collaborating-with-hermes/`, remove or rename it after installing this plugin to avoid duplicate discovery or stale instructions. The plugin never deletes that copy automatically.
 
 ## Lifecycle Model
 

@@ -7,8 +7,8 @@
   "plugins": [
     {
       "name": "superpower-planning",
-      "description": "Persistent file-based planning, Codex delegation, stashing, and archiving",
-      "version": "2.2.2",
+      "description": "Persistent file-based planning, Codex and Hermes delegation, stashing, and archiving",
+      "version": "2.4.0",
       "source": "./"
     }
   ]
