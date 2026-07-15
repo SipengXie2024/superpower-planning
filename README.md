@@ -17,10 +17,9 @@ This plugin keeps the parts of planning that need durable project state:
 
 1. **Brainstorm** — explore intent, constraints, and design before implementation
 2. **Review the spec** — refine design docs before planning
-3. **Write the implementation plan** — break work into bite-sized, testable tasks
-4. **Execute deliberately** — use Claude Code dynamic workflows for large parallel work, Codex CLI for second-model execution, or a manual batch session
-5. **Review when needed** — request bounded code review against the plan/spec
-6. **Stash, archive, and recover context** — pause unfinished work, archive completed work, and retain persistent working memory across sessions
+3. **Persist the plan** — keep the approved implementation plan in `.planning/plan.md` across sessions
+4. **Execute deliberately** — run the plan in-session, or via Claude Code dynamic workflows for large parallel work
+5. **Stash, archive, and recover context** — pause unfinished work, archive completed work, and retain persistent working memory across sessions
 
 All planning workflows share a `.planning/` directory in your project root containing:
 
@@ -29,50 +28,35 @@ All planning workflows share a `.planning/` directory in your project root conta
 - `archive/` — completed work summaries, lessons learned, and historical context for future tasks
 - `stash/` — paused unfinished work snapshots for later resume
 
-## Skills (18)
+## Skills (11)
 
 | Skill | Description |
 |-------|-------------|
-| **main** | Skill router loaded on every session. Determines which skills to invoke. |
 | **planning-foundation** | Creates and manages `.planning/` directory for complex tasks. |
-| **brainstorming** | Explores intent, requirements, decomposition, and design before implementation. |
+| **brainstorming** | Explores intent, requirements, decomposition, and design before implementation. Ends with a plan persisted to `.planning/plan.md`. |
 | **spec-interview** | Refines design docs through systematic deep questioning. Auto-invoked after brainstorming. |
-| **writing-plans** | Creates detailed implementation plans before touching code, including execution handoff guidance. |
-| **executing-plans** | Executes written plans in a separate/manual batch session with `.planning/` updates and checkpoints. |
 | **tdd** | Test-driven development: write tests before implementation. |
 | **debugging** | Root-cause analysis before proposing fixes. |
-| **requesting-review** | Requests code review with structured context, plan alignment, and severity handling. |
-| **receiving-review** | Technical rigor when processing review feedback. |
-| **subagent-driven-codex** | Executes plan tasks via **Codex CLI** in-session with Codex implementer and reviewer roles. |
 | **collaborating-with-codex** | Bridge to OpenAI Codex CLI for bounded coding work, debugging, analysis, or review. Consultations return a structured handoff while preserving the full answer privately. |
 | **collaborating-with-hermes** | Consults Hermes for an independent second opinion and mirrors Codex reasoning/research/review consultations. |
 | **perf-optimization** | Profiles first, fixes the largest measured bottleneck, then re-profiles. |
-| **git-worktrees** | Thin guidance around Claude Code's native worktree isolation. |
 | **archiving** | Archives completed plans, consolidates memory, and resets `.planning/` for the next task. |
 | **stashing** | Pauses unfinished work into `.planning/stash/` and supports resume with stale-findings checks. |
 | **releasing** | Bumps versions, tags, and publishes releases with changelogs. |
 
-## Commands (7)
+## Commands (5)
 
 | Command | Description |
 |---------|-------------|
 | `/brainstorm` | Start brainstorming before creative work. |
-| `/write-plan` | Create an implementation plan. |
-| `/execute-plan` | Execute a reviewed implementation plan using the remaining execution paths. |
 | `/catchup` | Recover context from previous sessions. |
 | `/archive` | Archive completed work and consolidate planning memory. |
 | `/stash` | Pause unfinished work and save the current `.planning/` state for later. |
 | `/resume-stash` | Restore a paused stash back into active `.planning/` with stale-findings checks. |
 
-## Agents (1)
-
-| Agent | Description |
-|-------|-------------|
-| **code-reviewer** | Reviews completed work against the original plan and coding standards. |
-
 ## Hooks
 
-- **SessionStart** — Automatically loads the main skill router and recovers `.planning/` state on session resume.
+- **SessionStart** — Injects the plugin's planning conventions and recovers `.planning/` state on session resume.
 - **Stop** — Checks task completion status and warns about stale planning files.
 
 ## Optional Dependencies
@@ -81,7 +65,7 @@ All planning workflows share a `.planning/` directory in your project root conta
 |------|---------|----------|
 | `jq` | `release.sh` | `release.sh` exits with error if missing |
 | `gh` | `release.sh` | Exits with error if missing |
-| `codex` CLI | `collaborating-with-codex`, `subagent-driven-codex` | Both skills are unusable without the Codex CLI on PATH |
+| `codex` CLI | `collaborating-with-codex` | Skill is unusable without the Codex CLI on PATH |
 | `hermes` CLI | `collaborating-with-hermes`, dual consultations | Hermes consultation is unavailable; a surviving Codex consultation still stands |
 
 If an older user-level Hermes skill remains at `~/.claude/skills/collaborating-with-hermes/`, remove or rename it after installing this plugin to avoid duplicate discovery or stale instructions. The plugin never deletes that copy automatically.

@@ -27,8 +27,7 @@ python3 scripts/codex_bridge.py --cd "/path/to/project" --PROMPT "Your task"
 
 **Inside the `superpower-planning` plugin**, the bridge script lives at
 `${CLAUDE_PLUGIN_ROOT}/skills/collaborating-with-codex/scripts/codex_bridge.py`.
-Always use that absolute path when invoking the bridge from another skill in this plugin
-(e.g. `subagent-driven-codex`).
+Always use that absolute path when invoking the bridge from another skill in this plugin.
 
 **Output:** direct execution returns JSON with `success`, `SESSION_ID`, `agent_messages`, and optional `error`; consultation mode returns a validated `handoff` plus private artifact metadata and never returns the full answer.
 

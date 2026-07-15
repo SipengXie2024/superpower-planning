@@ -52,8 +52,8 @@ You MUST create a task for each of these items and complete them in order:
 7. **Spec self-review** — quick inline check for placeholders, contradictions, ambiguity, scope (see below).
 8. **Spec interview** — ask: "Do you want to run a spec interview to refine details in the design?" (default: yes). If yes, invoke `superpower-planning:spec-interview` with the design doc as target. If user skips, proceed.
 9. **User review gate** — explicitly ask the user to review the written spec before planning.
-10. **Ask about worktree** — use `AskUserQuestion` to ask whether to create an isolated git worktree for implementation (invoke `superpower-planning:git-worktrees` if yes, skip if no).
-11. **Transition to implementation** — invoke writing-plans skill to create implementation plan.
+10. **Ask about worktree** — use `AskUserQuestion` to ask whether to isolate implementation in a git worktree (if yes, use Claude Code's native worktree support, e.g. `EnterWorktree`; skip if no).
+11. **Transition to implementation** — write the implementation plan to `.planning/plan.md` (bite-sized, verifiable tasks with exact files and commands), then proceed to execution.
 
 ## Process Flow
 
@@ -73,7 +73,7 @@ digraph brainstorming {
     "User reviews spec?" [shape=diamond];
     "Ask: create worktree?" [shape=diamond];
     "Create worktree" [shape=box];
-    "Invoke writing-plans skill" [shape=doublecircle];
+    "Write plan to .planning/plan.md" [shape=doublecircle];
 
     "Explore project context" -> "Scope too large?";
     "Scope too large?" -> "Decompose into sub-projects" [label="yes"];
@@ -92,12 +92,12 @@ digraph brainstorming {
     "User reviews spec?" -> "Write design doc to .planning/" [label="changes requested"];
     "User reviews spec?" -> "Ask: create worktree?" [label="approved"];
     "Ask: create worktree?" -> "Create worktree" [label="yes"];
-    "Ask: create worktree?" -> "Invoke writing-plans skill" [label="no"];
-    "Create worktree" -> "Invoke writing-plans skill";
+    "Ask: create worktree?" -> "Write plan to .planning/plan.md" [label="no"];
+    "Create worktree" -> "Write plan to .planning/plan.md";
 }
 ```
 
-**The terminal state is invoking writing-plans.** The allowed intermediate skills before writing-plans are: `spec-interview` (to refine the design) and `git-worktrees` (to isolate work). Do NOT invoke any implementation skill.
+**The terminal state is a persisted implementation plan at `.planning/plan.md`.** The allowed intermediate steps before it are: `spec-interview` (to refine the design) and native worktree isolation. Do NOT invoke any implementation skill or write code before the plan is persisted.
 
 ## The Process
 
@@ -149,8 +149,8 @@ Fix any issues inline. No need to re-review — just fix and move on.
 After the self-review, ask the user to review the written spec before proceeding.
 
 **Implementation:**
-- Invoke the writing-plans skill to create a detailed implementation plan
-- writing-plans is the terminal step. (`spec-interview` and `git-worktrees` are allowed intermediate steps before it.)
+- Write the detailed implementation plan to `.planning/plan.md`: bite-sized tasks with exact file paths, real code and commands, and verification steps
+- The persisted plan is the terminal step. (`spec-interview` and worktree isolation are allowed intermediate steps before it.)
 
 ## Key Principles
 

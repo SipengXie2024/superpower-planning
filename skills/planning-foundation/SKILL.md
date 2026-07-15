@@ -14,14 +14,14 @@ Every planning skill in superpower-planning inherits this foundation. `.planning
 ```
 .planning/                     # gitignored, ephemeral working state
 ├── design.md                  # design spec (created by brainstorming)
-├── plan.md                    # implementation plan (created by writing-plans)
+├── plan.md                    # implementation plan (persisted after plan approval)
 ├── findings.md                # aggregated findings
 ├── progress.md                # Task Status Dashboard + session log
 ├── agents/                    # created on demand by delegated roles
 │   ├── implementer/           # one dir per role, reused across tasks
 │   │   ├── findings.md        # this agent's discoveries (appended across tasks)
 │   │   └── progress.md        # this agent's action log (appended across tasks)
-│   ├── spec-reviewer/
+│   ├── reviewer/
 │   └── ...
 ├── stash/                     # paused projects (directory per entry)
 │   └── YYYY-MM-DD-<name>/
@@ -63,7 +63,7 @@ Filesystem = Disk (persistent, unlimited)
 | File | Purpose | What Goes Here | When to Update |
 |------|---------|----------------|----------------|
 | `design.md` | Design spec: architecture and requirements | Created by brainstorming skill. Architecture, components, data flow, error handling, testing strategy | After design approval or spec review |
-| `plan.md` | Implementation plan: bite-sized tasks | Created by writing-plans skill. File structure, task steps, parallelism groups, verification commands | After plan approval or plan review |
+| `plan.md` | Implementation plan: bite-sized tasks | Persisted after plan approval (plan mode or brainstorming flow). File structure, task steps, verification commands | After plan approval or plan review |
 | `findings.md` | Knowledge base: discoveries, decisions, surprises | Code patterns, architecture insights, technical decisions + rationale, rejected alternatives, unexpected behavior, edge cases, dependency constraints, debugging root causes | After ANY discovery or decision |
 | `progress.md` | Operations log: status, actions, evidence | Task Status Dashboard rows, phase status changes, actions taken (files modified), error log + retries, test results, verification evidence, batch/phase summaries | After ANY status change, action, or error |
 
@@ -173,7 +173,7 @@ If you can answer these, your context management is solid:
 
 ## Per-Agent Planning Directories
 
-When dispatching delegated roles such as Codex implementers/reviewers, each gets its own planning dir:
+When dispatching delegated roles (e.g. implementer/reviewer agents in an orchestrated run), each gets its own planning dir:
 
 ```
 .planning/agents/{role}/

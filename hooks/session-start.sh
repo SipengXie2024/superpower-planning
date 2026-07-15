@@ -2,8 +2,8 @@
 # SessionStart hook for superpower-planning plugin
 #
 # Usage: session-start.sh <startup|resume>
-#   startup — new session: inject main skill only
-#   resume  — same session interrupted (resume/clear/compact): inject main skill + .planning/ content
+#   startup — new session: inject planning conventions only
+#   resume  — same session interrupted (resume/clear/compact): inject planning conventions + .planning/ content
 
 set -euo pipefail
 
@@ -12,8 +12,8 @@ EVENT_TYPE="${1:-startup}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
 PLUGIN_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
-# Read main skill content
-main_skill_content=$(cat "${PLUGIN_ROOT}/skills/main/SKILL.md" 2>&1 || echo "Error reading main skill")
+# Read session context (planning conventions injected at session start)
+session_context=$(cat "${PLUGIN_ROOT}/hooks/session-context.md" 2>&1 || echo "Error reading session context")
 
 # Escape string for JSON embedding
 escape_for_json() {
@@ -58,14 +58,14 @@ else
     planning_message+="</PLANNING_INIT_REQUIRED>"
 fi
 
-main_skill_escaped=$(escape_for_json "$main_skill_content")
+session_context_escaped=$(escape_for_json "$session_context")
 planning_escaped=$(escape_for_json "$planning_message")
 
 cat <<EOF
 {
   "hookSpecificOutput": {
     "hookEventName": "SessionStart",
-    "additionalContext": "<EXTREMELY_IMPORTANT>\nYou have superpower-planning skills.\n\n**Below is the full content of your 'superpower-planning:main' skill - your introduction to using skills. For all other skills, use the 'Skill' tool:**\n\n${main_skill_escaped}\n</EXTREMELY_IMPORTANT>${planning_escaped}"
+    "additionalContext": "<superpower-planning-context>\n${session_context_escaped}\n</superpower-planning-context>${planning_escaped}"
   }
 }
 EOF

@@ -123,7 +123,7 @@ ${CLAUDE_PLUGIN_ROOT}/scripts/stash-restore.sh ".planning/stash/<selected>"
      - `needs refresh`
      - `obsolete`
 7. Explicitly report any stale or questionable findings before execution resumes
-8. If drift is large, recommend switching to `superpower-planning:brainstorming` or `superpower-planning:writing-plans` instead of blindly continuing
+8. If drift is large, recommend re-entering `superpower-planning:brainstorming` (or re-planning via plan mode) instead of blindly continuing
 
 **Legacy stash format:** If the selected stash is a single `.md` file (old format) instead of a directory, read it and restore context into `.planning/findings.md` and `.planning/progress.md` as before.
 
