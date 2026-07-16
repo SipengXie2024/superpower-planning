@@ -9,7 +9,7 @@ Refine draft specs and design docs into complete technical documents through dee
 
 ## When This Runs
 
-- **Automatically** after brainstorming produces a design doc — first confirm with `AskUserQuestion` ("Run a deep interview now?" / "Skip to implementation"); only proceed if the user opts in
+- **When another skill invokes it** (e.g. brainstorming, which has already asked whether to run the interview): proceed directly with the refinement. The caller owns the opt-in gate, so do not re-ask "run the interview now?"
 - **Manually** when user says "help me refine this plan/spec" or "ask me about the project"
 - When a draft spec or plan.md is missing critical details
 
@@ -23,9 +23,9 @@ Read target doc → Identify gaps → Ask deep questions (AskUserQuestion) → I
 
 The interview needs a real draft to probe. Before anything else, locate the target doc and branch:
 
-- **Doc missing or empty** — do NOT fabricate a spec to interview against. Use `AskUserQuestion` to offer: option 1 "(Recommended) Point me at the draft file", option 2 "Brainstorm first to produce one", option 3 "Paste the rough idea and I'll draft, then interview". Stop until one is chosen.
-- **Doc already complete** (no real gaps across the seven dimensions) — say so plainly and exit; don't manufacture questions to justify running. Offer to proceed to implementation instead.
-- **User declines to answer / gives no useful input** — record the gap as an open question in the doc and move on rather than blocking.
+- **Doc missing or empty**: do NOT fabricate a spec to interview against. Use `AskUserQuestion` to offer: option 1 "(Recommended) Point me at the draft file", option 2 "Brainstorm first to produce one", option 3 "Paste the rough idea and I'll draft, then interview". Stop until one is chosen.
+- **Doc already complete** (no real gaps across the seven dimensions): say so plainly and exit; don't manufacture questions to justify running. Offer to proceed to implementation instead.
+- **User declines to answer / gives no useful input**: record the gap as an open question in the doc and move on rather than blocking.
 
 Match the user's language (e.g. reply in Chinese to a Chinese trigger). Address the user directly: don't name this skill, its steps, or the tools you're using.
 
@@ -90,13 +90,14 @@ After the interview is complete, integrate all clarifications back into the orig
 - List identified risks and mitigations
 - Also persist key findings (rejected alternatives, risk assessments, non-obvious decisions) to `.planning/findings.md`
 
-**Confirmation gate (required before any commit).** Updating the doc and committing are mutating actions — never auto-commit. After writing the edits, summarize the changes and use `AskUserQuestion` to confirm before running git: option 1 "(Recommended) Commit the updated doc", option 2 "Show me the diff first", option 3 "Don't commit — leave it staged". Only run `git commit` if the user picks option 1.
+**Confirmation gate (required before any commit).** Updating the doc and committing are mutating actions, never auto-commit. After writing the edits, summarize the changes and use `AskUserQuestion` to confirm before running git: option 1 "(Recommended) Commit the updated doc", option 2 "Show me the diff first", option 3 "Don't commit, leave it staged". Only run `git commit` if the user picks option 1.
 
-## Return to Calling Flow
+## When Done
 
-If invoked from brainstorming, return control to the brainstorming checklist. The next step is typically **Ask about worktree**, then **Transition to implementation**. Do NOT write the implementation plan directly from here — let the brainstorming flow handle the transition.
+Refinement is complete once the target doc reflects the answers and the confirmation gate above is resolved.
 
-If invoked standalone (user manually triggered), simply end after committing the updated document.
+- **Invoked by another skill:** hand control back to the caller and let it drive what comes next. Do NOT start implementation or write an implementation plan from here; that belongs to the calling flow.
+- **Invoked standalone:** end after the document is updated (and committed, if the user approved the commit).
 
 ## Common Mistakes
 

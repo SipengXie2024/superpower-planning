@@ -23,25 +23,13 @@ If you haven't completed Phase 1, you cannot propose fixes.
 
 ## When to Use
 
-Use for ANY technical issue:
-- Test failures
-- Bugs in production
-- Unexpected behavior
-- Performance problems
-- Build failures
-- Integration issues
+Use for ANY technical issue: test failures, bugs in production, unexpected behavior, performance problems, build failures, integration issues.
 
-**Use this ESPECIALLY when:**
-- Under time pressure (emergencies make guessing tempting)
-- "Just one quick fix" seems obvious
-- You've already tried multiple fixes
-- Previous fix didn't work
+**Use this ESPECIALLY when you are tempted to skip it:**
+- Under time pressure or in a hurry (rushing guarantees rework; systematic is faster than thrashing)
+- "Just one quick fix" seems obvious, or the issue seems simple (simple bugs have root causes too)
+- You've already tried multiple fixes, or the previous fix didn't work
 - You don't fully understand the issue
-
-**Don't skip when:**
-- Issue seems simple (simple bugs have root causes too)
-- You're in a hurry (rushing guarantees rework)
-- Manager wants it fixed NOW (systematic is faster than thrashing)
 
 ## The Four Phases
 
@@ -86,7 +74,7 @@ You MUST complete each phase before proceeding to the next.
    THEN investigate that specific component
    ```
 
-   **CHECKPOINT — live/production systems:** If instrumentation would run against a live, shared, or production system (not a local/test environment), pause and get user confirmation before injecting it. State what you'll add, where, and that it's read-only logging. Don't instrument prod autonomously.
+   **CHECKPOINT for live/production systems:** If instrumentation would run against a live, shared, or production system (not a local/test environment), pause and get user confirmation before injecting it. State what you'll add, where, and that it's read-only logging. Don't instrument prod autonomously.
 
    **Example (multi-layer system):**
    ```bash
@@ -146,7 +134,7 @@ You MUST complete each phase before proceeding to the next.
    - What settings, config, environment?
    - What assumptions does it make?
 
-**After completing Phase 2, record pattern analysis findings in `.planning/findings.md` under "## Debugging Findings" — working examples found, key differences identified, dependency insights.**
+**After completing Phase 2, record pattern analysis findings in `.planning/findings.md` under "## Debugging Findings": working examples found, key differences identified, dependency insights.**
 
 ### Phase 3: Hypothesis and Testing
 
@@ -193,7 +181,7 @@ You MUST complete each phase before proceeding to the next.
    - ONE change at a time
    - No "while I'm here" improvements
    - No bundled refactoring
-   - **CHECKPOINT before applying:** State the root cause and the single fix in one sentence, then get user confirmation before editing — unless the change is local and trivially reversible (one-line/cosmetic) or the user already approved this fix. For risky edits (touches shared state, migrations, prod config, data-destructive paths), confirmation is mandatory.
+   - **CHECKPOINT before applying:** State the root cause and the single fix in one sentence, then get user confirmation before editing, unless the change is local and trivially reversible (one-line/cosmetic) or the user already approved this fix. For risky edits (touches shared state, migrations, prod config, data-destructive paths), confirmation is mandatory.
 
 3. **Verify Fix**
    - Test passes now?
@@ -265,15 +253,6 @@ If you catch yourself thinking:
 | "Reference too long, I'll adapt the pattern" | Partial understanding guarantees bugs. Read it completely. |
 | "I see the problem, let me fix it" | Seeing symptoms != understanding root cause. |
 | "One more fix attempt" (after 2+ failures) | 3+ failures = architectural problem. Question pattern, don't fix again. |
-
-## Quick Reference
-
-| Phase | Key Activities | Success Criteria |
-|-------|---------------|------------------|
-| **1. Root Cause** | Read errors, reproduce, check changes, gather evidence | Understand WHAT and WHY |
-| **2. Pattern** | Find working examples, compare | Identify differences |
-| **3. Hypothesis** | Form theory, test minimally | Confirmed or new hypothesis |
-| **4. Implementation** | Create test, fix, verify | Bug resolved, tests pass |
 
 ## When Process Reveals "No Root Cause"
 
