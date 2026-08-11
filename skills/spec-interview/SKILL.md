@@ -89,6 +89,7 @@ After the interview is complete, integrate all clarifications back into the orig
 - Annotate key decisions with their rationale
 - List identified risks and mitigations
 - Also persist key findings (rejected alternatives, risk assessments, non-obvious decisions) to `.planning/findings.md`
+- Record domain terms resolved during the interview in the repo-root `CONTEXT.md` (`superpower-planning:domain-glossary`)
 
 **Confirmation gate (required before any commit).** Updating the doc and committing are mutating actions, never auto-commit. After writing the edits, summarize the changes and use `AskUserQuestion` to confirm before running git: option 1 "(Recommended) Commit the updated doc", option 2 "Show me the diff first", option 3 "Don't commit, leave it staged". Only run `git commit` if the user picks option 1.
 

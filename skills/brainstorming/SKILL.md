@@ -27,7 +27,7 @@ You MUST create a task for each item and complete them in order. The terminal st
 
    **Cycle 1, broad sweep:**
    - Scan project structure (Glob for key directories and file patterns) and search request keywords (Grep)
-   - Read project docs, README, CLAUDE.md, recent commits
+   - Read project docs, README, CLAUDE.md, `CONTEXT.md` (the project's ubiquitous language, if present), recent commits
    - Check `.planning/archive/*.md` for relevant history; if found, note relevant Key Decisions and Lessons Learned under a `## Historical Context` section
    - Save initial findings to `.planning/findings.md`
 
@@ -63,6 +63,7 @@ You MUST create a task for each item and complete them in order. The terminal st
 - **Always use `AskUserQuestion`** for user-facing questions, one question per call. Multiple choice is easier to answer than open-ended.
 - **YAGNI ruthlessly.** Remove unnecessary features from every design.
 - **Evidence-first.** Every decision needs evidence; no evidence yet means mark `[NEEDS-EVIDENCE]`, never silently assume.
+- **Ubiquitous language.** When design talk coins or resolves a domain term, record it in the repo-root `CONTEXT.md` on the spot (`superpower-planning:domain-glossary`) and use canonical terms in the design doc.
 - **Iterative retrieval.** Start broad, score relevance, refine with codebase-native terms, max 3 cycles, depth over breadth.
 - **Explore alternatives.** Always propose 2-3 approaches before settling, and validate incrementally by getting approval per section.
 - **Large systems must decompose** into independent subsystems; keep files small with explicit boundaries before planning.

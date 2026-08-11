@@ -58,14 +58,22 @@ else
     planning_message+="</PLANNING_INIT_REQUIRED>"
 fi
 
+glossary_message=""
+if [ ! -f "CONTEXT.md" ]; then
+    glossary_message="${NL}${NL}<NO_PROJECT_GLOSSARY>${NL}"
+    glossary_message+="No repo-root CONTEXT.md (project glossary / ubiquitous language) exists yet. Do NOT scaffold it empty. The moment design or planning talk resolves the first domain term, create CONTEXT.md with that term (superpower-planning:domain-glossary) and tell the user the glossary has started.${NL}"
+    glossary_message+="</NO_PROJECT_GLOSSARY>"
+fi
+
 session_context_escaped=$(escape_for_json "$session_context")
 planning_escaped=$(escape_for_json "$planning_message")
+glossary_escaped=$(escape_for_json "$glossary_message")
 
 cat <<EOF
 {
   "hookSpecificOutput": {
     "hookEventName": "SessionStart",
-    "additionalContext": "<superpower-planning-context>\n${session_context_escaped}\n</superpower-planning-context>${planning_escaped}"
+    "additionalContext": "<superpower-planning-context>\n${session_context_escaped}\n</superpower-planning-context>${planning_escaped}${glossary_escaped}"
   }
 }
 EOF

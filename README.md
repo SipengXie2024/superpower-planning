@@ -28,13 +28,15 @@ All planning workflows share a `.planning/` directory in your project root conta
 - `archive/` — completed work summaries, lessons learned, and historical context for future tasks
 - `stash/` — paused unfinished work snapshots for later resume
 
-## Skills (11)
+## Skills (13)
 
 | Skill | Description |
 |-------|-------------|
 | **planning-foundation** | Creates and manages `.planning/` directory for complex tasks. |
 | **brainstorming** | Explores intent, requirements, decomposition, and design before implementation. Ends with a plan persisted to `.planning/plan.md`. |
 | **spec-interview** | Refines design docs through systematic deep questioning. Auto-invoked after brainstorming. |
+| **domain-glossary** | Maintains the project's shared vocabulary (ubiquitous language) in a repo-root `CONTEXT.md`: one canonical term per concept, synonyms banned. |
+| **wait-what** | User-invoked repair (`/wait-what`): re-pitch the last message with more context, in controlled plain language, using `CONTEXT.md` terms. |
 | **tdd** | Test-driven development: write tests before implementation. |
 | **debugging** | Root-cause analysis before proposing fixes. |
 | **collaborating-with-codex** | Bridge to OpenAI Codex CLI for bounded coding work, debugging, analysis, or review. Consultations return a structured handoff while preserving the full answer privately. |

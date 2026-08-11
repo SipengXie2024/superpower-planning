@@ -16,3 +16,4 @@ This plugin provides durable, file-based planning. Its skills appear in your ava
 - Executing a plan: run it in this session, keeping `.planning/` current. For large, parallel, or cross-checked work, prefer a Claude Code dynamic workflow that reads `.planning/design.md` + `plan.md` + `findings.md` and writes durable results back.
 - Code review: use Claude Code's built-in review capabilities (e.g. `/code-review`); point the reviewer at `.planning/plan.md` / `design.md` when plan alignment matters.
 - Pausing unfinished work → `superpower-planning:stashing` (`/stash`). Resuming → `/resume-stash` (includes a stale-findings check). Completed work → `superpower-planning:archiving`.
+- Terminology: if a repo-root `CONTEXT.md` exists, it is the project's ubiquitous language — use its canonical terms (never its `_Avoid_` words) in conversation, docs, and code. To add or change terms → `superpower-planning:domain-glossary`.
