@@ -2,7 +2,7 @@
 
 ## Task Status Dashboard
 <!-- Quick-scan execution status. Update after each task/phase completes. -->
-<!-- For Codex-driven execution: Spec Review, Quality Review, and Plan Align MUST all show PASS before Status can be ✅ complete. For manual execution or native dynamic workflows, these columns may be left as "-" when no explicit review gate applies. -->
+<!-- When review gates apply: Spec Review, Quality Review, and Plan Align MUST all show PASS before Status can be ✅ complete. For manual execution or native dynamic workflows, these columns may be left as "-" when no explicit review gate applies. -->
 <!-- Plan Align is checked per-task by the reviewer/agent when present and per-group/final by the orchestrator (Plan Alignment Gate). -->
 <!-- Cell notation for Spec Review / Quality Review:
        PASS                — review passed
