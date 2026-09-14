@@ -47,7 +47,7 @@ if [ -f "${PROJECT_ROOT}/pyproject.toml" ] || [ -f "${PROJECT_ROOT}/setup.py" ] 
     elif [ -d "${PROJECT_ROOT}/tests" ] || [ -d "${PROJECT_ROOT}/test" ]; then
         echo "pytest"
     else
-        echo "python -m pytest"
+        echo "python3 -m pytest"
     fi
     exit 0
 fi

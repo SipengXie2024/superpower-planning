@@ -172,11 +172,15 @@ def main():
 
     project_dir = get_project_dir_claude(project_path)
 
+    # Every exit path says why. This runs as step 1 of /catchup, where a silent
+    # exit 0 is indistinguishable from a broken script.
     if not project_dir.exists():
+        print(f"[superpower-planning] No catchup: no Claude Code transcript directory for this project ({project_dir}).")
         return
 
     sessions = get_sessions_sorted(project_dir)
     if len(sessions) < 2:
+        print(f"[superpower-planning] No catchup: this project has {len(sessions)} recorded session(s); at least 2 are needed to compare against.")
         return
 
     # Skip the current session (most recently modified = index 0)
@@ -199,7 +203,8 @@ def main():
             break
 
     if not update_session:
-        # No planning file updates found in any previous session
+        print(f"[superpower-planning] No catchup: scanned {len(previous_sessions)} previous session(s) and none of them wrote to a .planning/ file, so there is no sync point to measure drift from.")
+        print("  Read .planning/progress.md and .planning/findings.md directly instead.")
         return
 
     # Collect ALL messages from the update point forward, across all sessions
@@ -219,6 +224,7 @@ def main():
         all_messages.extend(messages)
 
     if not all_messages:
+        print(f"[superpower-planning] No catchup needed: .planning/ was last updated in session {update_session.stem[:8]} ({update_file}) and nothing has happened since.")
         return
 
     # Output catchup report

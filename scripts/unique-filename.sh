@@ -16,7 +16,9 @@ set -e
 
 DIR="${1:?Usage: unique-filename.sh <directory> <name> [extension]}"
 NAME="${2:?Usage: unique-filename.sh <directory> <name> [extension]}"
-EXT="${3:-.md}"
+# Unset-only default: callers pass "" to get a directory name with no extension,
+# and ${3:-.md} would substitute .md for that empty string too.
+EXT="${3-.md}"
 
 DATE=$(date +%Y-%m-%d)
 BASE="${DIR}/${DATE}-${NAME}"

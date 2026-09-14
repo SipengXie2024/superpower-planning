@@ -47,15 +47,16 @@ if [ -d ".planning" ]; then
         planning_message+="</PLANNING_SESSION_RECOVERY>"
     fi
 else
-    # .planning/ does NOT exist — inject strong initialization reminder
-    planning_message="${NL}${NL}<PLANNING_INIT_REQUIRED>${NL}"
-    planning_message+="**No .planning/ directory detected in this project.**${NL}${NL}"
-    planning_message+="Before starting ANY task that involves multiple steps, research, or more than 5 tool calls, you MUST first initialize the planning directory:${NL}${NL}"
+    # .planning/ does NOT exist. This block is injected into every session in every
+    # project that lacks one, so it states the condition and the command and stops
+    # there. Insisting in capitals costs output quality on current models and lands
+    # even when the user only asked a one-line question.
+    planning_message="${NL}${NL}<PLANNING_INIT_AVAILABLE>${NL}"
+    planning_message+="No .planning/ directory in this project.${NL}${NL}"
+    planning_message+="For work that spans multiple steps, needs research, or will outlive this context window, initialize it before starting so the plan survives a context reset:${NL}${NL}"
     planning_message+="\`\`\`bash${NL}\${CLAUDE_PLUGIN_ROOT}/scripts/init-planning-dir.sh${NL}\`\`\`${NL}${NL}"
-    planning_message+="This is NOT optional for complex tasks. The .planning/ directory is your persistent working memory.${NL}"
-    planning_message+="- Simple questions or single-file edits: skip planning${NL}"
-    planning_message+="- Everything else: initialize .planning/ FIRST, then proceed${NL}"
-    planning_message+="</PLANNING_INIT_REQUIRED>"
+    planning_message+="Simple questions and single-file edits do not need it.${NL}"
+    planning_message+="</PLANNING_INIT_AVAILABLE>"
 fi
 
 glossary_message=""

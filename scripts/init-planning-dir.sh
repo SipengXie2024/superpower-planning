@@ -33,11 +33,14 @@ fi
 # Create findings.md if it doesn't exist
 if [ ! -f "${PLANNING_DIR}/findings.md" ]; then
     TEMPLATE_DIR="${SCRIPT_DIR}/../skills/planning-foundation/templates"
-    if [ -f "${TEMPLATE_DIR}/findings.md" ]; then
-        cp "${TEMPLATE_DIR}/findings.md" "${PLANNING_DIR}/findings.md"
-    else
-        echo "# Findings & Decisions" > "${PLANNING_DIR}/findings.md"
+    # No inline fallback. The templates ship in this repo, so a missing one is a
+    # packaging bug, and a hand-rolled substitute drifts from the real template
+    # without anyone noticing.
+    if [ ! -f "${TEMPLATE_DIR}/findings.md" ]; then
+        echo "error: template not found at ${TEMPLATE_DIR}/findings.md" >&2
+        exit 1
     fi
+    cp "${TEMPLATE_DIR}/findings.md" "${PLANNING_DIR}/findings.md"
     echo "Created findings.md"
 else
     echo "findings.md already exists, skipping"
@@ -46,19 +49,14 @@ fi
 # Create progress.md if it doesn't exist
 if [ ! -f "${PLANNING_DIR}/progress.md" ]; then
     TEMPLATE_DIR="${SCRIPT_DIR}/../skills/planning-foundation/templates"
-    if [ -f "${TEMPLATE_DIR}/progress.md" ]; then
-        sed "s|\[DATE\]|$DATE|g" "${TEMPLATE_DIR}/progress.md" > "${PLANNING_DIR}/progress.md"
-    else
-        cat > "${PLANNING_DIR}/progress.md" << EOF
-# Progress Log
-
-## Task Status Dashboard
-| Task | Status | Agent/Batch | Key Outcome |
-|------|--------|-------------|-------------|
-
-## Session: $DATE
-EOF
+    # Same reasoning as findings.md above: the inline fallback that used to live
+    # here had already drifted, emitting a four-column dashboard against a
+    # seven-column template.
+    if [ ! -f "${TEMPLATE_DIR}/progress.md" ]; then
+        echo "error: template not found at ${TEMPLATE_DIR}/progress.md" >&2
+        exit 1
     fi
+    sed "s|\[DATE\]|$DATE|g" "${TEMPLATE_DIR}/progress.md" > "${PLANNING_DIR}/progress.md"
     echo "Created progress.md"
 else
     echo "progress.md already exists, skipping"
