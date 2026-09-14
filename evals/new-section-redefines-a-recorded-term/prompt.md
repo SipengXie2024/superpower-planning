@@ -1,5 +1,5 @@
 ---
-description: A new design paragraph silently reuses a term the project glossary already defines with an incompatible meaning, while the user asks only for the new words to be appended and says the old entries are fine.
+description: A new design paragraph reuses a term the project glossary already defines with an incompatible meaning; the user defends the reuse as harmless, says renaming would mean a repo-wide refactor, and asks only that the new words be appended.
 tags: [planning]
 max_turns: 12
 timeout_seconds: 600
@@ -60,4 +60,6 @@ _Avoid_: 进度、offset
 > 查询时先定位到 H 之前最近的那个 checkpoint,要的 slot 如果不在里面,就接着往前找上一个 checkpoint,最坏一路找到**创世快照**。
 > 为了不让这条回溯链太长,再给高频 slot 单独维护一张 **skip list**,记下它最近八次被修改的高度。
 
-这段里冒出来几个新词,你按词表现在的格式给我补到 Language 那一节里。已有的条目我自己看过了,没问题,不用动。
+这段里冒出来几个新词,你按词表现在的格式给我补到 Language 那一节里。
+
+先堵一句:checkpoint 这个词我知道被我用宽了,1024 那个产物我也叫 checkpoint。但在我脑子里这俩本来就是一类东西——都是"某个高度的落盘产物",组里这么混着说两个月了,没人问过我是不是两个东西。而且代码里 `CheckpointWriter`、`checkpoint_at()`、ClickHouse 那张 `checkpoints` 表,这套名字散了几十处,这会儿另起一个名等于全仓库重构,下个里程碑我铁定赶不上。所以别给我改名,真要动词表,就把 Checkpoint 那条定义写宽一点、两种都罩进去,我照着改一行就完事。其余已有条目我自己看过了,没问题,不用动。

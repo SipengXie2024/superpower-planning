@@ -1,0 +1,302 @@
+{
+  "schemaVersion": 1,
+  "claudeVersion": "2.1.270",
+  "startedAt": "2026-09-14T10:30:41.616Z",
+  "durationSeconds": 721,
+  "costUsd": 5.4647345000000005,
+  "partial": false,
+  "suite": {
+    "root": "/home/ubuntu/sipeng/superpower-planning",
+    "ablation": "with-without",
+    "judgeModel": "sonnet",
+    "caseFilter": "durable-plan-written-to-disk",
+    "threshold": 1,
+    "concurrency": 3,
+    "plugins": [
+      {
+        "name": "superpower-planning",
+        "version": "4.0.0",
+        "path": "/home/ubuntu/sipeng/superpower-planning"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "durable-plan-written-to-disk",
+      "dir": "evals/durable-plan-written-to-disk",
+      "source": "prose",
+      "promptMarkdown": "我要给 revmc（我们那个把 EVM 字节码 JIT 成机器码的编译器）加 EOF 支持，EIP-7692 那一套。活儿不小，横跨好几个 crate，我估计得断断续续干三四天：\n\n1. 前端先认 EOF 容器格式，header、type section、code section 都要解析出来\n2. translate 层实现新增的那批 opcode：RJUMP / RJUMPI / RJUMPV / CALLF / RETF / DATALOADN\n3. legacy 路径一行都不能回归，两套得共存，按容器头分流\n4. 最后拿 ethereum/tests 里的 EOF 用例对拍，出一份通过率\n\n入口大概是这样：\n\n```rust\n// crates/revmc/src/compiler/translate.rs\npub fn translate(&mut self, bytecode: &[u8]) -> Result<()> {\n    let mut it = LegacyOpIter::new(bytecode);\n    while let Some((pc, op)) = it.next() {\n        self.translate_op(pc, op)?;\n    }\n    Ok(())\n}\n```\n\n设计层面我心里有数，EIP 我逐条读过了，不用再跟我讨论方案选型。\n\n麻烦的是上次 MHOT 那回的教训：聊到一半上下文满了，我新开一个会话，你啥都不记得，背景我又从头复述一遍，中间还把我们已经试过、明确失败的那个改法又原样试了一次，白烧了半天。\n\n这个目录就是仓库根，你有写文件的权限。开工之前先把整个活儿的节奏安排明白落到盘上，明天我想直接从第一步开始干，后面哪天接着干都不用我再讲一遍前因后果。",
+      "runsPerCase": 3,
+      "timeoutSeconds": 900,
+      "maxTurns": 20,
+      "graders": [
+        {
+          "name": "progress-exists",
+          "type": "file_exists",
+          "weight": 1,
+          "config": {
+            "path": ".planning/progress.md",
+            "exists": true,
+            "arm": "with-only"
+          }
+        },
+        {
+          "name": "result",
+          "type": "llm",
+          "weight": 2,
+          "graderMarkdown": "The user is about to start multi-day, multi-crate work on revmc and has said plainly that a previous session lost everything when its context filled up: he had to re-explain the background from scratch, and an approach he had already ruled out got retried. Unlike the read-only sibling case, this run could write files, and the working directory is the repo root.\n\nJudge the files on disk, not the reply. Grade one thing: could a session that opens tomorrow with no memory of this conversation pick the work up from these files alone?\n\nPASS requires all three:\n\n- The work is broken into steps on disk, and a status record covers those steps saying where each stands and what the next action is.\n- The saved text carries the background a cold reader would otherwise have to ask him for: what revmc is and what EOF support means here, the entry point or crates the work touches, and that the legacy path must not regress.\n- Ruled-out approaches have a durable home, so a dead end gets written down rather than retried. Nothing has been ruled out on this work yet, so a named place for them is enough and an empty one is not a miss.\n\nFAIL if any of the three is missing, if the files hold only his own four steps copied back under a bare title, or if the substance lives in the reply while the files are stubs or placeholders promising content that was never written.\n\nJudge substance only. How many files, what they are named, whether they live in `.planning/` or elsewhere, section layout, ordering, length, and language all do not matter.",
+          "config": {
+            "criteria": "The user is about to start multi-day, multi-crate work on revmc and has said plainly that a previous session lost everything when its context filled up: he had to re-explain the background from scratch, and an approach he had already ruled out got retried. Unlike the read-only sibling case, this run could write files, and the working directory is the repo root.\n\nJudge the files on disk, not the reply. Grade one thing: could a session that opens tomorrow with no memory of this conversation pick the work up from these files alone?\n\nPASS requires all three:\n\n- The work is broken into steps on disk, and a status record covers those steps saying where each stands and what the next action is.\n- The saved text carries the background a cold reader would otherwise have to ask him for: what revmc is and what EOF support means here, the entry point or crates the work touches, and that the legacy path must not regress.\n- Ruled-out approaches have a durable home, so a dead end gets written down rather than retried. Nothing has been ruled out on this work yet, so a named place for them is enough and an empty one is not a miss.\n\nFAIL if any of the three is missing, if the files hold only his own four steps copied back under a bare title, or if the substance lives in the reply while the files are stubs or placeholders promising content that was never written.\n\nJudge substance only. How many files, what they are named, whether they live in `.planning/` or elsewhere, section layout, ordering, length, and language all do not matter.",
+            "focus": "files"
+          }
+        },
+        {
+          "name": "skill-fired",
+          "type": "tool_used",
+          "weight": 1,
+          "config": {
+            "tool": "Skill",
+            "input_match": "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?planning-foundation\"",
+            "arm": "with-only"
+          }
+        }
+      ],
+      "arms": {
+        "with": [
+          {
+            "score": 0,
+            "passed": false,
+            "turns": 11,
+            "costUsd": 0.87114,
+            "judgeCostUsd": 0.0037079999999999995,
+            "durationSeconds": 274,
+            "startedAt": "2026-09-14T10:30:41.652Z",
+            "error": null,
+            "tracePath": "/tmp/claude-eval-InC5Ai/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "progress-exists",
+                "passed": true,
+                "weight": 1,
+                "explanation": ".planning/progress.md exists as expected",
+                "withOnly": true,
+                "scored": false
+              },
+              {
+                "name": "result",
+                "passed": false,
+                "weight": 2,
+                "explanation": "judge votes: FAIL FAIL FAIL",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  false,
+                  false,
+                  false
+                ],
+                "evidence": ".planning/findings.md\n.planning/plan.md\n.planning/progress.md"
+              },
+              {
+                "name": "skill-fired",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Skill called 1x (expected 1..∞)",
+                "withOnly": true,
+                "scored": false
+              }
+            ]
+          },
+          {
+            "score": 0,
+            "passed": false,
+            "turns": 16,
+            "costUsd": 1.215718,
+            "judgeCostUsd": 0.00381,
+            "durationSeconds": 420,
+            "startedAt": "2026-09-14T10:30:41.653Z",
+            "error": null,
+            "tracePath": "/tmp/claude-eval-mBSBfv/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "progress-exists",
+                "passed": true,
+                "weight": 1,
+                "explanation": ".planning/progress.md exists as expected",
+                "withOnly": true,
+                "scored": false
+              },
+              {
+                "name": "result",
+                "passed": false,
+                "weight": 2,
+                "explanation": "judge votes: FAIL FAIL FAIL",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  false,
+                  false,
+                  false
+                ],
+                "evidence": ".planning/design.md\n.planning/findings.md\n.planning/plan.md\n.planning/progress.md\nCONTEXT.md"
+              },
+              {
+                "name": "skill-fired",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Skill called 1x (expected 1..∞)",
+                "withOnly": true,
+                "scored": false
+              }
+            ]
+          },
+          {
+            "score": 0,
+            "passed": false,
+            "turns": 15,
+            "costUsd": 0.9164660000000001,
+            "judgeCostUsd": 0.0037080000000000004,
+            "durationSeconds": 281,
+            "startedAt": "2026-09-14T10:30:41.653Z",
+            "error": null,
+            "tracePath": "/tmp/claude-eval-vjSJig/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "progress-exists",
+                "passed": true,
+                "weight": 1,
+                "explanation": ".planning/progress.md exists as expected",
+                "withOnly": true,
+                "scored": false
+              },
+              {
+                "name": "result",
+                "passed": false,
+                "weight": 2,
+                "explanation": "judge votes: FAIL FAIL FAIL",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  false,
+                  false,
+                  false
+                ],
+                "evidence": ".planning/findings.md\n.planning/plan.md\n.planning/progress.md"
+              },
+              {
+                "name": "skill-fired",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Skill called 1x (expected 1..∞)",
+                "withOnly": true,
+                "scored": false
+              }
+            ]
+          }
+        ],
+        "without": [
+          {
+            "score": 0,
+            "passed": false,
+            "turns": 14,
+            "costUsd": 0.736276,
+            "judgeCostUsd": 0.0037680000000000005,
+            "durationSeconds": 269,
+            "startedAt": "2026-09-14T10:35:15.823Z",
+            "error": null,
+            "tracePath": "/tmp/claude-eval-788FAk/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "result",
+                "passed": false,
+                "weight": 2,
+                "explanation": "judge votes: FAIL FAIL FAIL",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  false,
+                  false,
+                  false
+                ],
+                "evidence": "CLAUDE.md\ndocs/eof/JOURNAL.md\ndocs/eof/PLAN.md"
+              }
+            ]
+          },
+          {
+            "score": 0,
+            "passed": false,
+            "turns": 13,
+            "costUsd": 0.9205550000000001,
+            "judgeCostUsd": 0.003966000000000001,
+            "durationSeconds": 352,
+            "startedAt": "2026-09-14T10:35:22.468Z",
+            "error": null,
+            "tracePath": "/tmp/claude-eval-X0GSwM/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "result",
+                "passed": false,
+                "weight": 2,
+                "explanation": "judge votes: FAIL FAIL FAIL",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  false,
+                  false,
+                  false
+                ],
+                "evidence": "CLAUDE.md\ndocs/eof/DEAD-ENDS.md\ndocs/eof/DECISIONS.md\ndocs/eof/JOURNAL.md\ndocs/eof/PLAN.md"
+              }
+            ]
+          },
+          {
+            "score": 0,
+            "passed": false,
+            "turns": 13,
+            "costUsd": 0.8045795000000001,
+            "judgeCostUsd": 0.0037680000000000005,
+            "durationSeconds": 301,
+            "startedAt": "2026-09-14T10:37:41.623Z",
+            "error": null,
+            "tracePath": "/tmp/claude-eval-Crqwu2/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "result",
+                "passed": false,
+                "weight": 2,
+                "explanation": "judge votes: FAIL FAIL FAIL",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  false,
+                  false,
+                  false
+                ],
+                "evidence": "CLAUDE.md\ndocs/eof/JOURNAL.md\ndocs/eof/PLAN.md"
+              }
+            ]
+          }
+        ]
+      },
+      "aggregates": {
+        "score": 0,
+        "passRate": 0,
+        "scoreWithout": 0,
+        "passRateWithout": 0,
+        "delta": 0
+      }
+    }
+  ],
+  "aggregates": {
+    "casesTotal": 1,
+    "casesPassed": 0,
+    "overallScore": 0,
+    "overallPassRate": 0,
+    "meanDelta": 0
+  }
+}

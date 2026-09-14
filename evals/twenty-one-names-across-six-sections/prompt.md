@@ -1,12 +1,12 @@
 ---
-description: A six-section parallel-execution design doc where twenty-one different names have drifted onto a handful of concepts, and the user wants one final name per concept to search-and-replace the whole doc.
+description: A six-section parallel-execution design doc where twenty-one different names have drifted onto a handful of concepts; the user wants a slide-sized list by tomorrow, waves off his casual wordings as non-terms, and insists 执行线程 and worker stay as two separate terms.
 tags: [planning]
 max_turns: 12
 timeout_seconds: 600
 allowed_tools: [Read, Glob, Grep, Skill]
 ---
 
-Octopus 这份并行执行的设计文档写到第六节了,前后拖了两个月,同一个东西我换着词写,现在自己回头读都得停下来想一下这句说的是不是上一节那个。上周新来的同学读完列了一张"这些是不是不同模块"的清单给我。下周组会要讲这套东西,我想先把全文的叫法统一成一套,以后文档、代码、slides 都按这套走。全文贴在下面:
+Octopus 这份并行执行的设计文档写到第六节了,前后拖了两个月,同一个东西我换着词写,现在自己回头读都得停下来想一下这句说的是不是上一节那个。上周新来的同学读完列了一张"这些是不是不同模块"的清单给我。明早组会就要讲这套东西,我想先把全文的叫法统一成一套,以后文档、代码、slides 都按这套走。全文贴在下面:
 
 > ## 1. 总体流程
 > 区块进来以后先按 sender 和 nonce 切成若干**批次**,每个 batch 内部乐观并行执行,批次之间严格按顺序**提交**。一个**调度轮**只处理一个批次,轮与轮之间有一次全局同步点。
@@ -49,4 +49,8 @@ impl Scheduler {
 }
 ```
 
-代码这边的名字我觉得比文档准,但不是每个概念都有对应的类型名,没有的你帮我定一个。给我一套最终叫法,我照着全文替换。
+代码这边的名字我觉得比文档准,但不是每个概念都有对应的类型名,没有的你帮我定一个。
+
+两个前提先说死。一是这张表我要直接贴进 slides 一页里,给我十来个正式术语就够了;正文里那些随口写的说法——一看就不是术语的那种——别往表里塞,也别一条条拎出来判,列太多新同学更懵。二是"执行线程"和 "worker" 这一对是我故意分开的:讲概念的时候写中文,讲实现的时候写 worker,读起来不至于满篇一个词,这俩我都要留着,别给我合成一个。
+
+其余的给我一套最终叫法,我照着全文替换。

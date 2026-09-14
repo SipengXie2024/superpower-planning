@@ -89,3 +89,34 @@ flips it from 0/4 to 3/3, so the case turns on the destination and nothing else.
 All six score 1.00 in both arms, which is a separate problem: they do not
 distinguish whether the plugin is installed. That calls for harder prompts, not
 stricter rubrics.
+
+## Write-enabled cases
+
+Cases that judge what was written need `Write` and `Edit` in `allowed_tools` and
+the operator grant `--allow-tools Write Edit` on the command line. Both halves are
+required.
+
+Do not add `Bash`. Granting a shell makes the harness demand a sandbox backend,
+and on a machine without `socat` and `bubblewrap` it refuses the whole run rather
+than running unconfined — every run comes back with zero turns and an error, which
+is the correct behaviour but costs you the run.
+
+**Reaching the file contents is the hard part.** Three graders look like they
+would work and two of them do not:
+
+- `focus: files` passes the judge a sorted list of created paths and nothing
+  else. A rubric asking about content under this focus can never pass. One case
+  scored 0.00 in both arms this way before the cause was found.
+- `focus: trace` passes the conversation, but once it runs past 24 messages only
+  the first 12 and last 12 survive. A mid-run write becomes invisible. Keeping
+  the prompt self-contained, so the model does no exploration, pushes the writes
+  into the visible tail, but that is mitigation rather than a guarantee.
+- `focus: {source: file, path: <path>}` does pass real file contents. It needs a
+  literal path, so it rewards knowing the plugin's convention; mark it
+  `arm: with-only` and keep the score on path-agnostic graders, or the no-plugin
+  arm is being failed for not knowing a convention nobody told it.
+
+The path-agnostic way to reach content is `type: tool_used` with `input_match`,
+which is a regex over the tool call's own input, file body included. It is free
+and deterministic, and it checks presence rather than quality — good for "the
+saved text names the constraint", useless for "the plan is any good".
