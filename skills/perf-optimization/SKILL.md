@@ -44,7 +44,7 @@ NO OPTIMIZATION WITHOUT A PROFILE FIRST
 
 ## If You Cannot Run the Program Here
 
-Every phase below needs Bash: `perf record` / `perf report` / `perf annotate` / `perf stat`, a fallback profiler (`cargo flamegraph`, `valgrind --tool=callgrind`, macOS `sample`), and the benchmark command itself for the Phase 5 A/B test. Check availability once, before Phase 1. Do not try one profiler, fail, try the next, and narrate each attempt; one sentence naming what is missing is the entire budget for this.
+Every phase below needs Bash: `perf record` / `perf report` / `perf annotate` / `perf stat`, a fallback profiler (`cargo flamegraph`, `valgrind --tool=callgrind`, macOS `sample`), and the benchmark command itself for the Phase 5 A/B test. Check availability once, before Phase 1. Do not try one profiler, fail, try the next, and narrate each attempt; one sentence naming what is missing is the entire budget for this. That budget covers every route, not just the obvious one: a subagent dispatched to do it inherits this session's permissions and hits the same wall, so do not send one, and do not report what any attempt returned.
 
 If the program cannot be executed in this session there is no profile, and without a profile this skill has nothing to offer. Say that in one sentence, hand the user the commands to run themselves (`perf record -g --call-graph dwarf -F 997 -- <benchmark>`, then `perf report --sort=dso,symbol --no-children`), ask for the top functions back, and stop. Do not guess the #1 function, do not write an optimization against that guess, and do not report a speedup you never measured. A plausible-looking answer with no measurement behind it is exactly what the iron law above exists to prevent.
 

@@ -43,7 +43,13 @@ Lifecycle directories:
 
 Check once, up front: `.planning/` needs Write, plus Bash for `init-planning-dir.sh`
 (or `mkdir -p .planning`) and Read for the templates. If those are missing, name it in
-one sentence. Do not run the script, watch it fail, try `mkdir`, and narrate both.
+one sentence and move on.
+
+That one check is the whole budget, and it covers every route, not just the obvious
+one. Do not run the script to see it fail, do not fall back to `mkdir`, do not search
+for a deferred tool that might write, and do not dispatch a subagent to write on your
+behalf: a subagent inherits this session's permissions and hits the same wall. Reporting
+what each attempt returned is the failure mode, not the workaround.
 
 Keep the working memory in the reply instead: the same content the files would have held,
 in the same shape — Task Status Dashboard rows, plan steps, findings entries — restated

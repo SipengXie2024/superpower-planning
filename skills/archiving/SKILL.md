@@ -22,7 +22,7 @@ Archive the active project in `.planning/` into a structured archive directory, 
 Check once, up front, whether this session has Bash and Write/Edit. The archive
 scripts (`check-planning-state.sh`, `unique-filename.sh`, `snapshot-save.sh`,
 `planning-reset.sh`), the `summary.md` write and the memory edits all need them; name
-what is missing in one sentence rather than walking the steps to discover it.
+what is missing in one sentence rather than walking the steps to discover it. That budget covers every route, not just the obvious one: a subagent dispatched to do it inherits this session's permissions and hits the same wall, so do not send one, and do not report what any attempt returned.
 
 Deliver the archive as text instead: the Step 2 `summary.md` content, from whatever
 you can still read of `.planning/`, plus the Step 4c memory suggestions if the

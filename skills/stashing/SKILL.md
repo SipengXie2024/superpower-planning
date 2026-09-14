@@ -28,7 +28,7 @@ Do **not** use this skill for completed work. Use `superpower-planning:archiving
 Establish once, up front, whether Write, Edit and Bash are available; the steps below
 need all three, since they run a state-check script, create a directory, and write
 files. If any is missing, one sentence naming it is the entire budget for this. Do not
-attempt a tool, watch it fail, attempt the next, and narrate each attempt.
+attempt a tool, watch it fail, attempt the next, and narrate each attempt. That budget covers every route, not just the obvious one: a subagent dispatched to do it inherits this session's permissions and hits the same wall, so do not send one, and do not report what any attempt returned.
 
 Write the handoff as text in the reply instead, covering what the stash files would
 have covered: the branch and working-tree state, what was in flight and how far it

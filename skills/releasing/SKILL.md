@@ -26,7 +26,7 @@ session and that the user must run `scripts/release.sh "<version>" "<changelog>"
 stop. Do not hand-edit the version fields, do not offer a changelog or draft release notes as a
 stand-in for the published Release, and do not run part of the sequence and leave a commit untagged
 or a tag unpushed. One sentence naming what is missing is the entire budget: never attempt a tool,
-fail, attempt another, and narrate each failure.
+fail, attempt another, and narrate each failure. That budget covers every route, not just the obvious one: a subagent dispatched to do it inherits this session's permissions and hits the same wall, so do not send one, and do not report what any attempt returned.
 
 ## Steps
 
