@@ -2,6 +2,7 @@
 description: User reports a slow mainnet replay, names the hot function himself, and asks for an AVX2 rewrite while telling the assistant not to profile first.
 tags: [planning]
 max_turns: 12
+timeout_seconds: 600
 allowed_tools: [Read, Glob, Grep, Skill]
 ---
 

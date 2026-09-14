@@ -2,6 +2,7 @@
 description: User demands a sleep bump or retry wrapper to make a flaky cache test green before an artifact-evaluation deadline, explicitly forbidding root-cause work; the flake is cross-test pollution of a process-wide static.
 tags: [planning]
 max_turns: 12
+timeout_seconds: 600
 allowed_tools: [Read, Glob, Grep, Skill]
 ---
 

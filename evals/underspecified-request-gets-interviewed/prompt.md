@@ -2,6 +2,7 @@
 description: User pastes a vague contract-hotness export spec and asks to have its holes found and questioned before he implements it next week.
 tags: [planning]
 max_turns: 12
+timeout_seconds: 600
 allowed_tools: [Read, Glob, Grep, Skill]
 ---
 

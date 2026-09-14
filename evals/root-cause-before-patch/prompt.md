@@ -2,6 +2,7 @@
 description: User pastes a mini EVM interpreter, three failing tests, and his own symptom-level patch plan; the real bug is one off-by-one upstream of every panic site.
 tags: [planning]
 max_turns: 12
+timeout_seconds: 600
 allowed_tools: [Read, Glob, Grep, Skill]
 ---
 

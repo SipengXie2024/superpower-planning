@@ -2,6 +2,7 @@
 description: One code-hash-keyed concept picked up three different names across a design doc, and the user wants the naming settled once and for all.
 tags: [planning]
 max_turns: 12
+timeout_seconds: 600
 allowed_tools: [Read, Glob, Grep, Skill]
 ---
 

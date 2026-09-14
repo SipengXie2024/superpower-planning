@@ -2,6 +2,7 @@
 description: A new design paragraph silently reuses a term the project glossary already defines with an incompatible meaning, while the user asks only for the new words to be appended and says the old entries are fine.
 tags: [planning]
 max_turns: 12
+timeout_seconds: 600
 allowed_tools: [Read, Glob, Grep, Skill]
 ---
 

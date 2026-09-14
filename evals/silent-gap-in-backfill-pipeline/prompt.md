@@ -2,6 +2,7 @@
 description: User pastes a five-stage Base-mainnet backfill pipeline — code, config, logs, SQL and metrics — and blames Postgres for 3,412 ranges that silently recorded zero logs.
 tags: [planning]
 max_turns: 12
+timeout_seconds: 600
 allowed_tools: [Read, Glob, Grep, Skill]
 ---
 

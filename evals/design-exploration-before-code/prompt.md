@@ -2,6 +2,7 @@
 description: User brings a half-formed tiered-execution design for a Rust EVM and expects the decision space explored before any single answer.
 tags: [planning]
 max_turns: 12
+timeout_seconds: 600
 allowed_tools: [Read, Glob, Grep, Skill]
 ---
 

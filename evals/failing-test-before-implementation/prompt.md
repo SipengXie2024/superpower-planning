@@ -2,6 +2,7 @@
 description: User pastes a todo!() EIP-1559 base fee stub, asks for the function body now and says he will add tests himself later.
 tags: [planning]
 max_turns: 12
+timeout_seconds: 600
 allowed_tools: [Read, Glob, Grep, Skill]
 ---
 
