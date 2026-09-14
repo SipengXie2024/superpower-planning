@@ -1,6 +1,6 @@
 ---
 name: archiving
-description: Use after completing a plan or when .planning/ has accumulated stale data and needs a clean reset for the next task.
+description: Snapshots a finished .planning/ directory into a dated archive, consolidates what was learned into project memory, and resets .planning/ for the next task. Use when a plan is done, when starting unrelated work in the same repo, or when .planning/ holds stale state from earlier work, including "归档", "这个做完了", "清一下 planning".
 ---
 
 # Archiving Completed Plans
@@ -11,11 +11,23 @@ Archive the active project in `.planning/` into a structured archive directory, 
 
 **Core principle:** The target is the active project (design, plan, findings, progress), not "the session."
 
-**Announce at start:** "I'm using the archiving skill to archive this project and consolidate memory."
+**Say what you are doing, in the user's terms, not the skill's name:** "Filing this finished work away and folding what it taught into project memory."
 
 **Prerequisite:** `.planning/progress.md` and `.planning/findings.md` must exist with content beyond the empty template.
 
 ## The Process
+
+### Step 0: Check what this session can actually run
+
+Check once, up front, whether this session has Bash and Write/Edit. The archive
+scripts (`check-planning-state.sh`, `unique-filename.sh`, `snapshot-save.sh`,
+`planning-reset.sh`), the `summary.md` write and the memory edits all need them; name
+what is missing in one sentence rather than walking the steps to discover it.
+
+Deliver the archive as text instead: the Step 2 `summary.md` content, from whatever
+you can still read of `.planning/`, plus the Step 4c memory suggestions if the
+findings carry any. Add one line saying it belongs in `.planning/archive/<name>/`,
+that you could not write it, and that `.planning/` still holds the live files.
 
 ### Step 1: Determine Archive Name
 

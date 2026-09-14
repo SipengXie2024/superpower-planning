@@ -2,15 +2,9 @@
 
 ## Task Status Dashboard
 <!-- Quick-scan execution status. Update after each task/phase completes. -->
-<!-- When review gates apply: Spec Review, Quality Review, and Plan Align MUST all show PASS before Status can be ✅ complete. For manual execution or native dynamic workflows, these columns may be left as "-" when no explicit review gate applies. -->
-<!-- Plan Align is checked per-task by the reviewer/agent when present and per-group/final by the orchestrator (Plan Alignment Gate). -->
-<!-- Cell notation for Spec Review / Quality Review:
-       PASS                — review passed
-       FAIL (round 2/3)    — fix loop in progress, round 2 of 3
-       -                   — review not applicable for this execution mode
-     The "PASS" prefix is preserved so `grep -E '^\s*\|.*PASS\b'` style scans keep working. -->
-| Task | Status | Spec Review | Quality Review | Plan Align | Agent/Batch | Key Outcome |
-|------|--------|-------------|----------------|------------|-------------|-------------|
+<!-- Status: pending / in progress / ✅ complete / blocked. Agent-Batch names the subagent or batch that did the work, or "-" for inline work. -->
+| Task | Status | Agent/Batch | Key Outcome |
+|------|--------|-------------|-------------|
 
 ## Session: [DATE]
 

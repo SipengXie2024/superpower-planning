@@ -1,6 +1,6 @@
 ---
 name: tdd
-description: Use when implementing any feature or bugfix, before writing implementation code
+description: Drives implementation through the red-green-refactor cycle, writing a test that fails for the right reason, watching it fail, writing the minimum code that passes, then refactoring. Use before writing any feature or bugfix implementation, and whenever a change needs a regression test that proves the bug existed, including "先写测试", "加个单测", "补个测试". Applies even when the request is only for the implementation and even when the change looks too small to test.
 ---
 
 # Test-Driven Development (TDD)
@@ -46,6 +46,12 @@ Implement fresh from tests. Period.
 
 **Before deleting code the user already wrote, confirm first.** State plainly what will be removed and why (it has no failing test behind it), then wait for a yes. Phrase the confirmation as your own recommendation, not a rule citation, and never name this skill, its steps, or any internal tool to the user. Only their own freshly-written, untested code needs this gate; code you wrote earlier in the same session does not.
 
+## When Tools Are Missing
+
+Check once, up front, for the two tools this cycle needs: Write/Edit to create the test file, and Bash to run the test command (`npm test` or the project's equivalent). One sentence naming what is missing is the entire budget for this. Do not attempt a tool, watch it fail, attempt a different one, and narrate each attempt.
+
+If either is unavailable, the deliverable is still the test. Put the complete failing test in the reply, in the same shape the file would have had, followed by the minimal implementation, and say in one line which paths they belong at and which command the user runs to see RED then GREEN. State that you could not write or run them yourself. Never report a verification step you did not perform, and never treat a missing runner as grounds to skip the test and hand over implementation alone.
+
 ## Red-Green-Refactor
 
 The cycle is RED (write a failing test) to Verify RED (watch it fail correctly) to GREEN (minimal code) to Verify GREEN (watch it pass, all green) to REFACTOR (clean up, stay green), then repeat. A wrong failure loops back to RED; a still-failing test loops back to GREEN.
@@ -53,39 +59,6 @@ The cycle is RED (write a failing test) to Verify RED (watch it fail correctly) 
 ### RED - Write Failing Test
 
 Write one minimal test showing what should happen.
-
-<Good>
-```typescript
-test('retries failed operations 3 times', async () => {
-  let attempts = 0;
-  const operation = () => {
-    attempts++;
-    if (attempts < 3) throw new Error('fail');
-    return 'success';
-  };
-
-  const result = await retryOperation(operation);
-
-  expect(result).toBe('success');
-  expect(attempts).toBe(3);
-});
-```
-Clear name, tests real behavior, one thing
-</Good>
-
-<Bad>
-```typescript
-test('retry works', async () => {
-  const mock = jest.fn()
-    .mockRejectedValueOnce(new Error())
-    .mockRejectedValueOnce(new Error())
-    .mockResolvedValueOnce('success');
-  await retryOperation(mock);
-  expect(mock).toHaveBeenCalledTimes(3);
-});
-```
-Vague name, tests mock not code
-</Bad>
 
 **Requirements:**
 - One behavior
@@ -112,38 +85,6 @@ Confirm:
 ### GREEN - Minimal Code
 
 Write simplest code to pass the test.
-
-<Good>
-```typescript
-async function retryOperation<T>(fn: () => Promise<T>): Promise<T> {
-  for (let i = 0; i < 3; i++) {
-    try {
-      return await fn();
-    } catch (e) {
-      if (i === 2) throw e;
-    }
-  }
-  throw new Error('unreachable');
-}
-```
-Just enough to pass
-</Good>
-
-<Bad>
-```typescript
-async function retryOperation<T>(
-  fn: () => Promise<T>,
-  options?: {
-    maxRetries?: number;
-    backoff?: 'linear' | 'exponential';
-    onRetry?: (attempt: number) => void;
-  }
-): Promise<T> {
-  // YAGNI
-}
-```
-Over-engineered
-</Bad>
 
 Don't add features, refactor other code, or "improve" beyond the test.
 
@@ -202,24 +143,6 @@ Next failing test for next feature.
 | "TDD will slow me down" | TDD faster than debugging. Pragmatic = test-first. |
 | "Manual test faster" | Manual doesn't prove edge cases. You'll re-test every change. |
 | "Existing code has no tests" | You're improving it. Add tests for existing code. |
-
-## Red Flags - STOP and Start Over
-
-- Code before test
-- Test after implementation
-- Test passes immediately
-- Can't explain why test failed
-- Tests added "later"
-- Rationalizing "just this once"
-- "I already manually tested it"
-- "Tests after achieve the same purpose"
-- "It's about spirit not ritual"
-- "Keep as reference" or "adapt existing code"
-- "Already spent X hours, deleting is wasteful"
-- "TDD is dogmatic, I'm being pragmatic"
-- "This is different because..."
-
-**All of these mean: Delete code. Start over with TDD.**
 
 ## Example: Bug Fix
 

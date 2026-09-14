@@ -1,6 +1,6 @@
 ---
 name: perf-optimization
-description: "Systematic performance optimization methodology: profile first, fix only the #1 bottleneck, re-profile, repeat. Use when optimizing any program's performance — before writing SIMD, parallelism, caching, or algorithmic rewrites. Also use when someone says 'make it faster', 'this is slow', 'optimize this', 'too slow', 'performance bottleneck', or wants to reduce latency/prove time/build time. Prevents the common trap of guessing bottlenecks (which wastes 10x more code for less speedup). Covers perf record/annotate workflow, A/B testing discipline, contaminated profile diagnosis, and when to stop. NOT for memory leaks (use valgrind/heaptrack) or known algorithmic complexity fixes (O(N^2) → O(N log N))."
+description: "Profile first, fix only the #1 bottleneck, re-profile, repeat, covering the perf record and annotate workflow, A/B discipline, and when to stop. Use before writing SIMD, parallelism, caching, or an algorithmic rewrite, and whenever someone says 'make it faster', 'this is slow', 太慢了, 优化一下性能. Applies especially when the requester already names the function they believe is slow, since a guessed bottleneck is usually the wrong one. NOT for memory leaks (valgrind or heaptrack) or a known complexity fix."
 ---
 
 # Shrink the Bottleneck Top-Down
@@ -41,6 +41,12 @@ NO OPTIMIZATION WITHOUT A PROFILE FIRST
 - **I/O-bound programs** — network latency, disk wait, database queries. perf CPU profile won't show these; use `strace -T`, `perf trace`, or application-level timing.
 - **Trivial known fix** — a one-line change where the cause and fix are already clear (e.g., removing an accidental `.clone()` in a hot loop). Just fix it, measure, done.
 - **Build time / compile time** — use `cargo build --timings`, `cargo llvm-lines`, or `-Z time-passes`. Different tools, different methodology.
+
+## If You Cannot Run the Program Here
+
+Every phase below needs Bash: `perf record` / `perf report` / `perf annotate` / `perf stat`, a fallback profiler (`cargo flamegraph`, `valgrind --tool=callgrind`, macOS `sample`), and the benchmark command itself for the Phase 5 A/B test. Check availability once, before Phase 1. Do not try one profiler, fail, try the next, and narrate each attempt; one sentence naming what is missing is the entire budget for this.
+
+If the program cannot be executed in this session there is no profile, and without a profile this skill has nothing to offer. Say that in one sentence, hand the user the commands to run themselves (`perf record -g --call-graph dwarf -F 997 -- <benchmark>`, then `perf report --sort=dso,symbol --no-children`), ask for the top functions back, and stop. Do not guess the #1 function, do not write an optimization against that guess, and do not report a speedup you never measured. A plausible-looking answer with no measurement behind it is exactly what the iron law above exists to prevent.
 
 ## The Cycle
 
@@ -277,18 +283,6 @@ perf stat -e instructions,cycles -- <command>
 | Branch miss rate | < 2% | > 5% → branch-heavy code, consider branchless |
 | IPC | > 2.0 | < 1.0 → memory-bound or stalled |
 
-## Verification Checklist
-
-Before reporting optimization results:
-
-- [ ] Profiled BEFORE making any changes
-- [ ] Fixed only the #1 bottleneck per round
-- [ ] A/B tested on same machine, same data
-- [ ] Re-profiled after each fix
-- [ ] Reported before/after numbers with delta
-- [ ] Stopped when top function < 10-15% (or explained why continuing)
-- [ ] No "should be faster" claims without measurement
-
 ## Quick Reference
 
 | Phase | Action | Output |
@@ -300,19 +294,6 @@ Before reporting optimization results:
 | **5. A/B** | Same benchmark, same machine, before/after | Measured speedup |
 | **6. Check** | Re-profile → top still > 10-15%? | Continue or stop |
 | **7. Stop** | Profile flat, no dominant function | Report final results |
-
-## Red Flags — STOP and Profile
-
-If you catch yourself thinking:
-- "I know what's slow without profiling"
-- "Let me try this optimization first, then profile"
-- "This SIMD rewrite should definitely help"
-- "Let me fix these three things and then benchmark"
-- "The compiler won't optimize this" (it probably will)
-- "More threads = faster" (not if bandwidth-bound)
-- "It's obviously memory-bound" (use counters to confirm)
-
-**All of these mean: STOP. Run `perf record` first.**
 
 ## Integration with Other Skills
 
@@ -327,4 +308,4 @@ If you catch yourself thinking:
 
 **Deep reference (read when you need a specific perf feature):**
 - **`references/perf-tool-guide.md`** — Comprehensive perf CLI reference (~860 lines): TMA top-down analysis, memory profiling (cache miss / false sharing / NUMA), off-CPU analysis, lock contention, Intel PT, dynamic probes, scheduler analysis, security model, and glossary. Has a table of contents at the top. Read the relevant section when the optimization cycle surfaces a bottleneck type that needs specialized perf tooling (e.g., false sharing → read the c2c section; lock contention → read the lock section).
-- **`references/github_docs/`** — Per-subcommand reference docs from Linux kernel source (perf-stat, perf-record, perf-report, perf-c2c, perf-lock, Intel PT, etc.)
+- **`references/github_docs/`** — Per-subcommand reference docs from Linux kernel source, one file per subcommand named `perf_doc_<subcommand>.txt` (perf-stat, perf-record, perf-report, perf-c2c, perf-lock, Intel PT, etc.). Grep for the flag or concept you need. Several run past 2000 lines, so reading one whole either burns the context or gets silently truncated.

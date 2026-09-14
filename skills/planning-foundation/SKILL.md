@@ -1,6 +1,6 @@
 ---
 name: planning-foundation
-description: Use when starting complex multi-step tasks, research projects, or anything needing >5 tool calls. Provides the persistent .planning/ directory used as on-disk working memory across sessions.
+description: Creates and maintains the persistent .planning/ directory that carries a task's plan, progress, and findings across context resets and session boundaries, serving as on-disk working memory. Use when starting complex multi-step work, a research project, or anything needing more than five tool calls, and when recovering context from an earlier session, including "接着上次", "这个要分几步", "先做个计划".
 ---
 
 # Planning Foundation
@@ -39,6 +39,17 @@ Lifecycle directories:
 - `.planning/stash/` — paused projects (each entry is a subdirectory with all active files)
 - `.planning/archive/` — completed projects (each entry is a subdirectory with all active files + summary.md)
 
+## If This Session Cannot Write Files
+
+Check once, up front: `.planning/` needs Write, plus Bash for `init-planning-dir.sh`
+(or `mkdir -p .planning`) and Read for the templates. If those are missing, name it in
+one sentence. Do not run the script, watch it fail, try `mkdir`, and narrate both.
+
+Keep the working memory in the reply instead: the same content the files would have held,
+in the same shape — Task Status Dashboard rows, plan steps, findings entries — restated
+as it changes so it survives the context. Close with one line saying to save it as
+`.planning/progress.md` and `.planning/findings.md`, and that you could not write them.
+
 ## Quick Start
 
 Before ANY complex task:
@@ -70,7 +81,7 @@ Filesystem = Disk (persistent, unlimited)
 ## Critical Rules
 
 ### 1. Create Planning Dir First
-Never start a complex task without `.planning/`. All project documents (design, plan, findings, progress) live in `.planning/`. Execution status is tracked via the Task Status Dashboard in `progress.md`.
+Never start a complex task without `.planning/`. All project documents (design, plan, findings, progress) live in `.planning/`. Execution status is tracked via the Task Status Dashboard in `progress.md`; the TaskCreate/TaskUpdate API is session-scoped orchestration only and does not persist status across sessions.
 
 ### 2. The 2-Action Dispatch Rule
 > "After every 2 read/search/explore operations, IMMEDIATELY save to the appropriate file by content type."
@@ -145,18 +156,6 @@ AFTER ALIGNMENT (based on user's judgment):
 | Error occurred | Read relevant file | Need current state to fix |
 | Resuming after gap | Read all planning files | Recover state |
 
-## The 5-Question Reboot Test
-
-If you can answer these, your context management is solid:
-
-| Question | Answer Source |
-|----------|---------------|
-| Where am I? | Task Status Dashboard in progress.md |
-| Where am I going? | Remaining phases |
-| What's the goal? | Goal statement in plan |
-| What have I learned? | findings.md |
-| What have I done? | progress.md |
-
 ## When to Use This Pattern
 
 **Use for:**
@@ -217,15 +216,3 @@ The orchestrator aggregates delegated-role findings into top-level `.planning/fi
 **Other:**
 - `${CLAUDE_PLUGIN_ROOT}/scripts/release.sh` — Version bump, tag, GitHub Release
 - `${CLAUDE_PLUGIN_ROOT}/scripts/session-catchup.py` — Recover context from previous session (manual utility, requires Python)
-
-## Anti-Patterns
-
-| Don't | Do Instead |
-|-------|------------|
-| Use TaskCreate/TaskUpdate as cross-session persistence | Use .planning/progress.md Task Status Dashboard for persistent status. Task API is for session-scoped orchestration only. |
-| State goals once and forget | Re-read plan before decisions |
-| Hide errors and retry silently | Log errors to plan file |
-| Stuff everything in context | Store large content in files |
-| Start executing immediately | Create plan file FIRST |
-| Repeat failed actions or independently try alternatives | Log failure, escalate to user for direction |
-| Let delegated findings disappear | Aggregate into top-level findings.md |

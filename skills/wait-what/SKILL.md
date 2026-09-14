@@ -1,6 +1,6 @@
 ---
 name: wait-what
-description: Stop. That last message did not land — re-pitch it.
+description: User-invoked repair command for a message that did not land. Use when the user types /wait-what after failing to follow the assistant's last message. The assistant re-pitches what it just said, adds the missing context, writes in the conversation's controlled plain register (ASD-STE100 for English, controlled Chinese otherwise), and swaps invented shorthand for the canonical terms in the repo-root CONTEXT.md.
 disable-model-invocation: true
 ---
 

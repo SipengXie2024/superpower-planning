@@ -1,6 +1,6 @@
 ---
 name: spec-interview
-description: Use when refining design docs and specs through deep questioning. Triggered when user says "help me refine this plan", "ask me about the project", "deep interview", or after brainstorming produces a design doc.
+description: Interrogates a design doc or spec through successive rounds of questions until the ambiguities that would otherwise produce the wrong implementation are resolved and recorded. Use after brainstorming produces a design doc, or when a spec reads complete but an implementer would still have to guess, including "help me refine this plan", "ask me about the project", "帮我打磨这个方案", "问我点问题".
 ---
 
 # Spec Interview
@@ -99,16 +99,3 @@ Refinement is complete once the target doc reflects the answers and the confirma
 
 - **Invoked by another skill:** hand control back to the caller and let it drive what comes next. Do NOT start implementation or write an implementation plan from here; that belongs to the calling flow.
 - **Invoked standalone:** end after the document is updated (and committed, if the user approved the commit).
-
-## Common Mistakes
-
-| Mistake | Correct Approach |
-|---------|-----------------|
-| Asking obvious questions | Ask about scenarios the user hasn't considered |
-| Too many questions at once | 1-2 related questions per AskUserQuestion call |
-| Accepting vague answers | Follow up until you get concrete details |
-| Only focusing on features | Cover all seven dimensions |
-| Not updating the doc after | Immediately write findings into the document |
-| Asking in plain text | ALWAYS use AskUserQuestion tool |
-| Asking without a recommendation | Lead every question with your recommended answer + rationale |
-| Asking what the code already answers | Explore the codebase/docs first; only ask what you can't determine |

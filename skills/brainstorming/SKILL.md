@@ -1,23 +1,17 @@
 ---
 name: brainstorming
-description: Use when designing complex multi-step features, building new components, or planning significant behavior changes that require design exploration before implementation.
+description: Explores a design space before any code is written, surfacing the decisions that actually matter and their tradeoffs, then persists the approved design and plan into .planning/. Use when a feature is multi-step or still ambiguous, when a new component needs shaping, or when the approach itself is the open question rather than the implementation, including "帮我理一理", "该怎么设计", "有哪些方案".
 ---
 
 # Brainstorming Ideas Into Designs
 
 Help turn ideas into fully formed designs and specs through natural collaborative dialogue.
 
-**Announce at start:** "I'm using the brainstorming skill to explore this design."
+**Say what you are doing, in the user's terms, not the skill's name:** "Working through the design space before any code gets written."
 
 Start by understanding the current project context, then ask questions to refine the idea. Once you understand what you're building, present the design and get user approval.
 
-<EXTREMELY-IMPORTANT>
 Do NOT invoke any implementation skill, write any code, scaffold any project, or take any implementation action until you have presented a design and the user has approved it. This applies to EVERY project regardless of perceived simplicity.
-</EXTREMELY-IMPORTANT>
-
-## Anti-Pattern: "This Is Too Simple To Need A Design"
-
-Every project goes through this process: a todo list, a single-function utility, a config change, all of them. "Simple" projects are where unexamined assumptions cause the most wasted work. The design can be short (a few sentences for truly simple projects), but you MUST present it and get approval.
 
 ## Checklist
 
@@ -55,7 +49,7 @@ You MUST create a task for each item and complete them in order. The terminal st
    - **Ambiguity:** could a requirement be read two ways? Pick one and make it explicit.
 8. **Spec interview.** Ask: "Do you want to run a spec interview to refine details in the design?" (default: yes). If yes, invoke `superpower-planning:spec-interview` with the design doc as target; when it returns, resume this checklist. If the user skips, continue directly. Either way, the next step is the user review gate below.
 9. **User review gate.** Explicitly ask the user to review the written spec before planning.
-10. **Ask about worktree** via `AskUserQuestion`: isolate implementation in a git worktree? If yes, use Claude Code's native worktree support (e.g. `EnterWorktree`); skip if no.
+10. **Ask about worktree** via `AskUserQuestion`: isolate implementation in a git worktree? If yes, use Claude Code's native worktree support (e.g. `EnterWorktree`); skip if no. `.planning/` is gitignored, so a fresh worktree starts without it: copy the directory across (`cp -r .planning <worktree>/`) before step 11, or the plan you are about to write lands in an empty planning directory, separated from the design doc and findings written in step 6.
 11. **Transition to implementation.** Write the plan to `.planning/plan.md`: bite-sized, verifiable tasks with exact file paths, real code and commands, and verification steps. This persisted plan is the terminal step; `spec-interview` and worktree isolation are the only allowed intermediate steps before it.
 
 ## Key Principles

@@ -1,6 +1,6 @@
 ---
 name: stashing
-description: Use when switching to another project, waiting on dependencies, or temporarily setting aside unfinished work.
+description: Saves unfinished work into a dated stash under .planning/stash, capturing the plan state, what was in flight, and what comes next, so a later session can resume it; the matching resume path restores that state and re-checks whether the findings went stale. Use when switching to another project, blocked waiting on a dependency, or setting work aside, including "先放一放", "回头再弄", "暂存一下".
 ---
 
 # Stashing Unfinished Work
@@ -9,7 +9,7 @@ Pause the active project in `.planning/` without claiming it is done.
 
 **Core principle:** `archive = done`, `stash = paused`. The target is the active project (design, plan, findings, progress), not "the session."
 
-**Announce at start:** "I'm using the stashing skill to pause this work safely."
+**Say what you are doing, in the user's terms, not the skill's name:** "Saving where this stands so a later session can pick it up."
 
 ## When to Use
 
@@ -22,6 +22,22 @@ Use this skill when:
 Do **not** use this skill for completed work. Use `superpower-planning:archiving` instead.
 
 ## The Process
+
+### Step 0: Check what this session can actually write
+
+Establish once, up front, whether Write, Edit and Bash are available; the steps below
+need all three, since they run a state-check script, create a directory, and write
+files. If any is missing, one sentence naming it is the entire budget for this. Do not
+attempt a tool, watch it fail, attempt the next, and narrate each attempt.
+
+Write the handoff as text in the reply instead, covering what the stash files would
+have covered: the branch and working-tree state, what was in flight and how far it
+got, the next concrete step, and the one detail most likely to be forgotten. Close
+with one line saying where to paste it (`.planning/stash/<name>/`, or any file the
+user already keeps) and that you could not write it yourself.
+
+The user asked to put work down. A handoff they can paste in ten seconds does that;
+an account of which scripts were unavailable does not.
 
 ### Step 1: Check stash-worthiness and completion guard
 
