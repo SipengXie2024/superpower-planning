@@ -1,0 +1,727 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Eval report — superpower-planning v4.0.0</title>
+</head>
+<body>
+<style>
+:root{--plane:#f9f9f7;--surface:#fcfcfb;--ink:#0b0b0b;--ink-2:#52514e;--ink-3:#6b6a64;--hairline:rgba(11,11,11,.10);--grid:#e1e0d9;--inset:rgba(11,11,11,.04);--accent:#2a78d6;--base-fill:#6b6a64;--delta-good:#006300;--good:#067d06;--warning:#8a6100;--critical:#d03b3b;
+  color-scheme:light dark;
+}
+@media (prefers-color-scheme:dark){:root{--plane:#0d0d0d;--surface:#1a1a19;--ink:#ffffff;--ink-2:#c3c2b7;--ink-3:#898781;--hairline:rgba(255,255,255,.10);--grid:#2c2c2a;--inset:rgba(255,255,255,.05);--accent:#3987e5;--base-fill:#898781;--delta-good:#0ca30c;--good:#0ca30c;--warning:#fab219;--critical:#e06c6c;color-scheme:dark}}
+:root[data-theme="dark"]{--plane:#0d0d0d;--surface:#1a1a19;--ink:#ffffff;--ink-2:#c3c2b7;--ink-3:#898781;--hairline:rgba(255,255,255,.10);--grid:#2c2c2a;--inset:rgba(255,255,255,.05);--accent:#3987e5;--base-fill:#898781;--delta-good:#0ca30c;--good:#0ca30c;--warning:#fab219;--critical:#e06c6c;color-scheme:dark}
+:root[data-theme="light"]{--plane:#f9f9f7;--surface:#fcfcfb;--ink:#0b0b0b;--ink-2:#52514e;--ink-3:#6b6a64;--hairline:rgba(11,11,11,.10);--grid:#e1e0d9;--inset:rgba(11,11,11,.04);--accent:#2a78d6;--base-fill:#6b6a64;--delta-good:#006300;--good:#067d06;--warning:#8a6100;--critical:#d03b3b;color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:var(--plane);color:var(--ink);
+  font:14px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif;
+  -webkit-text-size-adjust:100%}
+.wrap{max-width:880px;margin:0 auto;padding:40px 24px 64px;display:flex;flex-direction:column;gap:20px}
+.eyebrow{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+header h1{margin:2px 0 0;font-size:24px;font-weight:600;line-height:1.25;text-wrap:balance}
+.meta{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;color:var(--ink-2);font-size:13px}
+.meta .num{font-variant-numeric:tabular-nums lining-nums}
+.banner{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:8px;
+  border:1px solid var(--hairline);background:var(--surface);font-size:13px}
+.banner .chip-warn{color:var(--warning);font-weight:600}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.tile{background:var(--surface);border:1px solid var(--hairline);border-radius:10px;padding:14px 16px;
+  display:flex;flex-direction:column;gap:4px}
+.tile .label{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+.tile .value{font-size:26px;font-weight:600;font-variant-numeric:tabular-nums lining-nums;line-height:1.1}
+.tile.hero .value{font-family:Georgia,"Times New Roman",serif;font-weight:400;font-size:48px}
+.tile .sub{font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.tile .value.delta-pos{color:var(--delta-good)}
+.tile .value.delta-neg{color:var(--critical)}
+.toolbar{display:flex;gap:8px;justify-content:flex-end}
+.toolbar button{font:12px system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink-2);
+  background:var(--surface);border:1px solid var(--hairline);border-radius:6px;padding:4px 10px;cursor:pointer}
+.toolbar button:hover{color:var(--ink)}
+.toolbar button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.case{background:var(--surface);border:1px solid var(--hairline);border-radius:10px;padding:18px 20px;
+  display:flex;flex-direction:column;gap:10px}
+.case-regressed{border-left:3px solid var(--critical)}
+.verdict{margin:6px 0 0;font-size:15px}
+.verdict .delta{font-size:15px}
+.flag{font-size:11px;font-weight:600;color:var(--warning);white-space:nowrap}
+.star{color:var(--warning);font-size:.45em;vertical-align:super;line-height:0;cursor:help}
+.legend summary{cursor:pointer;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2)}
+.legend-list{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--ink-2)}
+.case-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.case-head h2{margin:0;font-size:16px;font-weight:600}
+.case-head .spacer{flex:1}
+.case-score{font-size:15px;font-weight:600}
+.mono{font:12px "SF Mono",ui-monospace,Menlo,Consolas,monospace}
+.num{font-variant-numeric:tabular-nums lining-nums}
+.muted{color:var(--ink-3);font-size:12px}
+.meter{display:inline-block;position:relative;width:120px;height:6px;border-radius:4px;background:var(--grid);
+  vertical-align:middle}
+.meter>span{display:block;height:100%;border-radius:4px;max-width:100%}
+.meter .tick{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--ink-3);border-radius:1px}
+.m-accent>span{background:var(--accent)}
+.m-base>span{background:var(--base-fill)}
+.delta{font-size:12px;font-weight:600;font-variant-numeric:tabular-nums}
+.delta-pos{color:var(--delta-good)}
+.delta-neg{color:var(--critical)}
+.delta-zero{color:var(--ink-3)}
+details.section{border-top:1px solid var(--grid);padding-top:10px}
+details.section>summary{cursor:pointer;font-size:12px;font-weight:600;letter-spacing:.04em;
+  text-transform:uppercase;color:var(--ink-2);list-style-position:outside;margin-left:2px}
+details.section>summary:hover{color:var(--ink)}
+details.section[open]>summary{margin-bottom:8px}
+.md{display:flex;flex-direction:column;gap:8px;background:var(--inset);border-radius:8px;
+  padding:12px 14px;overflow-wrap:break-word}
+.md>:first-child{margin-top:0}
+.md h1,.md h2,.md h3,.md h4,.md h5,.md h6{margin:4px 0 0;font-size:1em;font-weight:600;line-height:1.3}
+.md p,.md ul,.md ol,.md blockquote,.md table,.md pre,.md hr{margin:0}
+.md ul,.md ol{display:flex;flex-direction:column;gap:4px;padding-left:20px}
+.md blockquote{border-left:2px solid var(--hairline);padding-left:10px;color:var(--ink-2)}
+.md :not(pre)>code{background:var(--inset);padding:1px 4px;border-radius:4px;
+  font:.92em "SF Mono",ui-monospace,Menlo,Consolas,monospace}
+.md pre{background:var(--inset);border:1px solid var(--hairline);padding:10px 12px;border-radius:6px;
+  overflow-x:auto;font:12px/1.5 "SF Mono",ui-monospace,Menlo,Consolas,monospace}
+.md pre code{background:none;padding:0;font:inherit}
+.md table{width:100%;border-collapse:collapse}
+.md th,.md td{padding:5px 8px;text-align:left;vertical-align:top;border-bottom:1px solid var(--grid)}
+.md th{font-weight:600;color:var(--ink-2)}
+.md a{color:var(--accent);text-decoration:none}
+.md a:hover{text-decoration:underline}
+.grader-def{display:flex;flex-direction:column;gap:6px;padding:8px 0}
+.grader-def+.grader-def{border-top:1px solid var(--grid)}
+.grader-def-head{display:flex;align-items:baseline;gap:8px}
+.grader-name{font:13px "SF Mono",ui-monospace,Menlo,Consolas,monospace;font-weight:600}
+.badge{font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2);
+  border:1px solid var(--hairline);border-radius:999px;padding:1px 8px}
+.config{display:flex;flex-direction:column;gap:2px;background:var(--inset);border-radius:8px;padding:10px 14px}
+.config code{font:12px "SF Mono",ui-monospace,Menlo,Consolas,monospace;overflow-wrap:anywhere}
+.arm{display:flex;flex-direction:column;gap:8px;padding:6px 0}
+.arm+.arm{border-top:1px dashed var(--grid);margin-top:4px;padding-top:12px}
+.arm-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.arm-label{font-size:13px;font-weight:600}
+.run{border:1px solid var(--grid);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.run-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.run-title{font-size:12px;font-weight:600;color:var(--ink-2)}
+.run-error .explanation{color:var(--ink-2)}
+.note{font-size:12px;color:var(--ink-2)}
+.graders{display:flex;flex-direction:column;gap:4px}
+details.grader{border-radius:6px}
+details.grader>summary{cursor:pointer;display:flex;align-items:baseline;gap:8px;padding:3px 4px;
+  border-radius:6px;list-style:none}
+details.grader>summary::-webkit-details-marker{display:none}
+details.grader>summary::before{content:'▸';font-size:10px;color:var(--ink-3);flex:none;
+  transition:transform .12s ease}
+details.grader[open]>summary::before{transform:rotate(90deg)}
+details.grader>summary:hover{background:var(--inset)}
+details.grader>summary:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.grader-body{padding:6px 8px 8px 24px;display:flex;flex-direction:column;gap:6px}
+.chip{font-size:11px;font-weight:600;border-radius:999px;padding:1px 8px;white-space:nowrap}
+.chip-pass{color:var(--good);border:1px solid currentColor}
+.chip-fail{color:var(--critical);border:1px solid currentColor}
+.chip.chip-warn{color:var(--warning);border:1px solid currentColor}
+.explanation{margin:0;font-size:13px;color:var(--ink-2);white-space:pre-wrap;overflow-wrap:break-word}
+.kv{display:flex;gap:8px;font-size:12px;color:var(--ink-3)}
+.votes{font-variant-numeric:tabular-nums;letter-spacing:.1em}
+pre.evidence{margin:0;background:var(--inset);border:1px solid var(--hairline);border-radius:6px;
+  padding:8px 10px;overflow-x:auto;max-height:320px;
+  font:12px/1.5 "SF Mono",ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap;overflow-wrap:break-word}
+footer{color:var(--ink-3);font-size:12px;text-align:center;padding-top:8px}
+@media (prefers-reduced-motion:no-preference){
+  details.grader>summary,.toolbar button{transition:background .12s ease,color .12s ease}
+}
+@media (prefers-reduced-motion:reduce){
+  details.grader>summary::before{transition:none}
+}
+@media print{
+  :root,:root[data-theme="dark"],:root[data-theme="light"]{--plane:#f9f9f7;--surface:#fcfcfb;--ink:#0b0b0b;--ink-2:#52514e;--ink-3:#6b6a64;--hairline:rgba(11,11,11,.10);--grid:#e1e0d9;--inset:rgba(11,11,11,.04);--accent:#2a78d6;--base-fill:#6b6a64;--delta-good:#006300;--good:#067d06;--warning:#8a6100;--critical:#d03b3b;color-scheme:light}
+  body{background:#fff}
+  .toolbar{display:none}
+  .case,.run,.grader-def{break-inside:avoid}
+  pre.evidence{max-height:none}
+}
+</style>
+<div class="wrap">
+<header>
+<div class="eyebrow">Plugin eval report</div>
+<h1>superpower-planning v4.0.0</h1>
+<p class="verdict">Plugin effect: <span class="delta delta-zero">· 0.0 pts</span> vs baseline — improved 0 · flat 1 · regressed 0 of 1 case.</p>
+<div class="meta">
+<span class="mono">.</span>
+<span>Claude Code v2.1.270</span>
+<span class="num">2026-09-14 11:09 UTC</span>
+<span class="num">5m 33s</span>
+<span class="num">$2.57</span>
+<span class="num">6 runs</span>
+<span class="num">3 in flight</span>
+
+
+<span>judge sonnet</span>
+<span class="num">threshold 100%</span>
+<span>filtered: --case new-section-redefines-a-recorded-term</span>
+</div>
+</header>
+
+<section class="tiles">
+<div class="tile hero"><span class="label">Suite score · with plugin</span><span class="value">0%</span><span class="sub">mean of per-case scores</span></div>
+<div class="tile"><span class="label">Ablation Δ</span><span class="value num delta-zero">0.0</span><span class="sub">score points vs baseline, 1 of 1 case</span></div>
+<div class="tile"><span class="label">Baseline score</span><span class="value num">0%</span><span class="sub">without the plugin</span></div>
+<div class="tile"><span class="label">Cases</span><span class="value num">1</span><span class="sub">0 of 1 ≥ 100% threshold</span></div>
+<div class="tile"><span class="label">Perfect runs</span><span class="value num">0%</span><span class="sub">runs where every grader passed</span></div>
+</section>
+<details class="section legend">
+<summary>How to read this report</summary>
+<ul class="legend-list">
+<li>A run's score is the weighted fraction of its graders that passed; a "perfect" run passed every grader.</li>
+<li>A case's score is the mean of its runs; a case passes when its score is at or above the 100% threshold (the tick on each case bar).</li>
+<li>The suite score is the mean of the per-case scores.</li>
+<li>Judge votes are independent samples of the LLM judge; the majority decides pass or fail.</li>
+<li>"With plugin" and "Baseline" runs are identical except for the plugin being loaded; Δ is the with-plugin score minus the baseline score.</li>
+
+</ul>
+</details>
+<div class="toolbar"><button type="button" data-act="expand">Expand all</button><button type="button" data-act="collapse">Collapse all</button></div>
+<article class="case" id="case-1">
+<div class="case-head">
+<h2>new-section-redefines-a-recorded-term</h2>
+<span class="muted mono">evals/new-section-redefines-a-recorded-term</span>
+<span class="spacer"></span>
+
+<span class="delta delta-zero">· 0.0 pts</span>
+<span class="muted">with plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span><i class="tick" style="left:100.0%"></i></span>
+<span class="num case-score">0%</span>
+</div>
+
+<details class="section" open>
+<summary>Results</summary>
+<section class="arm">
+<div class="arm-head">
+<span class="arm-label">With plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">0% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">3 turns · $0.42 · 11:09:32 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">result</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">词表按你现在的格式补好了,repo 不在这台机器上,所以下面是直接可粘的整段。
+
+先说一句 Checkpoint,然后就照你说的办:你现有那条定义里唯一在做事的性质是「不需要再回放任何区块」,而 1024 那个产物恰恰不满足它——查不到就得继续往前找。所以我没把定义抹平成「某个高度的落盘产物」,而是写宽成一条带两个限定语的伞形定义,两种都罩进去,限定语只在文档和口头用,`CheckpointWriter`、`checkpoint_at()`、`checkpoints` 表一个都不用动。
+
+## 替换 Language 里的 Checkpoint 那条
+
+```md
+**Checkpoint**:
+某个高度的落盘产物,回溯查询的起点。有两种:full checkpoint 存该高度的全量状态,可以独立恢复,不需要回放任何区块;hot-slice checkpoint 只存 hot slice,独立还原不出全量状态,查不到的 slot 要沿 backtrack chain 继续往前找。
+_Avoid_: 快照、存档点
+```
+
+## 新增条目
+
+```md
+**Hot slice**:
+一个 checkpoint 里实际写下的那部分数据:只有该 checkpoint 覆盖的 block range 内被动过的 slot 的最终值,没被动过的 slot 不写。
+_Avoid_: 热切片、增量快照
+
+**Backtrack chain**:
+一次查询为了确定某个 slot 在高度 H 的值,从 H 之前最近的 checkpoint 起依次往前访问过的 checkpoint 序列。
+_Avoid_: 回溯链、查找链
+
+**Genesis checkpoint**:
+高度 0 的 full checkpoint,backtrack chain 的终点。
+_Avoid_: 创世快照、初始快照
+
+**Hot slot**:
+被修改得足够频繁、值得单独维护 skip list 的 slot。
+_Avoid_: 高频 slot、热点 slot
+
+**Skip list**:
+为单个 hot slot 维护的索引,记录它最近八次被修改的高度,用来跳到含它的 checkpoint 而不必走完整条 backtrack chain。
+_Avoid_: 跳表、修改历史
+```
+
+你原文里的「创世快照」用到了 Checkpoint 的 _Avoid_ 词「快照」,所以规范写法收成了 Genesis checkpoint。「高频 slot」同理提成了 Hot slot——skip list 的定义绕不开它,而且「够频繁」的阈值目前是空的。
+
+## 建议同时加一节(你这份还没有)
+
+```md
+## Flagged ambiguities
+
+- Checkpoint 同时指 full 和 hot-slice 两种产物,是**有意保留**的重载:代码里
+  `CheckpointWriter` / `checkpoint_at()` / `checkpoints` 表几十处已散开,改名成本
+  远超收益。口头和文档用 full / hot-slice 限定语区分。
+- Skip list 不是跳表这个数据结构,只是一串修改高度。
+```
+
+## 两件值得你定一下的
+
+1. **`checkpoint_at()` 的返回值现在有两种语义。** 不改名的代价全落在这里:凡是「拿到 checkpoint 就算查完了」的调用点,这个假设现在只对 full 的成立。不用重构,但这些点值得扫一遍。
+2. **除 genesis 外还留不留别的 full checkpoint?** 留的话 backtrack chain 有界;不留的话冷 slot 最坏一路回溯到创世,而这类 slot 恰好不会有 skip list 兜底——P99 可能比现在的 4 秒更差。这个会反过来影响上面 Checkpoint 那条算不算一个干净的二分。
+
+Skip list 这个名字现在零代码引用,想换成 Skip index 之类的话此刻是免费的,过了这个里程碑就不是了。</pre>
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">skill-fired</span>  <span class="badge">plugin-fired indicator</span></summary>
+<div class="grader-body">
+<p class="explanation">Skill called 1x (expected 1..∞)</p>
+
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 2</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">3 turns · $0.43 · 11:09:32 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">result</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">词表没在这台机器上,所以我没写文件,下面是可直接粘贴的内容。
+
+## 1. 替换 Checkpoint 那一条
+
+```md
+**Checkpoint**:
+某个高度上落盘的状态产物,Full checkpoint 和 Hot slice checkpoint 的统称。单说 checkpoint 不保证能独立恢复全量状态,取决于是哪一种。
+_Avoid_: 快照、存档点
+```
+
+## 2. 新增条目
+
+```md
+**Full checkpoint**:
+存了该高度全部 slot 的 checkpoint,可以直接从它恢复出该高度的全量状态,既不用回放区块,也不用读别的 checkpoint。创世高度那一份就是 Full checkpoint。
+_Avoid_: 完整快照、创世快照、全量存档
+
+**Hot slice**:
+一份 checkpoint 里实际存下来的数据:该区间内被写改过的 slot,以及它们在区间末尾的值。区间内没被改过的 slot 不进 hot slice。
+_Avoid_: 增量、热点集
+
+**Hot slice checkpoint**:
+每 1024 个区块打一份、内容只有一个 hot slice 的 checkpoint。单独一份不足以回答任意 slot 的查询,查不到就要沿 backtrack chain 往前找。
+_Avoid_: 增量 checkpoint、稀疏快照、小 checkpoint
+
+**Backtrack chain**:
+一次回溯查询实际串起来的 checkpoint 序列:从 H 之前最近的一份开始往前走,直到在某份 hot slice 里命中目标 slot,或走到 Full checkpoint 为止。链长决定单次查询的最坏耗时。
+_Avoid_: 回溯链、查询链
+
+**Skip list**:
+给高频 slot 单独维护的一张表,记它最近八次被写改的高度,用来跳过 backtrack chain 的逐段回退。记的是修改,不是 Touch。
+_Avoid_: 跳表、修改历史
+```
+
+## 3. 关于 Checkpoint,一句话说完
+
+按你的要求写宽了,**代码一行不用动**——`CheckpointWriter`、`checkpoint_at()`、`checkpoints` 表全都还成立,因为 Full / Hot slice 是加在这个词前面的定语,不是替代它的新词。
+
+代价只有一处,但它已经在你的方案原文里发生了:那一段 &quot;checkpoint&quot; 出现四次,第一次(&quot;从最近的 checkpoint 往后扫 diff&quot;)指的是 Full checkpoint,后三次指的是 Hot slice checkpoint。umbrella 定义罩得住,但那句话得补上定语,不然读的人分不出来。别处沿用旧写法不影响。
+
+顺带,你原文里的**创世快照**踩了 Checkpoint 的 `_Avoid_: 快照`,我把它收进 Full checkpoint 的 `_Avoid_` 了,那句改成&quot;最坏一路找到创世那份 Full checkpoint&quot;。
+
+## 4. Skip list 这个名字建议换掉
+
+这是新词、零代码存量,现在改是一个词的事。**skip list 在 CS 里是有确定含义的**——多层概率链表。你这个是定长八项的最近写入高度列表,两者没关系。新人看到这名字会去找层数和随机化。
+
+建议换成 **Write trail**,其余定义原样:
+
+```md
+**Write trail**:
+给高频 slot 单独维护的一张表,记它最近八次被写改的高度,用来跳过 backtrack chain 的逐段回退。记的是修改,不是 Touch。
+_Avoid_: skip list、跳表、修改历史
+```
+
+你要是坚持 skip list,上面第 2 节那版直接用就行,不影响其他条目。
+
+## 5. 两个待定,不属于词表但会影响它
+
+- **&quot;高频 slot&quot; 没有判定标准**。Write trail 只给高频 slot 建,那门槛是什么(改动次数?最近窗口内?)得定下来,否则这条定义落不了地。
+- 「查某个 slot 在高度 H 的值」这个操作本身还没名字,你原文用了&quot;回溯&quot;&quot;查询&quot;两种说法。要是想定一个,现在顺手就加了。
+
+另外可以在文件末尾加个 **Flagged ambiguities** 段落记一笔,免得下次有人重新提这事:
+
+```md
+## Flagged ambiguities
+
+- &quot;checkpoint&quot; 同时指全量落盘和 1024 区间落盘 — 已解决:Checkpoint 作为统称保留,
+  两种分别叫 **Full checkpoint** 和 **Hot slice checkpoint**,不改代码里的既有命名。
+```</pre>
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">skill-fired</span>  <span class="badge">plugin-fired indicator</span></summary>
+<div class="grader-body">
+<p class="explanation">Skill called 1x (expected 1..∞)</p>
+
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 3</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">3 turns · $0.44 · 11:09:32 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">result</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">仓库不在本机,所以下面是可以直接贴回 `CONTEXT.md` 的文本,我没在本地建任何文件。
+
+## 1. 替换现有的 Checkpoint 条目
+
+```md
+**Checkpoint**:
+某个高度上的落盘产物,查询和恢复都从它出发;代码里的 `CheckpointWriter`、`checkpoint_at()` 和 `checkpoints` 表指的都是这一类。分两种,区别在能不能单独使用:**full checkpoint** 存该高度的全量状态,可以直接恢复、不回放任何区块;**hot-slice checkpoint** 每 1024 个区块打一个,只存这一区间的 hot slice,必须沿 lookback chain 往前串才能答出一个 slot 的值。不加限定的 &quot;checkpoint&quot; 是两者的统称;凡是&quot;从最近的 checkpoint 恢复 / 往后扫&quot;这类说法,必须写明是哪一种。
+_Avoid_: 快照、存档点
+```
+
+按你说的口径写宽了,名字一个没动 —— `full` / `hot-slice` 只是限定词,`CheckpointWriter`、`checkpoint_at()`、`checkpoints` 表在统称下全部继续成立,不涉及重构。
+
+## 2. 紧跟在 Checkpoint 后面插入(四条都挂在它下面)
+
+```md
+**Hot slice**:
+一个 checkpoint 区间(现在是 1024 个区块)内出现在 Diff 里的 slot 及其区间末的值,这一区间没被改过的 slot 不写入。
+_Avoid_: 热切片、增量快照、热数据
+
+**Lookback chain**:
+查询某个 slot 在高度 H 的值时,从 H 之前最近的 checkpoint 往前依次串起来的 checkpoint 序列,终点是 genesis checkpoint。
+_Avoid_: 回溯链、回溯路径、查找链
+
+**Genesis checkpoint**:
+高度 0 的那个 full checkpoint,lookback chain 的终点。
+_Avoid_: 创世快照、初始快照
+
+**Skip list**:
+为高频 slot 单独维护的一张表,记下该 slot 最近八次被改动的高度。
+_Avoid_: 跳表、修改历史、热点索引
+```
+
+## 需要你拍板的几点
+
+**&quot;被动过&quot;是 Diff 还是 Touch。** 你方案里写&quot;这一段区间内被动过的 slot&quot;,但词表里这两个词是分开的 —— Touch 含只读,Diff 只含改动。我按 Diff 写了(只读的 slot 没有和前值不同的&quot;最终值&quot;),这决定 hot slice 的大小。如果本意要含只读 Touch,这条定义得改。
+
+**词写宽之后,能不能单独恢复这个性质就只剩在文档里了。** 这是原定义里唯一能判真假的部分,合并后 `checkpoints` 表里两种行长得一样。文档拦不住 `ORDER BY height DESC LIMIT 1` 这种取法 —— 恢复、backfill 续跑、GC 三处都是这个形状,而且两种行的删除语义不同(删掉一个 hot-slice checkpoint 会断掉它之后所有查询的链)。如果表里还没有区分两者的字段,这是我唯一建议在里程碑前动的地方:加一个 `kind` 列 + 枚举,不是重构。
+
+**skip list 现在改名是免费的。** 它和 CS 里那个概率性有序结构重名,新人看到会按那个理解,而这里是&quot;每个 slot 最近八次改动高度&quot;的定长列表。和 checkpoint 的处境正好相反 —— 那个散在几十处所以贵,这个只存在于你刚写的一段方案里,代码里零引用。想换就现在换,`Skip trail` 或 `Slot history` 都比 skip list 准。不换我也按原样收了。
+
+另外两处小的:你方案里写的&quot;创世快照&quot;用了 `快照`,已经在 Checkpoint 的 `_Avoid_` 上,统一成 genesis checkpoint;以及口头说的&quot;回溯&quot;和 Backfill 的&quot;回补&quot;在中文里很近,后者已被 `_Avoid_` 收编,前者建议一律说 lookback。
+
+如果想把这次的取舍留痕,在 Language 后面加一节就够了,免得下一个人以为是漏改:
+
+```md
+## Flagged ambiguities
+
+- checkpoint 曾同时指全量落盘产物和 1024 区块的区间产物 —— 已决定保留统称
+  (代码中名字散布过广),用 full / hot-slice 限定区分,不单独造词。
+```</pre>
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">skill-fired</span>  <span class="badge">plugin-fired indicator</span></summary>
+<div class="grader-body">
+<p class="explanation">Skill called 1x (expected 1..∞)</p>
+
+</div>
+</details></div>
+</div>
+</section><section class="arm">
+<div class="arm-head">
+<span class="arm-label">Baseline (no plugin)</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">0% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">3 turns · $0.46 · 11:11:54 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">result</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">词表更新如下。两段,分开贴。
+
+## 1. 替换现有的 Checkpoint 那一条
+
+```md
+**Checkpoint**:
+某个高度的落盘产物,回溯查询往前走时的落脚点。分 full checkpoint 和 hot slice 两种,共用 checkpoint 这个名字;凡是会影响&quot;回溯到此为止还是继续往前&quot;的地方,必须显式区分这两种。
+_Avoid_: 快照、存档点
+
+**Full checkpoint**:
+存了该高度全量状态的 checkpoint,不依赖在它之前的任何产物就能恢复出全部 slot。回溯走到 full checkpoint 必须停:在这里查不到的 slot,就是该高度确实没有值。
+_Avoid_: 全量快照、完整存档
+
+**Hot slice**:
+只存某个 block range 内被动过的 slot 的最终值的 checkpoint,这段没动过的 slot 不写进去。在 hot slice 里查不到一个 slot,只说明这段区间没动它,不说明它没有值,必须继续往前走。
+_Avoid_: 增量快照、稀疏 checkpoint、热点集
+
+**Genesis checkpoint**:
+高度 0 的那个 full checkpoint,回溯链最坏情况下的终点。
+_Avoid_: 创世快照、创世状态
+```
+
+## 2. 追加到 Language 末尾(Cursor 之后)
+
+```md
+**Backtrack chain**:
+一次回溯查询实际走过的 checkpoint 序列:从 H 之前最近的一个开始往前,直到命中目标 slot 或走到 full checkpoint 为止。整条链上不回放任何区块,链长就是这次查询的成本。
+_Avoid_: 查找链、checkpoint 链、回溯路径
+
+**Skip list**:
+给高频 slot 单独维护的表,记录它最近八次被修改的高度,回溯时直接跳到这些高度,省掉一段段走 backtrack chain。只是加速结构,不是数据来源,掉了不影响查询结果的正确性。
+_Avoid_: 跳表、热点索引、修改历史
+```
+
+## 几点说明
+
+**Checkpoint 按你说的写宽了,没动任何名字。** `CheckpointWriter`、`checkpoint_at()`、`checkpoints` 表全部照旧——full checkpoint 和 hot slice 都是形容词式的限定,不是新词。代价是这条从一行变成四行,你多贴几行而已。
+
+**但有一个区别不能被罩掉:回溯在哪儿终止。** full checkpoint 是自足的,查不到就等于该 slot 在那个高度没有值;hot slice 不自足,查不到只意味着这段没动过它。两者在这一点上是相反的,而这正是新查询路径的终止条件。如果代码里分不出来,两种错法都很难查:走过一个 full checkpoint 没停,就一路回溯到创世(正是你想干掉的那个六万区块扫描);在 hot slice 上停了,就对一个有值的 slot 静默返回空。所以我把这个性质写进了定义里。落到代码上最省事的做法是纯增量的:`checkpoints` 表加一个 `kind` 字段,`checkpoint_at()` 的返回值带上它,一个名字都不用改,不影响里程碑。顺带一提,两种都不回放区块——hot slice 链也不用——所以&quot;独立/不独立&quot;才是真正的分界,我按这个措辞写的。
+
+**方案里的&quot;创世快照&quot;建议改成&quot;创世 checkpoint&quot;。** 词表里 Checkpoint 一直避着&quot;快照&quot;这个词,这个产物又恰好是第一个 full checkpoint,所以我把&quot;创世快照&quot;放进 Genesis checkpoint 的 _Avoid_ 了。这只是改你文档里的一句话,跟代码无关。
+
+**skip list 这个名字建议趁现在换掉。** 它和那个经典的概率跳表数据结构重名,但完全不是一回事——你这个是每个 slot 一串最近写入高度。现在还没有代码用这个名字,改的成本是零;等 `SkipList` 这类类型名散出去,就是第二个 checkpoint。`WriteTrail` 或者 `SlotHistory` 都行。你要留着 skip list 我也照写,上面那条已经能用。
+
+最后,Skip list 那条里&quot;只是加速结构,不是数据来源&quot;是我从你的描述推的(它只记高度不记值,所以值还得回 checkpoint 拿)。如果它其实也存值,这句要删。</pre>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 2</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">3 turns · $0.48 · 11:12:06 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">result</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">记忆目录当前不可写,跳过了,不影响下面的内容。
+
+先说结论:名字一个都不用改,`CheckpointWriter` / `checkpoint_at()` / `checkpoints` 表全部照旧,Checkpoint 保持统称。但我没有只放宽那一条——放宽之后在它底下挂了两个下位词,理由在最后。
+
+## 替换 Checkpoint 这一条
+
+```md
+**Checkpoint**:
+任何一份在某个高度落盘的产物的统称,不承诺内容是全量还是增量。需要区分时用下面的 Full checkpoint / Hot slice;单说 checkpoint 时不再默认包含&quot;能直接恢复出全量状态&quot;这层意思。
+_Avoid_: 快照、存档点
+```
+
+## 紧跟其后新增两条
+
+```md
+**Full checkpoint**:
+内容是全量状态的那种 checkpoint:可以直接从它恢复出该高度的全量状态,不需要回放区块,也不需要再往前找别的 checkpoint。Walkback 的终止条件就是走到一份 full checkpoint。
+_Avoid_: 快照、创世快照、全量快照
+
+**Hot slice**:
+一份 checkpoint 里实际存下来的数据:只有它覆盖的那段 block range(当前是 1024 个区块)内被改过的 slot 的最终值,这段区间内没被改过的 slot 不写入。一份 1024 的 checkpoint 里正好装一个 hot slice,所以口语里也可以拿 hot slice 指那份 checkpoint 本身。在 hot slice 里查不到某个 slot,只说明这段区间内它没被改过,不说明它没有值。
+_Avoid_: 增量 checkpoint、稀疏快照、差分快照
+```
+
+## 追加到词表末尾
+
+```md
+**Walkback**:
+查&quot;某个 slot 在高度 H 的值&quot;时,从 H 之前最近的那份 checkpoint 开始一份一份往前找的过程,命中即停,最坏一路走到 full checkpoint。Skip list 就是用来缩短它的。
+_Avoid_: 回溯、回溯链、往前扫
+
+**Skip list**:
+给高频被改的 slot 单独维护的一张表,记下它最近八次被修改的高度,查询时可以直接跳到对应的 checkpoint,不必逐份 walkback。纯加速结构,不存 slot 的值;丢了或过期只影响查询延迟,不影响结果正确性。
+_Avoid_: 跳表、跳跃表、索引表
+```
+
+## 几处要你拍板的
+
+**为什么没有只放宽一行。** 你原来那条 Checkpoint 的定义,全部信息量就是&quot;能直接恢复全量状态、不用回放&quot;,而 1024 那份在这条轴上正好是反的——查不到就得继续往前。放宽成&quot;落盘产物&quot;之后这句话不剩什么,连&quot;walkback 走到哪儿算到底&quot;都表述不出来。证据是你方案那段自己写的:&quot;最坏一路找到**创世快照**&quot;——那个位置你没法用 checkpoint,临时换了个词,而&quot;快照&quot;还在 Checkpoint 的 Avoid 里。下位词挂在统称底下,代码符号一个不动,你的顾虑不受影响。
+
+**Full checkpoint 的范围我拿不准。** 新方案里除创世那份外,还按老节奏定期打全量吗?我是按&quot;还打&quot;写的。如果实际只有创世一份,这条改叫 Genesis checkpoint 更准。
+
+**skip list 这名字跟 Pugh 的跳表撞了**,而且它不是跳表(是 per-slot 的最近修改高度表)。现在还没进代码,改名成本约等于零,Slot history / Write history 都行。留着也可以,我在 Avoid 里压了&quot;跳表&quot;防止中文里混用。
+
+**两处 &quot;hot&quot; 不同义。** hot slice 的 hot 是&quot;这段区间内被改过&quot;,skip list 那句&quot;高频 slot&quot;是&quot;改得频繁&quot;。我没单开 hot slot 条目,因为判定阈值还没定;定了之后建议补一条,或者把其中一个的 hot 换掉。
+
+**我替你写死了一个假设:** skip list &quot;丢了不影响正确性&quot;。你方案里没明说,按加速结构理解才自洽。如果它其实是权威数据(查不到即认为没改过),这条得反过来写,告诉我我改。</pre>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 3</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">3 turns · $0.34 · 11:12:09 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">result</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">词表的补充如下,格式和现有条目一致。
+
+```md
+**Checkpoint**:
+某个高度的一份落盘产物,是查询和恢复的起点。分两种:**全量 checkpoint** 存该高度的全部 slot,单独一份就能恢复出全量状态;**hot slice checkpoint** 只存它覆盖的那段区间里被动过的 slot,单独一份恢复不出全量状态。代码里的 `CheckpointWriter`、`checkpoint_at()` 和 `checkpoints` 表是这两种的统称,区分靠前缀而不靠标识符。
+_Avoid_: 快照、存档点
+
+**Hot slice**:
+一个 hot slice checkpoint 里实际写下的那部分数据:它覆盖的 1024 个区块区间内被动过的 slot 的最终值,这段区间没被动过的 slot 不写。
+_Avoid_: 热切片、增量快照、热数据
+
+**Genesis checkpoint**:
+高度 0 的那个全量 checkpoint,回溯链的终点,任何 slot 往前找最坏会落到这里。
+_Avoid_: 创世快照、创世块快照
+
+**Skip list**:
+为高频 slot 单独维护的一张表,记下它最近八次被修改的高度,让回溯查询直接跳到目标 checkpoint,不必一个个往前走。
+_Avoid_: 跳表、高频索引
+
+**Backtrack chain**:
+从 H 之前最近的 checkpoint 起、为找某个 slot 逐个往前走过的那串 checkpoint,终点是找到该 slot 或走到 genesis checkpoint。链长直接决定查询延迟。
+_Avoid_: 回溯链、查找链、checkpoint 链
+```
+
+放法:Hot slice 和 Genesis checkpoint 跟在 Checkpoint 后面(都是 checkpoint 家族),Skip list 和 Backtrack chain 放末尾。
+
+两处需要你拍板:
+
+**Checkpoint 这条没改名,也没动代码。** 你要的&quot;一条定义罩两种&quot;我按字面做了,`全量 checkpoint` / `hot slice checkpoint` 只是散文里的形容词,不是新标识符——仓库里那几十处一个字都不用动。补充一点你可能没算进去的:过去两个月混着说没出事,是因为那时两种产物在&quot;单独一份能不能恢复出全量状态&quot;上答案相同,混用不花钱;hot slice 是第一个答案为否的产物,所以那两个月的无事记录对新方案不构成证据。具体会咬人的地方是 `checkpoint_at()` 的调用方——凡是拿到返回值就当能恢复全量状态的(恢复路径、Backfill 起点、on-call runbook 里&quot;从最近的 checkpoint 恢复&quot;),现在有可能拿到一个 hot slice。改名确实赶不上里程碑,但这些调用点值得在合并前扫一遍。
+
+**Skip list 这个名字建议趁现在换掉。** 它和那个众所周知的概率跳表数据结构撞名,而你这东西不是跳表,是&quot;最近 N 次写入高度&quot;的表;中文更糟,`跳表` 就是那个数据结构的标准译名,我只能把它塞进 _Avoid_,等于让词表跟通用术语打架。这个词还没进代码,现在换零成本,再过一个里程碑就是第二个 Checkpoint。建议 **Write trail**(_Avoid_: 跳表、写入轨迹、高频索引)。同意的话把上面那条的头词和 _Avoid_ 换掉即可,定义句不用动。
+
+另外两点小的:Genesis checkpoint 我按&quot;高度 0 的全量 checkpoint&quot;写的,如果你们的创世产物其实是某个更晚的 bootstrap 高度,这句要改;Backtrack chain 是你没加粗、我自己补的,理由是 skip list 的存在意义就是压它的长度,没个名字说不清优化目标——觉得多余直接删掉那条。</pre>
+</div>
+</details></div>
+</div>
+</section>
+</details>
+<details class="section" open>
+<summary>Prompt</summary>
+<div class="md"><p>statediff-index 这个项目的 CONTEXT.md 已经维护一阵了,仓库不在这台机器上,我把里面的词表整段贴给你:</p>
+<pre><code class="language-md"># statediff-index
+
+把 Base 主网每个区块的状态改动抽出来,建成可以按 address / slot 回溯查询的索引。
+
+## Language
+
+**Block range**:
+一段左闭右开的区块高度区间,索引任务的最小分配单位。
+_Avoid_: 区间、段
+
+**Diff**:
+单个区块里所有被改过的 (address, slot) -&gt; (old, new) 三元组的集合。
+_Avoid_: 变更集、delta
+
+**Touch**:
+某个 slot 在某个区块里被读或被写这件事,只记发生过,不记值。
+_Avoid_: 访问
+
+**Checkpoint**:
+一份被完整写盘的快照,可以直接从它恢复出该高度的全量状态,恢复过程不需要再回放任何区块。
+_Avoid_: 快照、存档点
+
+**Backfill**:
+对历史高度重新跑一遍索引的过程,和跟随链头的 Follow 相对。
+_Avoid_: 补数据、回补
+
+**Follow**:
+跟随链头实时索引新区块的常驻模式。
+_Avoid_: 追块、实时同步
+
+**Reorg depth**:
+从链头往回、仍可能被重组覆盖的最大区块数,超过这个深度的数据视为终局。
+_Avoid_: 回滚深度
+
+**Sink**:
+索引结果的落地目标,目前是 ClickHouse 表,以后可能加 parquet。
+_Avoid_: 输出、存储层
+
+**Cursor**:
+某个 worker 当前推进到的高度,崩溃重启后从这里接着跑。
+_Avoid_: 进度、offset
+</code></pre>
+<p>下个里程碑要做快速回溯查询,我把方案那一节先写出来了:</p>
+<blockquote>
+<h2>快速回溯</h2>
+<p>现在查"某个 slot 在高度 H 的值",要从最近的 checkpoint 往后扫 diff,平均扫六万个区块,P99 要 4 秒。
+新方案是每 1024 个区块打一个 checkpoint,里面只存这一段区间内被动过的 slot 的最终值,这部分数据我们叫 <strong>hot slice</strong>,这一段没被动过的 slot 就不写进去。
+查询时先定位到 H 之前最近的那个 checkpoint,要的 slot 如果不在里面,就接着往前找上一个 checkpoint,最坏一路找到<strong>创世快照</strong>。
+为了不让这条回溯链太长,再给高频 slot 单独维护一张 <strong>skip list</strong>,记下它最近八次被修改的高度。</p>
+</blockquote>
+<p>这段里冒出来几个新词,你按词表现在的格式给我补到 Language 那一节里。</p>
+<p>先堵一句:checkpoint 这个词我知道被我用宽了,1024 那个产物我也叫 checkpoint。但在我脑子里这俩本来就是一类东西——都是"某个高度的落盘产物",组里这么混着说两个月了,没人问过我是不是两个东西。而且代码里 <code>CheckpointWriter</code>、<code>checkpoint_at()</code>、ClickHouse 那张 <code>checkpoints</code> 表,这套名字散了几十处,这会儿另起一个名等于全仓库重构,下个里程碑我铁定赶不上。所以别给我改名,真要动词表,就把 Checkpoint 那条定义写宽一点、两种都罩进去,我照着改一行就完事。其余已有条目我自己看过了,没问题,不用动。</p>
+</div>
+</details>
+<details class="section" open>
+<summary>Graders — what "good" means for this case</summary>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">result</span><span class="badge">llm</span></div>
+<div class="md"><p>The user pasted his project's existing glossary and a newly drafted design section, then asked only that the new words be appended in the same format, adding that the existing entries are fine and should not be touched. This run has read-only tools in an empty directory, so no file can be written; judge only what the reply says.</p>
+<p>One discipline: the new section reuses the recorded term <strong>Checkpoint</strong> with an incompatible meaning. The glossary's Checkpoint is a complete on-disk snapshot that restores the full state at that height with no replay; the new 1024-block artifact holds only the slots touched inside its own window and forces a query to walk back to earlier ones, so it is by construction not complete. The reply has to leave one meaning per name.</p>
+<p>PASS requires both:</p>
+<ul>
+<li>It says that Checkpoint is now carrying two incompatible meanings.</li>
+<li>It takes the overlap away with a concrete proposal, by at least one of: giving the 1024-block artifact a stated replacement name and saying it should stop being called checkpoint; rewriting the Checkpoint entry to the new incremental sense and giving the full-snapshot meaning its own stated new name; or laying those two out as named options for the user to pick between. The proposal counts only if the replacement name is actually spelled out.</li>
+</ul>
+<p>FAIL if the new terms are appended with no mention of the collision; if the incremental sense is recorded under the word Checkpoint as though it matched the existing entry; if the proposed fix is to widen Checkpoint's definition to cover both senses; or if the collision is flagged but no stated name takes the overloaded word's place — a remark that the two senses differ, a hot slice entry defined as the data sitting inside that artifact, and an unnamed "should be renamed some day / you decide later" all leave the artifact called checkpoint and resolve nothing.</p>
+<p>Nothing else is judged: formatting, language, definition wording, whether hot slice / skip list / 创世快照 are added at all, how many other terms it touches, and anything it appends are all out of scope.</p>
+</div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">skill-fired</span><span class="badge">tool_used</span></div>
+<div class="config"><div class="kv"><span>tool</span><code>&quot;Skill&quot;</code></div><div class="kv"><span>input_match</span><code>&quot;\&quot;skill\&quot;\\s*:\\s*\&quot;(?:[\\w-]+:)?domain-glossary\&quot;&quot;</code></div></div>
+</div>
+</details>
+</article>
+<footer>Generated by <code>claude plugin eval</code> · schema v1 · scores are not comparable across different suites</footer>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  var bar=document.querySelector('.toolbar');
+  if(!bar)return;
+  bar.addEventListener('click',function(e){
+    var b=e.target&&e.target.closest('button');
+    if(!b)return;
+    var open=b.dataset.act==='expand';
+    document.querySelectorAll('details.section, details.grader').forEach(function(d){d.open=open});
+  });
+});
+// Collapsed details vanish from print/PDF; these pages are share artifacts.
+window.addEventListener('beforeprint',function(){
+  document.querySelectorAll('details').forEach(function(d){
+    if(!d.open){d.dataset.printOpened='1';d.open=true}
+  });
+});
+window.addEventListener('afterprint',function(){
+  document.querySelectorAll('details[data-print-opened]').forEach(function(d){
+    d.open=false;delete d.dataset.printOpened;
+  });
+});
+</script>
+</body>
+</html>

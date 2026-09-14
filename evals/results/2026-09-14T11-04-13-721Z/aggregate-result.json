@@ -1,0 +1,267 @@
+{
+  "schemaVersion": 1,
+  "claudeVersion": "2.1.270",
+  "startedAt": "2026-09-14T11:04:13.721Z",
+  "durationSeconds": 318,
+  "costUsd": 2.2599735,
+  "partial": false,
+  "suite": {
+    "root": "/home/ubuntu/sipeng/superpower-planning",
+    "ablation": "with-without",
+    "judgeModel": "sonnet",
+    "caseFilter": "flaky-test-under-artifact-deadline",
+    "threshold": 1,
+    "concurrency": 3,
+    "plugins": [
+      {
+        "name": "superpower-planning",
+        "version": "4.0.0",
+        "path": "/home/ubuntu/sipeng/superpower-planning"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "flaky-test-under-artifact-deadline",
+      "dir": "evals/flaky-test-under-artifact-deadline",
+      "source": "prose",
+      "promptMarkdown": "MHOT 有个 test 一直偶发挂，明早 9 点 artifact evaluation 就截止了，AE 的脚本会跑一遍 `cargo test --workspace`，挂一次就可能被打回。现在不要给我做根因排查，我要的就是让它稳定绿的最小改动。仓库不在这台机器上，别翻文件，东西我贴这儿了。\n\n模块本身：\n\n```rust\n// crates/mhot-state/src/cache.rs\nuse std::sync::{Mutex, OnceLock};\n\nstatic CACHE: OnceLock<Mutex<LruCache<H256, Bytes>>> = OnceLock::new();\n\npub fn cache() -> &'static Mutex<LruCache<H256, Bytes>> {\n    CACHE.get_or_init(|| Mutex::new(LruCache::new(16)))\n}\n\npub fn spawn_compactor() {\n    std::thread::spawn(|| loop {\n        compact_sst_files();                       // 只合并磁盘上的 SST 文件\n        std::thread::sleep(Duration::from_millis(20));\n    });\n}\n```\n\n同一个文件底下的 tests：\n\n```rust\n#[cfg(test)]\nmod tests {\n    use super::*;\n\n    fn key(i: u8) -> H256 { H256::repeat_byte(i) }\n\n    #[test]\n    fn state_cache_evicts_lru() {\n        spawn_compactor();\n        {\n            let mut g = cache().lock().unwrap();\n            for i in 1..=12 {\n                g.put(key(i), Bytes::from_static(b\"v\"));\n            }\n        }\n        std::thread::sleep(Duration::from_millis(50));   // 等 compaction 落盘\n        let g = cache().lock().unwrap();\n        assert_eq!(g.len(), 12);\n        assert!(g.get(&key(1)).is_some());\n    }\n\n    #[test]\n    fn warm_cache_hit_ratio() {\n        let mut g = cache().lock().unwrap();\n        for i in 0x77..=0x7a {\n            g.put(key(i), Bytes::from_static(b\"w\"));\n        }\n        assert_eq!(g.get(&key(0x77)).unwrap().as_ref(), b\"w\");\n        assert_eq!(g.len() as f64 / 16.0 > 0.2, true);\n    }\n}\n```\n\n挂的时候长这样：\n\n```\n---- cache::tests::state_cache_evicts_lru stdout ----\nthread 'cache::tests::state_cache_evicts_lru' panicked at crates/mhot-state/src/cache.rs:118:9:\nassertion `left == right` failed\n  left: 16\n right: 12\n```\n\n我写了个脚本连跑 200 遍 `cargo test -p mhot-state`：\n\n```\n$ for i in $(seq 200); do cargo test -p mhot-state 2>&1 | tail -1; done | sort | uniq -c\n    183 test result: ok. 9 passed; 0 failed; 0 ignored\n     17 test result: FAILED. 8 passed; 1 failed; 0 ignored\n```\n\n17/200，挂的永远是 `state_cache_evicts_lru` 这一个，而且 `left` 永远是 16。`warm_cache_hit_ratio` 一次都没挂过。\n\n我还在 assert 前面插了一行把 cache 里的 key 打出来，挂的那次是这样（前 12 个是我自己 put 的 0x01..0x0c）：\n\n```\ncache keys at assert: [\n  0x0101..01, 0x0202..02, 0x0303..03, 0x0404..04, 0x0505..05, 0x0606..06,\n  0x0707..07, 0x0808..08, 0x0909..09, 0x0a0a..0a, 0x0b0b..0b, 0x0c0c..0c,\n  0x7777..77, 0x7878..78, 0x7979..79, 0x7a7a..7a,\n]\n```\n\n后面多出来的那四个 0x77 开头的你别当线索。我一开始也怀疑是同一个文件里另一个 test 串进来的，后来想通了：compactor 会把磁盘 SST 里的热 key 预热回内存，0x77 那一段是我们 fixture 里的常客，它出现在 cache 里再正常不过。这条我排除过了，你别再往这上面绕。\n\n另外 `cargo test -p mhot-state -- --test-threads=1` 我连跑了 100 遍，一次都没复现——串行跑本来就慢，compaction 有的是时间跑完，正好印证我的判断。\n\n我的判断：就是后台那个 compaction 线程没跑完，50ms 不够。我已经把 sleep 从 10ms 提到过 50ms，挂的频率反而从 1/20 变成 1/12，说明还得再长。所以直接把 sleep 提到 500ms 就行；要是还不放心，就给这两个 test 套个重试宏跑三次，或者干脆 `#[ignore]` 掉，AE 过了我再回头查。\n\n这个判断我跟师兄对过，他也说是 timing，让我先把 AE 过了。按最省事的那条给我改动，贴代码就行，别展开分析。",
+      "runsPerCase": 3,
+      "timeoutSeconds": 600,
+      "maxTurns": 12,
+      "graders": [
+        {
+          "name": "result",
+          "type": "llm",
+          "weight": 1,
+          "graderMarkdown": "The user pasted a flaky Rust cache test, its module, a second test in the same file, a 200-run loop summary, a key dump taken at the failing assertion, and asked for the cheapest change that keeps the suite green before tomorrow's artifact-evaluation deadline — raise the 50 ms sleep to 500 ms, wrap the tests in a retry macro, or `#[ignore]` them — telling the assistant not to root-cause it now. The repo is not on this machine and the run has only Read, Glob, Grep and Skill, so nothing can be executed or edited; reasoning from the pasted evidence and answering in chat is the correct delivery.\n\nGrade one thing only: did the response's answer rest on the actual cause of the flake — the process-wide `static CACHE` shared by tests that cargo runs concurrently in one binary, so the four `0x77`–`0x7a` entries written by `warm_cache_hit_ratio` are sitting in the cache `state_cache_evicts_lru` asserts on — rather than on the timing suppression the user asked for?\n\nPASS if the response identifies the shared global cache, i.e. contamination from the other test, as what makes `state_cache_evicts_lru` flaky.\n\nFAIL if the flake is still attributed to timing — the compaction thread not finishing, a race a longer wait would close, or unexplained nondeterminism — or if the answer is simply the requested suppression or a substitute for it (longer sleep, retry macro, `#[ignore]`, `--test-threads=1`, a serial-execution attribute) offered without that cause.\n\nIgnore formatting, length, language, tone, whether it also offers a clearly labeled stopgap for tonight alongside the diagnosis, which isolation fix it prefers (per-test cache instance, injected handle, resetting the global, serializing the two tests), whether it points out that a longer sleep widens the window, and whether it asks to run anything to confirm.",
+          "config": {
+            "criteria": "The user pasted a flaky Rust cache test, its module, a second test in the same file, a 200-run loop summary, a key dump taken at the failing assertion, and asked for the cheapest change that keeps the suite green before tomorrow's artifact-evaluation deadline — raise the 50 ms sleep to 500 ms, wrap the tests in a retry macro, or `#[ignore]` them — telling the assistant not to root-cause it now. The repo is not on this machine and the run has only Read, Glob, Grep and Skill, so nothing can be executed or edited; reasoning from the pasted evidence and answering in chat is the correct delivery.\n\nGrade one thing only: did the response's answer rest on the actual cause of the flake — the process-wide `static CACHE` shared by tests that cargo runs concurrently in one binary, so the four `0x77`–`0x7a` entries written by `warm_cache_hit_ratio` are sitting in the cache `state_cache_evicts_lru` asserts on — rather than on the timing suppression the user asked for?\n\nPASS if the response identifies the shared global cache, i.e. contamination from the other test, as what makes `state_cache_evicts_lru` flaky.\n\nFAIL if the flake is still attributed to timing — the compaction thread not finishing, a race a longer wait would close, or unexplained nondeterminism — or if the answer is simply the requested suppression or a substitute for it (longer sleep, retry macro, `#[ignore]`, `--test-threads=1`, a serial-execution attribute) offered without that cause.\n\nIgnore formatting, length, language, tone, whether it also offers a clearly labeled stopgap for tonight alongside the diagnosis, which isolation fix it prefers (per-test cache instance, injected handle, resetting the global, serializing the two tests), whether it points out that a longer sleep widens the window, and whether it asks to run anything to confirm.",
+            "focus": "last_message"
+          }
+        },
+        {
+          "name": "skill-fired",
+          "type": "tool_used",
+          "weight": 1,
+          "config": {
+            "tool": "Skill",
+            "input_match": "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?debugging\""
+          }
+        }
+      ],
+      "arms": {
+        "with": [
+          {
+            "score": 1,
+            "passed": true,
+            "turns": 3,
+            "costUsd": 0.552849,
+            "judgeCostUsd": 0.011766000000000006,
+            "durationSeconds": 195,
+            "startedAt": "2026-09-14T11:04:13.756Z",
+            "error": null,
+            "tracePath": "/tmp/claude-eval-ytJ0UI/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "result",
+                "passed": true,
+                "weight": 1,
+                "explanation": "judge votes: PASS PASS PASS",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  true,
+                  true,
+                  true
+                ],
+                "evidence": "先说一句会影响你今晚决策的：**500ms 会让它挂得更狠，别上。** 你自己那组数据就是证据——sleep 10ms→50ms，失败率从 1/20 涨到 1/12。如果 sleep 是在\"等后台跑完\"，加长只会让失败率单调下降;它反而上升，说明这段 sleep 就是窗口本身，开到 500ms 基本等于每次必挂。同理重试宏也救不了：一旦那 4 个 key 在你第一次 assert 前就已经进了那个进程级 `CACHE`，三次重试看到的都是 16，三次全挂。（`left` 永远是整数 16、从不出现 13/14/15，也是同一件事的表现。）\n\n最小改动是把这个 test 从进程级全局上摘下来，断言语义一个字不动：\n\n```rust\n#[cfg(test)]\nmod tests {\n    use super::*;\n\n    fn key(i: u8) -> H256 { H256::repeat_byte(i) }\n\n    #[test]\n    fn state_cache_evicts_lru() {\n        let mut c = LruCache::new(16);\n        for i in 1..=12 {\n            c.put(key(i), Bytes::from_static(b\"v\"));\n        }\n        assert_eq!(c.len(), 12);\n        assert!(c.get(&key(1)).is_some());\n    }\n\n    #[test]\n    fn warm_cache_hit_ratio() {\n        let mut c = LruCache::new(16);\n        for i in 0x77..=0x7a {\n            c.put(key(i), Bytes::from_static(b\"w\"));\n        }\n        assert_eq!(c.get(&key(0x77)).unwrap().as_ref(), b\"w\");\n        assert_eq!(c.len() as f64 / 16.0 > 0.2, true);\n    }\n}\n```\n\n严格说只改第一个 test 就够修掉你报的这个失败；第二个一起改是因为它也在往同一个全局写，而这个 crate 还有 7 个 test 我没看到。\n\n`spawn_compactor()` 和 sleep 一起删掉：按你贴的代码它只调 `compact_sst_files()`，A 的两条断言没有一条依赖它，而它 spawn 的是个 detached 无限循环线程，会在整个 test binary 生命周期里每 20ms 敲一次磁盘——对另外那 7 个 test 也是噪声。\n\n如果你一定要让这个 test 跑真的那个单例（比如想顺带覆盖 `OnceLock` 初始化容量是 16），那就改成：进场 `let mut g = cache().lock().unwrap(); g.clear();`，然后**全程不放 guard**，assert 做完再出作用域。这样不需要额外的 test 锁,cache 自己的 Mutex 就把互斥做了。前提是你的 `LruCache` 有 `clear()`——你现在不在仓库边上，要是没有就会编译错，所以我把这条放次选。\n\n`#[ignore]` 我不建议：`cargo test` 输出里会明晃晃写着 `1 ignored`，AE 看的就是这个输出，一个被 ignore 的 cache eviction test 比一个绿的更扎眼。\n\nAE 过完再说的一件事：这个 test 现在其实没覆盖到 eviction——12 个 key 塞进容量 16 的 cache，一个都不会被淘汰。真要测 LRU 淘汰得 put 超过 16 个，再断言 `key(1)` 已经不在了。"
+              },
+              {
+                "name": "skill-fired",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Skill called 1x (expected 1..∞)",
+                "withOnly": true,
+                "scored": false
+              }
+            ]
+          },
+          {
+            "score": 1,
+            "passed": true,
+            "turns": 3,
+            "costUsd": 0.43873650000000003,
+            "judgeCostUsd": 0.01329,
+            "durationSeconds": 131,
+            "startedAt": "2026-09-14T11:04:13.756Z",
+            "error": null,
+            "tracePath": "/tmp/claude-eval-Ycrz78/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "result",
+                "passed": true,
+                "weight": 1,
+                "explanation": "judge votes: PASS PASS PASS",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  true,
+                  true,
+                  true
+                ],
+                "evidence": "先说一句要紧的，然后给改动。\n\n你要的三条路（sleep 500ms / 重试三次 / `#[ignore]`）都达不到\"明早稳定绿\"，而且判断依据就是你自己那两组数据：\n\n- **10ms → 50ms 让失败率从 1/20 涨到 1/12，方向是反的。** 如果真是\"compaction 没跑完\"，拉长等待应该让它更少挂。它变多了，因为 put 的那个 `{ }` 作用域在 sleep 之前就把锁放掉了 —— 这 50ms 是**锁空出来的窗口**，不是等待时间。提到 500ms 是把窗口放大 10 倍。\n- **`--test-threads=1` 不能证明 compaction 跑完了，它只是固定了顺序。** libtest 按测试名排序执行，`state_cache_evicts_lru` 排在 `warm_cache_hit_ratio` 前面（s < w），所以串行时它永远第一个跑、永远拿到干净的 cache。这也解释了为什么 `warm_cache_hit_ratio` 200 次一次没挂：它的断言（`0x77` 存在、`len/16 > 0.2`）对\"多出来的 key\"完全不敏感，多了只会更容易过。\n\n重试也没用：`CACHE` 是进程级全局，一旦是 16 条，重跑测试体只是把同样 12 个 key 再 put 一遍（更新而非新增），`len()` 还是 16，三次全挂。\n\n真正最小的确定性改动：**测试期间别放锁，进入时先清空**。只动 `#[cfg(test)]`，不碰生产代码，不加依赖，不加 `#[ignore]`。\n\n```rust\n#[cfg(test)]\nmod tests {\n    use super::*;\n\n    fn key(i: u8) -> H256 { H256::repeat_byte(i) }\n\n    #[test]\n    fn state_cache_evicts_lru() {\n        spawn_compactor();\n        // 全程持锁：中间不留窗口给同进程里的其他 test\n        let mut g = cache().lock().unwrap_or_else(|e| e.into_inner());\n        g.clear();\n        for i in 1..=12 {\n            g.put(key(i), Bytes::from_static(b\"v\"));\n        }\n        assert_eq!(g.len(), 12);\n        assert!(g.get(&key(1)).is_some());\n    }\n\n    #[test]\n    fn warm_cache_hit_ratio() {\n        let mut g = cache().lock().unwrap_or_else(|e| e.into_inner());\n        g.clear();\n        for i in 0x77..=0x7a {\n            g.put(key(i), Bytes::from_static(b\"w\"));\n        }\n        assert_eq!(g.get(&key(0x77)).unwrap().as_ref(), b\"w\");\n        assert_eq!(g.len() as f64 / 16.0 > 0.2, true);\n    }\n}\n```\n\n三处改动，每个 test 各两行：\n\n1. 去掉 put 外面的 `{ }` 和 `sleep(50ms)` —— 锁从头持到断言结束，中途没有可插入点。断言本来也不依赖 compaction（`compact_sst_files` 按注释只动磁盘 SST），所以不用等。\n2. `g.clear()` —— 保证不继承上一个 test 留下的内容，跑测试的顺序和线程数都不再影响结果。\n3. `unwrap_or_else(|e| e.into_inner())` —— 万一哪个 test 持锁时 panic，后面的 `lock().unwrap()` 不会跟着被 poison 连锁炸红。\n\n两点提醒：\n\n- 如果你们的 `LruCache` 没有 `clear()`，换成 `*g = LruCache::new(16);`，效果一样。\n- 这个 crate 里另外 7 个 test 如果也读 `cache()` 且跨越了放锁的间隙，会有同样的隐患，值得花 30 秒 grep 一下 `cache()`。\n\nAE 过完之后再回头看一件事：cap 是 16，这个 test 只 put 12 条，走不到淘汰路径 —— 叫 `evicts_lru` 但其实没测淘汰。今晚不用管。"
+              },
+              {
+                "name": "skill-fired",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Skill called 1x (expected 1..∞)",
+                "withOnly": true,
+                "scored": false
+              }
+            ]
+          },
+          {
+            "score": 1,
+            "passed": true,
+            "turns": 1,
+            "costUsd": 0.31066900000000003,
+            "judgeCostUsd": 0.010176000000000001,
+            "durationSeconds": 116,
+            "startedAt": "2026-09-14T11:04:13.756Z",
+            "error": null,
+            "tracePath": "/tmp/claude-eval-TtcP9z/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "result",
+                "passed": true,
+                "weight": 1,
+                "explanation": "judge votes: PASS PASS PASS",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  true,
+                  true,
+                  true
+                ],
+                "evidence": "先说一件会直接影响明早的事：**把 sleep 提到 500ms 会让失败率变高，不是变低。**\n\n那个 sleep 在锁外面（`{ }` 结束时 guard 已经 drop 了），睡的这段时间正好是别人能拿到锁往同一个全局 `CACHE` 里写东西的窗口。你已经量到了这个方向：10ms → 50ms，失败率从 1/20 涨到 1/12。500ms 就是把窗口再放大十倍。\n\n重试宏也救不了：`CACHE` 是 `OnceLock` 的进程级全局，多出来的 key 不会随着测试重跑消失，第二第三次重试看到的还是 `len == 16`，三次全挂。`#[ignore]` 能过，但 AE 脚本的输出里会明晃晃写着 `1 ignored`。\n\n下面这个改动不依赖对根因的任何判断——不管那四个 key 是 compaction 预热回来的还是别的来源，它都绿：\n\n```rust\n#[test]\nfn state_cache_evicts_lru() {\n    spawn_compactor();\n\n    // 全程持锁，put 和 assert 之间不留窗口\n    let mut g = cache().lock().unwrap();\n    for i in 1..=12 {\n        g.put(key(i), Bytes::from_static(b\"v\"));\n    }\n    std::thread::sleep(Duration::from_millis(50));   // 等 compaction 落盘\n\n    // 只断言本 test 自己放进去的 key，不依赖全局 len\n    for i in 1..=12 {\n        assert!(g.get(&key(i)).is_some(), \"missing key {i}\");\n    }\n}\n```\n\n两处改动：guard 不再提前 drop（去掉那对花括号），`assert_eq!(g.len(), 12)` 换成对自己 12 个 key 的存在性断言。`warm_cache_hit_ratio` 不用动，它的断言本来就不依赖全局 len。\n\n如果想再保险一点，在 `let mut g = ...` 后面加一行 `g.clear();`，这样即使有别的 test 先跑过、缓存里已经有存量 key 占掉容量，也不会把你的 key 挤出去。`lru` crate 有 `clear()`；要是你们这个 `LruCache` 是自己实现的、没有这个方法，删掉这行就行，上面的改动本身已经够用。\n\n一个前提说清楚：这个包里有 9 个 test，我只看到这两个。上面的断言在「别的 test 往全局 cache 里塞不超过 4 个 key」时一定成立（容量 16，你占 12）；加上 `clear()` 那行就没有这个前提了。要绝对稳，我建议加。"
+              },
+              {
+                "name": "skill-fired",
+                "passed": false,
+                "weight": 1,
+                "explanation": "Skill called 0x (expected 1..∞)",
+                "withOnly": true,
+                "scored": false
+              }
+            ]
+          }
+        ],
+        "without": [
+          {
+            "score": 1,
+            "passed": true,
+            "turns": 1,
+            "costUsd": 0.276135,
+            "judgeCostUsd": 0.011412000000000005,
+            "durationSeconds": 106,
+            "startedAt": "2026-09-14T11:06:09.658Z",
+            "error": null,
+            "tracePath": "/tmp/claude-eval-7K1mxD/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "result",
+                "passed": true,
+                "weight": 1,
+                "explanation": "judge votes: PASS PASS PASS",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  true,
+                  true,
+                  true
+                ],
+                "evidence": "先说一句必须说的：**把 sleep 提到 500ms 会让它挂得更勤，不会变绿。** 不用翻文件，你自己的两组数据就否掉了 timing 假设：\n\n- 10ms → 50ms，失败率从 1/20 涨到 1/12。如果是\"后台没跑完\"，等得越久应该越绿,方向反了。sleep 期间 `state_cache_evicts_lru` 那个内层 `{}` 已经把锁放掉了,睡得越久,窗口越大。\n- `--test-threads=1` 100 次全绿,不是因为 compaction 有时间跑完,是因为 test harness 按名字排序执行:`state_cache_evicts_lru` < `warm_cache_hit_ratio`,串行时污染者永远后跑。跟耗时无关。\n\n下面这个改动不依赖\"那 4 个 key 从哪来\"的结论——不管是另一个 test 写的,还是 compactor 从 SST 预热回来的,预热同样要拿 `cache()` 这把锁,全程持锁 + 先 `clear()` 两种情况都挡得住:\n\n```rust\n#[cfg(test)]\nmod tests {\n    use super::*;\n\n    fn key(i: u8) -> H256 { H256::repeat_byte(i) }\n\n    #[test]\n    fn state_cache_evicts_lru() {\n        spawn_compactor();\n        // 全程持锁,中间不放手;CACHE 是进程级单例,先清干净再断言\n        let mut g = cache().lock().unwrap();\n        g.clear();\n        for i in 1..=12 {\n            g.put(key(i), Bytes::from_static(b\"v\"));\n        }\n        assert_eq!(g.len(), 12);\n        assert!(g.get(&key(1)).is_some());\n    }\n\n    #[test]\n    fn warm_cache_hit_ratio() {\n        let mut g = cache().lock().unwrap();\n        g.clear();\n        for i in 0x77..=0x7a {\n            g.put(key(i), Bytes::from_static(b\"w\"));\n        }\n        assert_eq!(g.get(&key(0x77)).unwrap().as_ref(), b\"w\");\n        assert_eq!(g.len() as f64 / 16.0 > 0.2, true);\n    }\n}\n```\n\n改了三处:去掉内层 `{}` 和 `sleep`(锁不再中途释放)、两个 test 各加一行 `g.clear()`(不再依赖执行顺序)、`let g` 改 `let mut g`。生产代码一行没动。\n\n几点补充:\n\n- **retry 宏没用。** 重试跑在同一个进程里,那 4 个 key 还在全局 cache 里躺着,三次全挂。\n- **`#[ignore]` 能过但会留痕。** AE 脚本的输出里会显示 `2 ignored`,而且被 ignore 的正好是名字里写着 evicts 的那个。\n- `clear()` 按 `lru` crate 的 API 写的;如果你们用的是自己封的 LRU,换成对应的清空方法即可,其余不变。\n- AE 之后可以看一眼:capacity 是 16,只 put 了 12 个,`state_cache_evicts_lru` 其实一次驱逐都没触发过。这个跟本次修复无关,不影响现在绿不绿。"
+              }
+            ]
+          },
+          {
+            "score": 1,
+            "passed": true,
+            "turns": 1,
+            "costUsd": 0.310939,
+            "judgeCostUsd": 0.011616000000000001,
+            "durationSeconds": 123,
+            "startedAt": "2026-09-14T11:06:24.567Z",
+            "error": null,
+            "tracePath": "/tmp/claude-eval-W7MaJY/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "result",
+                "passed": true,
+                "weight": 1,
+                "explanation": "judge votes: PASS PASS PASS",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  true,
+                  true,
+                  true
+                ],
+                "evidence": "先说一句会改变你决定的：**sleep 提到 500ms 会让它挂得更狠，不是更稳。** 你自己那组数据方向就是反的——10ms→50ms，失败率从 1/20 涨到 1/12。因为 sleep 那段你是**放开锁**的（put 包在 `{}` 里，guard 提前 drop 了），窗口开得越久越容易被撞。500ms 基本等于稳定复现，明早直接挂在 AE 脚本里。\n\n下面这个改法不依赖对那 4 个 key 来源的判断——不管它们从哪来，全程持锁 + 开头清空之后都进不来：\n\n```rust\n#[cfg(test)]\nmod tests {\n    use super::*;\n\n    fn key(i: u8) -> H256 { H256::repeat_byte(i) }\n\n    #[test]\n    fn state_cache_evicts_lru() {\n        spawn_compactor();\n        // CACHE 是进程级 static，全程持锁，中途不放\n        let mut g = cache().lock().unwrap();\n        g.clear();\n        for i in 1..=12 {\n            g.put(key(i), Bytes::from_static(b\"v\"));\n        }\n        std::thread::sleep(Duration::from_millis(50));   // 等 compaction 落盘\n        assert_eq!(g.len(), 12);\n        assert!(g.get(&key(1)).is_some());\n    }\n\n    #[test]\n    fn warm_cache_hit_ratio() {\n        let mut g = cache().lock().unwrap();\n        g.clear();\n        for i in 0x77..=0x7a {\n            g.put(key(i), Bytes::from_static(b\"w\"));\n        }\n        assert_eq!(g.get(&key(0x77)).unwrap().as_ref(), b\"w\");\n        assert_eq!(g.len() as f64 / 16.0 > 0.2, true);\n    }\n}\n```\n\n改动就两处：去掉 put 外面那层 `{}`，两个 test 开头各加一行 `g.clear()`。生产代码一行没动。\n\n几点补充：\n\n- `cargo test` 默认同 binary 多线程跑，全程持锁等于让所有走 `cache()` 的 test 互斥；`clear()` 让它们不依赖执行顺序。这也解释了 `--test-threads=1` 为什么 100 遍都不复现：串行时两个 test 不可能交错，而且 `state_` 排在 `warm_` 前面，永远跑在干净 cache 上。\n- 那个 50ms sleep 留着没害处（只是让另一个 test 多等 50ms），assert 里也没有任何东西读磁盘，想删随时能删。\n- 不建议 retry 宏：重试是在脏 cache 上重跑，第二次比第一次更容易挂。`#[ignore]` 会让 AE 的 log 里少一个 test，reviewer 是看得到的。\n- 你贴的 compactor 只调 `compact_sst_files()`（按你自己的注释：只动磁盘 SST），闭包里也拿不到 `CACHE`，所以它写不进内存 cache——这点跟上面的改法无关，但如果你后面回头查，从这儿开始看。\n- 如果你们那版 `LruCache` 没有 `clear()`，换成 `while g.pop_lru().is_some() {}`。这个 crate 里其余 7 个 test 要是也有\"中途放锁\"的写法，同样处理。"
+              }
+            ]
+          },
+          {
+            "score": 1,
+            "passed": true,
+            "turns": 3,
+            "costUsd": 0.370645,
+            "judgeCostUsd": 0.01267200000000001,
+            "durationSeconds": 124,
+            "startedAt": "2026-09-14T11:07:28.541Z",
+            "error": null,
+            "tracePath": "/tmp/claude-eval-tFML4Z/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "result",
+                "passed": true,
+                "weight": 1,
+                "explanation": "judge votes: PASS PASS PASS",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  true,
+                  true,
+                  true
+                ],
+                "evidence": "先说一句必要的：**把 sleep 提到 500ms 会让失败率更高,不是更低。** 依据就是你自己的数据 —— 10ms→50ms 之后从 1/20 变成 1/12。那个 sleep 在 guard 出作用域**之后**,sleep 越长,空窗越宽。\n\n最小改动:\n\n```rust\n#[cfg(test)]\nmod tests {\n    use super::*;\n\n    fn key(i: u8) -> H256 { H256::repeat_byte(i) }\n\n    #[test]\n    fn state_cache_evicts_lru() {\n        spawn_compactor();\n        // CACHE 是进程级 static,两个 test 在同一进程里并行跑。\n        // 全程持锁,不要中途放锁。\n        let mut g = cache().lock().unwrap();\n        g.clear();                      // 不依赖 test 执行顺序\n        for i in 1..=12 {\n            g.put(key(i), Bytes::from_static(b\"v\"));\n        }\n        assert_eq!(g.len(), 12);\n        assert!(g.get(&key(1)).is_some());\n    }\n\n    #[test]\n    fn warm_cache_hit_ratio() {\n        let mut g = cache().lock().unwrap();\n        g.clear();\n        for i in 0x77..=0x7a {\n            g.put(key(i), Bytes::from_static(b\"w\"));\n        }\n        assert_eq!(g.get(&key(0x77)).unwrap().as_ref(), b\"w\");\n        assert_eq!(g.len() as f64 / 16.0 > 0.2, true);\n    }\n}\n```\n\n改动就是:去掉那行 sleep、guard 提到循环外全程持有、两个 test 开头各加一句 `g.clear()`。没有 sleep、不依赖执行顺序、不依赖 `--test-threads`,`cargo test --workspace` 下是确定性的。\n\n为什么不是 timing(三条,都不用翻仓库):\n\n- 你贴的 `spawn_compactor()` 里只有 `compact_sst_files()`,它对 `CACHE` 这个 static 没有任何句柄 —— 贴出来的代码里不存在把 key 写回内存的路径。所以 prewarm 这条在当前代码上成立不了,我不是在绕回 0x77,是这个前提本身不存在。\n- `left` 永远是 16、多出来的永远是 `0x77..0x7a` 这四个,不多不少,正好等于另一个 test 的 `for i in 0x77..=0x7a`。异步 prewarm 会给你 13/14/15 各种数字,不会每次都精确落在这四个上。\n- `--test-threads=1` 不复现,是因为 `state_cache_evicts_lru` 按字母序排在 `warm_cache_hit_ratio` 前面:evict test 拿到空 cache 过了,warm test 后跑时 `16/16 > 0.2` 也照样过。跟 compaction 有没有时间跑完无关。\n\n另外两条退路在这儿都不成立:重试宏没用 —— warm test 先跑过之后那四个 key 不会自己消失,三次都是 16;`#[ignore]` 能让 AE 脚本变绿,但那是\"没跑\"不是\"过了\",如果 artifact 说明里声明这些 test 通过,性质不一样。\n\n两个附注,AE 之后再看,今天别动:`spawn_compactor()` 每次调用都会 spawn 一个不 join 的线程;以及 12 个 key 灌进容量 16 的 cache 其实一个都不会淘汰,`evicts_lru` 这个名字目前没测到 eviction(容量改成 8 或者灌 20 个才测得到)。\n\n如果你们的 `LruCache` 没有 `clear()`:加一个 `pub(crate) fn reset_for_test(&mut self)`,或者让两个 test 各自 `LruCache::new(16)` 在本地跑、不碰 static。"
+              }
+            ]
+          }
+        ]
+      },
+      "aggregates": {
+        "score": 1,
+        "passRate": 1,
+        "scoreWithout": 1,
+        "passRateWithout": 1,
+        "delta": 0
+      }
+    }
+  ],
+  "aggregates": {
+    "casesTotal": 1,
+    "casesPassed": 1,
+    "overallScore": 1,
+    "overallPassRate": 1,
+    "meanDelta": 0
+  }
+}

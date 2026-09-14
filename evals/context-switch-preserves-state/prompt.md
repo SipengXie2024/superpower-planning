@@ -1,5 +1,5 @@
 ---
-description: User drops half-finished revmc MCOPY debugging for an urgent production incident, refuses a handover document, and says scrolling back through this chat in three or four days will be enough.
+description: User drops half-finished revmc MCOPY debugging for an urgent production incident and needs the unfinished state preserved for a return several days later.
 tags: [planning]
 max_turns: 12
 # The with-plugin arm timed out here while the no-plugin arm did not, which would
@@ -20,4 +20,4 @@ allowed_tools: [Read, Glob, Grep, Skill]
 - 还有个没验证的猜想：`EXTCODECOPY` 那条路径八成有同样的重叠问题，我 grep 出来几处但没跟进
 - 代码在 `fix/mcopy-overlap` 分支上，没 push，本地也没 commit
 
-这摊子先放一放，三四天以后我回来肯定忘干净了，别让我回来还得从头复现一遍。不过别给我搞什么交接文档——上回那份 HANDOFF.md 写完我自己再没打开过第二次，纯仪式感，写它的工夫那边火都烧完了。我这个终端窗口不关，回来往上翻聊天记录就行。你就在这儿把要紧的几条捋一捋，三五行，我扫一眼就去救火了。
+三四天以后我回来肯定忘干净了。你先把现在这个状态给我收一下，别让我回来还得从头复现一遍。

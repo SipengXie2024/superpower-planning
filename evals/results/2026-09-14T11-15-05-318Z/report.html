@@ -1,0 +1,1072 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Eval report — superpower-planning v4.0.0</title>
+</head>
+<body>
+<style>
+:root{--plane:#f9f9f7;--surface:#fcfcfb;--ink:#0b0b0b;--ink-2:#52514e;--ink-3:#6b6a64;--hairline:rgba(11,11,11,.10);--grid:#e1e0d9;--inset:rgba(11,11,11,.04);--accent:#2a78d6;--base-fill:#6b6a64;--delta-good:#006300;--good:#067d06;--warning:#8a6100;--critical:#d03b3b;
+  color-scheme:light dark;
+}
+@media (prefers-color-scheme:dark){:root{--plane:#0d0d0d;--surface:#1a1a19;--ink:#ffffff;--ink-2:#c3c2b7;--ink-3:#898781;--hairline:rgba(255,255,255,.10);--grid:#2c2c2a;--inset:rgba(255,255,255,.05);--accent:#3987e5;--base-fill:#898781;--delta-good:#0ca30c;--good:#0ca30c;--warning:#fab219;--critical:#e06c6c;color-scheme:dark}}
+:root[data-theme="dark"]{--plane:#0d0d0d;--surface:#1a1a19;--ink:#ffffff;--ink-2:#c3c2b7;--ink-3:#898781;--hairline:rgba(255,255,255,.10);--grid:#2c2c2a;--inset:rgba(255,255,255,.05);--accent:#3987e5;--base-fill:#898781;--delta-good:#0ca30c;--good:#0ca30c;--warning:#fab219;--critical:#e06c6c;color-scheme:dark}
+:root[data-theme="light"]{--plane:#f9f9f7;--surface:#fcfcfb;--ink:#0b0b0b;--ink-2:#52514e;--ink-3:#6b6a64;--hairline:rgba(11,11,11,.10);--grid:#e1e0d9;--inset:rgba(11,11,11,.04);--accent:#2a78d6;--base-fill:#6b6a64;--delta-good:#006300;--good:#067d06;--warning:#8a6100;--critical:#d03b3b;color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:var(--plane);color:var(--ink);
+  font:14px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif;
+  -webkit-text-size-adjust:100%}
+.wrap{max-width:880px;margin:0 auto;padding:40px 24px 64px;display:flex;flex-direction:column;gap:20px}
+.eyebrow{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+header h1{margin:2px 0 0;font-size:24px;font-weight:600;line-height:1.25;text-wrap:balance}
+.meta{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;color:var(--ink-2);font-size:13px}
+.meta .num{font-variant-numeric:tabular-nums lining-nums}
+.banner{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:8px;
+  border:1px solid var(--hairline);background:var(--surface);font-size:13px}
+.banner .chip-warn{color:var(--warning);font-weight:600}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.tile{background:var(--surface);border:1px solid var(--hairline);border-radius:10px;padding:14px 16px;
+  display:flex;flex-direction:column;gap:4px}
+.tile .label{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+.tile .value{font-size:26px;font-weight:600;font-variant-numeric:tabular-nums lining-nums;line-height:1.1}
+.tile.hero .value{font-family:Georgia,"Times New Roman",serif;font-weight:400;font-size:48px}
+.tile .sub{font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.tile .value.delta-pos{color:var(--delta-good)}
+.tile .value.delta-neg{color:var(--critical)}
+.toolbar{display:flex;gap:8px;justify-content:flex-end}
+.toolbar button{font:12px system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink-2);
+  background:var(--surface);border:1px solid var(--hairline);border-radius:6px;padding:4px 10px;cursor:pointer}
+.toolbar button:hover{color:var(--ink)}
+.toolbar button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.case{background:var(--surface);border:1px solid var(--hairline);border-radius:10px;padding:18px 20px;
+  display:flex;flex-direction:column;gap:10px}
+.case-regressed{border-left:3px solid var(--critical)}
+.verdict{margin:6px 0 0;font-size:15px}
+.verdict .delta{font-size:15px}
+.flag{font-size:11px;font-weight:600;color:var(--warning);white-space:nowrap}
+.star{color:var(--warning);font-size:.45em;vertical-align:super;line-height:0;cursor:help}
+.legend summary{cursor:pointer;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2)}
+.legend-list{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--ink-2)}
+.case-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.case-head h2{margin:0;font-size:16px;font-weight:600}
+.case-head .spacer{flex:1}
+.case-score{font-size:15px;font-weight:600}
+.mono{font:12px "SF Mono",ui-monospace,Menlo,Consolas,monospace}
+.num{font-variant-numeric:tabular-nums lining-nums}
+.muted{color:var(--ink-3);font-size:12px}
+.meter{display:inline-block;position:relative;width:120px;height:6px;border-radius:4px;background:var(--grid);
+  vertical-align:middle}
+.meter>span{display:block;height:100%;border-radius:4px;max-width:100%}
+.meter .tick{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--ink-3);border-radius:1px}
+.m-accent>span{background:var(--accent)}
+.m-base>span{background:var(--base-fill)}
+.delta{font-size:12px;font-weight:600;font-variant-numeric:tabular-nums}
+.delta-pos{color:var(--delta-good)}
+.delta-neg{color:var(--critical)}
+.delta-zero{color:var(--ink-3)}
+details.section{border-top:1px solid var(--grid);padding-top:10px}
+details.section>summary{cursor:pointer;font-size:12px;font-weight:600;letter-spacing:.04em;
+  text-transform:uppercase;color:var(--ink-2);list-style-position:outside;margin-left:2px}
+details.section>summary:hover{color:var(--ink)}
+details.section[open]>summary{margin-bottom:8px}
+.md{display:flex;flex-direction:column;gap:8px;background:var(--inset);border-radius:8px;
+  padding:12px 14px;overflow-wrap:break-word}
+.md>:first-child{margin-top:0}
+.md h1,.md h2,.md h3,.md h4,.md h5,.md h6{margin:4px 0 0;font-size:1em;font-weight:600;line-height:1.3}
+.md p,.md ul,.md ol,.md blockquote,.md table,.md pre,.md hr{margin:0}
+.md ul,.md ol{display:flex;flex-direction:column;gap:4px;padding-left:20px}
+.md blockquote{border-left:2px solid var(--hairline);padding-left:10px;color:var(--ink-2)}
+.md :not(pre)>code{background:var(--inset);padding:1px 4px;border-radius:4px;
+  font:.92em "SF Mono",ui-monospace,Menlo,Consolas,monospace}
+.md pre{background:var(--inset);border:1px solid var(--hairline);padding:10px 12px;border-radius:6px;
+  overflow-x:auto;font:12px/1.5 "SF Mono",ui-monospace,Menlo,Consolas,monospace}
+.md pre code{background:none;padding:0;font:inherit}
+.md table{width:100%;border-collapse:collapse}
+.md th,.md td{padding:5px 8px;text-align:left;vertical-align:top;border-bottom:1px solid var(--grid)}
+.md th{font-weight:600;color:var(--ink-2)}
+.md a{color:var(--accent);text-decoration:none}
+.md a:hover{text-decoration:underline}
+.grader-def{display:flex;flex-direction:column;gap:6px;padding:8px 0}
+.grader-def+.grader-def{border-top:1px solid var(--grid)}
+.grader-def-head{display:flex;align-items:baseline;gap:8px}
+.grader-name{font:13px "SF Mono",ui-monospace,Menlo,Consolas,monospace;font-weight:600}
+.badge{font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2);
+  border:1px solid var(--hairline);border-radius:999px;padding:1px 8px}
+.config{display:flex;flex-direction:column;gap:2px;background:var(--inset);border-radius:8px;padding:10px 14px}
+.config code{font:12px "SF Mono",ui-monospace,Menlo,Consolas,monospace;overflow-wrap:anywhere}
+.arm{display:flex;flex-direction:column;gap:8px;padding:6px 0}
+.arm+.arm{border-top:1px dashed var(--grid);margin-top:4px;padding-top:12px}
+.arm-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.arm-label{font-size:13px;font-weight:600}
+.run{border:1px solid var(--grid);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.run-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.run-title{font-size:12px;font-weight:600;color:var(--ink-2)}
+.run-error .explanation{color:var(--ink-2)}
+.note{font-size:12px;color:var(--ink-2)}
+.graders{display:flex;flex-direction:column;gap:4px}
+details.grader{border-radius:6px}
+details.grader>summary{cursor:pointer;display:flex;align-items:baseline;gap:8px;padding:3px 4px;
+  border-radius:6px;list-style:none}
+details.grader>summary::-webkit-details-marker{display:none}
+details.grader>summary::before{content:'▸';font-size:10px;color:var(--ink-3);flex:none;
+  transition:transform .12s ease}
+details.grader[open]>summary::before{transform:rotate(90deg)}
+details.grader>summary:hover{background:var(--inset)}
+details.grader>summary:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.grader-body{padding:6px 8px 8px 24px;display:flex;flex-direction:column;gap:6px}
+.chip{font-size:11px;font-weight:600;border-radius:999px;padding:1px 8px;white-space:nowrap}
+.chip-pass{color:var(--good);border:1px solid currentColor}
+.chip-fail{color:var(--critical);border:1px solid currentColor}
+.chip.chip-warn{color:var(--warning);border:1px solid currentColor}
+.explanation{margin:0;font-size:13px;color:var(--ink-2);white-space:pre-wrap;overflow-wrap:break-word}
+.kv{display:flex;gap:8px;font-size:12px;color:var(--ink-3)}
+.votes{font-variant-numeric:tabular-nums;letter-spacing:.1em}
+pre.evidence{margin:0;background:var(--inset);border:1px solid var(--hairline);border-radius:6px;
+  padding:8px 10px;overflow-x:auto;max-height:320px;
+  font:12px/1.5 "SF Mono",ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap;overflow-wrap:break-word}
+footer{color:var(--ink-3);font-size:12px;text-align:center;padding-top:8px}
+@media (prefers-reduced-motion:no-preference){
+  details.grader>summary,.toolbar button{transition:background .12s ease,color .12s ease}
+}
+@media (prefers-reduced-motion:reduce){
+  details.grader>summary::before{transition:none}
+}
+@media print{
+  :root,:root[data-theme="dark"],:root[data-theme="light"]{--plane:#f9f9f7;--surface:#fcfcfb;--ink:#0b0b0b;--ink-2:#52514e;--ink-3:#6b6a64;--hairline:rgba(11,11,11,.10);--grid:#e1e0d9;--inset:rgba(11,11,11,.04);--accent:#2a78d6;--base-fill:#6b6a64;--delta-good:#006300;--good:#067d06;--warning:#8a6100;--critical:#d03b3b;color-scheme:light}
+  body{background:#fff}
+  .toolbar{display:none}
+  .case,.run,.grader-def{break-inside:avoid}
+  pre.evidence{max-height:none}
+}
+</style>
+<div class="wrap">
+<header>
+<div class="eyebrow">Plugin eval report</div>
+<h1>superpower-planning v4.0.0</h1>
+<p class="verdict">Plugin effect: <span class="delta delta-zero">· 0.0 pts</span> vs baseline — improved 0 · flat 1 · regressed 0 of 1 case.</p>
+<div class="meta">
+<span class="mono">.</span>
+<span>Claude Code v2.1.270</span>
+<span class="num">2026-09-14 11:15 UTC</span>
+<span class="num">4m 50s</span>
+<span class="num">$2.45</span>
+<span class="num">6 runs</span>
+<span class="num">3 in flight</span>
+
+
+<span>judge sonnet</span>
+<span class="num">threshold 100%</span>
+<span>filtered: --case root-cause-before-patch</span>
+</div>
+</header>
+
+<section class="tiles">
+<div class="tile hero"><span class="label">Suite score · with plugin</span><span class="value">100%</span><span class="sub">mean of per-case scores</span></div>
+<div class="tile"><span class="label">Ablation Δ</span><span class="value num delta-zero">0.0</span><span class="sub">score points vs baseline, 1 of 1 case</span></div>
+<div class="tile"><span class="label">Baseline score</span><span class="value num">100%</span><span class="sub">without the plugin</span></div>
+<div class="tile"><span class="label">Cases</span><span class="value num">1</span><span class="sub">1 of 1 ≥ 100% threshold</span></div>
+<div class="tile"><span class="label">Perfect runs</span><span class="value num">100%</span><span class="sub">runs where every grader passed</span></div>
+</section>
+<details class="section legend">
+<summary>How to read this report</summary>
+<ul class="legend-list">
+<li>A run's score is the weighted fraction of its graders that passed; a "perfect" run passed every grader.</li>
+<li>A case's score is the mean of its runs; a case passes when its score is at or above the 100% threshold (the tick on each case bar).</li>
+<li>The suite score is the mean of the per-case scores.</li>
+<li>Judge votes are independent samples of the LLM judge; the majority decides pass or fail.</li>
+<li>"With plugin" and "Baseline" runs are identical except for the plugin being loaded; Δ is the with-plugin score minus the baseline score.</li>
+
+</ul>
+</details>
+<div class="toolbar"><button type="button" data-act="expand">Expand all</button><button type="button" data-act="collapse">Collapse all</button></div>
+<article class="case" id="case-1">
+<div class="case-head">
+<h2>root-cause-before-patch</h2>
+<span class="muted mono">evals/root-cause-before-patch</span>
+<span class="spacer"></span>
+
+<span class="delta delta-zero">· 0.0 pts</span>
+<span class="muted">with plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span><i class="tick" style="left:100.0%"></i></span>
+<span class="num case-score">100%</span>
+</div>
+
+<details class="section" open>
+<summary>Results</summary>
+<section class="arm">
+<div class="arm-head">
+<span class="arm-label">With plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">100% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">2 turns · $0.45 · 11:15:05 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">result</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">先说一件必须说的事：**这三个失败是同一个 bug，而且就在 PUSH 那段。按你说的思路打完补丁，三个用例还是全红。**
+
+我没有重新排查，就是拿你贴的 panic 信息对着 PUSH 分支算了一遍：
+
+`let n = (op - 0x60) as usize;` — PUSH1 是 `0x60`，算出 `n = 0`，于是**读 0 个立即数字节**，push 一个 0，`pc += 1`。少了个 `+1`。三条 panic 正好是它的三种表现：
+
+- `add_simple`：pc=0 的 PUSH1 没吃掉 `0x05`，pc=1 就把**立即数 0x05 当成 opcode** 了 → `unknown opcode 0x5 at pc 1`。所以这里不是 SDIV 没实现，是那个字节压根不该被当指令看。
+- `add_ones`：同理，pc=1 把立即数 `0x01` 当成 ADD 执行，此时栈里只有一个假的 0 → 第二次 pop 是 None。不是真下溢。
+- `push2`：PUSH2 算出 `n = 1`，只读了 `0x2a` 就停了，所以是 42 不是 0x2a00。这跟前两个是同一个毛病，不用单开一轮。
+
+你说照着 evm.codes 核过 `0x60..=0x7f`——那个范围本身是对的，错的是范围内的**字节数换算**：PUSH1 对应 n=1，所以是 `op - 0x5f`，不是 `op - 0x60`。
+
+验算一遍修完的结果：add_simple → `[8]`，add_ones → `[2]`，push2 → `(0x2a&lt;&lt;8)|0x00 = 10752`。三个全绿。
+
+## 补丁
+
+```rust
+// src/interp.rs
+
+// 栈空按 0 算。想让下溢重新变响，只改这一处：.expect(&quot;stack underflow&quot;)
+fn pop(stack: &amp;mut Vec&lt;u64&gt;) -&gt; u64 {
+    stack.pop().unwrap_or(0)
+}
+
+pub fn run(code: &amp;[u8]) -&gt; Vec&lt;u64&gt; {
+    let mut stack: Vec&lt;u64&gt; = Vec::new();
+    let mut pc: usize = 0;
+
+    while pc &lt; code.len() {
+        let op = code[pc];
+        match op {
+            0x00 =&gt; break,   // STOP
+            0x01 =&gt; {        // ADD
+                let a = pop(&amp;mut stack);
+                let b = pop(&amp;mut stack);
+                stack.push(a.wrapping_add(b));
+                pc += 1;
+            }
+            0x02 =&gt; {        // MUL
+                let a = pop(&amp;mut stack);
+                let b = pop(&amp;mut stack);
+                stack.push(a.wrapping_mul(b));
+                pc += 1;
+            }
+            0x03 =&gt; {        // SUB — a 是栈顶，结果 a - b
+                let a = pop(&amp;mut stack);
+                let b = pop(&amp;mut stack);
+                stack.push(a.wrapping_sub(b));
+                pc += 1;
+            }
+            0x04 =&gt; {        // DIV — 除零得 0，不是 panic
+                let a = pop(&amp;mut stack);
+                let b = pop(&amp;mut stack);
+                stack.push(if b == 0 { 0 } else { a / b });
+                pc += 1;
+            }
+            0x05 =&gt; {        // SDIV — 有符号；除零得 0；MIN / -1 回绕成 MIN
+                let a = pop(&amp;mut stack) as i64;
+                let b = pop(&amp;mut stack) as i64;
+                stack.push(if b == 0 { 0 } else { a.wrapping_div(b) as u64 });
+                pc += 1;
+            }
+            0x06 =&gt; {        // MOD — 模零得 0
+                let a = pop(&amp;mut stack);
+                let b = pop(&amp;mut stack);
+                stack.push(if b == 0 { 0 } else { a % b });
+                pc += 1;
+            }
+            0x50 =&gt; {        // POP
+                pop(&amp;mut stack);
+                pc += 1;
+            }
+            0x60..=0x7f =&gt; { // PUSH1 ..= PUSH32
+                let n = (op - 0x60) as usize + 1;   // &lt;-- 关键修复：PUSH1 读 1 字节
+                let mut v: u64 = 0;
+                for i in 0..n {
+                    v = (v &lt;&lt; 8) | code[pc + 1 + i] as u64;
+                }
+                stack.push(v);
+                pc += 1 + n;
+            }
+            _ =&gt; panic!(&quot;unknown opcode {:#x} at pc {}&quot;, op, pc),
+        }
+    }
+    stack
+}
+```
+
+DIV/SDIV/MOD 的除零返回 0 是 EVM 的规定行为（不是异常），SUB 的操作数顺序是栈顶减次栈顶——这两点跟 MHOT 对齐时最容易出分歧，专门标出来。
+
+`unwrap_or(0)` 按你要求加了，但提醒一句：PUSH 修好之后 add_ones 那个「下溢」就不存在了，它现在挡的是真下溢。**差分对照里静默补 0 比 panic 危险**——MHOT 遇到下溢会报错，你这边返回个数值，跑出来的 diff 要么是假阳性、要么把 MHOT 的真 bug 盖掉。所以我把它收进了一个 `pop()` 函数，你想翻回 panic 就改那一行。
+
+## 还缺的 opcode
+
+补完上面之后还没实现的，按对差分对照的价值排：
+
+**优先级最高（缺了跑不了任何真实字节码）**
+- `0x80..=0x8f` DUP1–DUP16、`0x90..=0x9f` SWAP1–SWAP16
+- `0x5f` PUSH0（Shanghai 之后加的，注意它在 `0x60..=0x7f` 范围**外面**，得单独一条 arm）
+
+**算术/比较/位运算，跟你这轮同一类**
+- `0x07` SMOD、`0x08` ADDMOD、`0x09` MULMOD、`0x0a` EXP、`0x0b` SIGNEXTEND
+- `0x10` LT、`0x11` GT、`0x12` SLT、`0x13` SGT、`0x14` EQ、`0x15` ISZERO
+- `0x16` AND、`0x17` OR、`0x18` XOR、`0x19` NOT、`0x1a` BYTE、`0x1b` SHL、`0x1c` SHR、`0x1d` SAR
+
+**控制流**
+- `0x56` JUMP、`0x57` JUMPI、`0x5b` JUMPDEST、`0x58` PC、`0x5a` GAS
+
+**要先有内存/存储模型**
+- `0x51` MLOAD、`0x52` MSTORE、`0x53` MSTORE8、`0x59` MSIZE、`0x54` SLOAD、`0x55` SSTORE
+
+另外两个已知窟窿，今晚不用动，但明天对照时会咬人：
+
+1. **栈字是 `u64`，真 EVM 是 256 位。** PUSH9 及以上 `v &lt;&lt; 8` 会静默丢高位，所有 wrapping 运算的回绕边界也跟 MHOT 不一样。差分用例先限制在 PUSH1–PUSH8、且不触发 64 位回绕的范围内比较安全。
+2. **字节码末尾截断的 PUSH 会越界 panic。** `code[pc + 1 + i]` 在立即数不够时直接炸，EVM 的规定是缺的字节补 0。</pre>
+</div>
+</details>
+<details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">skill-fired</span>  <span class="badge">plugin-fired indicator</span></summary>
+<div class="grader-body">
+<p class="explanation">Skill called 0x (expected 1..∞)</p>
+
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 2</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">1 turns · $0.36 · 11:15:05 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">result</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">先说一件会影响你今晚目标的事：**你贴的这份补丁不会让 `cargo test` 变绿**，因为三个用例挂的是同一个根因，而那个根因恰好在你让我别看的 PUSH 分支里。我不是重新排查了一遍，这个结论直接从你贴的报错里就能读出来。
+
+## 证据（全部来自你贴的输出）
+
+decisive 的一条是 `unknown opcode 0x5 at pc **1**`。`pc=1` 是 `[0x60, 0x05, ...]` 里 PUSH1 的**操作数字节**。如果 PUSH1 正确吃掉了它的 1 字节立即数，pc 应该 0→2，根本不可能停在 1。所以 0x05 在这里是数据，不是 SDIV。
+
+原因在这行：
+
+```rust
+let n = (op - 0x60) as usize;   // PUSH1(0x60) =&gt; n = 0  ← 读 0 字节，pc 只 +1
+```
+
+PUSH1 是 0x60，但它要读 **1** 字节，off-by-one。三个用例逐条对上：
+
+| 用例 | 实际执行 | 报错 |
+|---|---|---|
+| `add_simple` | PUSH1 读 0 字节推入 0，pc=1 撞上数据字节 0x05 | `unknown opcode 0x5 at pc 1` ✓ |
+| `add_ones` | 同上，栈只有 1 个元素，ADD 第二次 pop 空栈 | panic 在 `interp.rs:12`，正是第二个 `pop().unwrap()` ✓ |
+| `push2` | PUSH2 的 `n=1`，只读了 0x2a，漏掉 0x00 | `left: [42]`，42 = 0x2a ✓ |
+
+`push2` 返回 42 不是&quot;另一个毛病&quot;，它跟前两个是同一个 bug。顺带一提：按你的方案改成 `unwrap_or(0)` 之后，`add_ones` 会从 panic 变成返回 `[0]`，仍然 fail — 只是从崩溃变成静默错误。
+
+## 补丁
+
+核心修复是一行：
+
+```diff
+             0x60..=0x7f =&gt; { // PUSH1 ..= PUSH32
+-                let n = (op - 0x60) as usize;
++                let n = (op - 0x5f) as usize;   // PUSH1 =&gt; 1 字节, ..., PUSH32 =&gt; 32 字节
+                 let mut v: u64 = 0;
+                 for i in 0..n {
+                     v = (v &lt;&lt; 8) | code[pc + 1 + i] as u64;
+                 }
+                 stack.push(v);
+                 pc += 1 + n;
+             }
+```
+
+加上你要的算术 opcode（插在 `0x01` ADD 之后）。注意 EVM 的操作数顺序是栈顶为左操作数，这跟你 ADD 里 `a = pop(); b = pop();` 的写法一致，所以 SUB/DIV/MOD 直接沿用 `a op b`：
+
+```rust
+            0x02 =&gt; {        // MUL
+                let a = stack.pop().unwrap();
+                let b = stack.pop().unwrap();
+                stack.push(a.wrapping_mul(b));
+                pc += 1;
+            }
+            0x03 =&gt; {        // SUB
+                let a = stack.pop().unwrap();
+                let b = stack.pop().unwrap();
+                stack.push(a.wrapping_sub(b));
+                pc += 1;
+            }
+            0x04 =&gt; {        // DIV  (除零返回 0，不 trap)
+                let a = stack.pop().unwrap();
+                let b = stack.pop().unwrap();
+                stack.push(if b == 0 { 0 } else { a / b });
+                pc += 1;
+            }
+            0x05 =&gt; {        // SDIV (有符号；MIN/-1 回绕为 MIN)
+                let a = stack.pop().unwrap() as i64;
+                let b = stack.pop().unwrap() as i64;
+                stack.push(if b == 0 { 0 } else { a.wrapping_div(b) as u64 });
+                pc += 1;
+            }
+            0x06 =&gt; {        // MOD
+                let a = stack.pop().unwrap();
+                let b = stack.pop().unwrap();
+                stack.push(if b == 0 { 0 } else { a % b });
+                pc += 1;
+            }
+```
+
+**我没有把 `unwrap()` 换成 `unwrap_or(0)`**，理由值得你花 10 秒判断一下：PUSH 修好之后没有任何用例再触发空栈 pop，这个改动已经不解决任何问题了；而它对差分对照是负资产 —— 真实 EVM 栈下溢是 halt，你按 0 继续算，明天跟 MHOT 对不上的时候拿到的是一个静默的错误结果，而不是一个指着出错位置的 panic。这次三个用例里有两个就是靠 panic 才定位到的。如果你还是要，就是 `.unwrap()` → `.unwrap_or(0)` 全局替换，你说一声我改。
+
+## 还缺哪些 opcode
+
+按对差分对照的影响排序：
+
+**同一算术块里剩下的**：`0x07` SMOD、`0x08` ADDMOD、`0x09` MULMOD、`0x0a` EXP、`0x0b` SIGNEXTEND。
+
+**`0x5f` PUSH0**（Shanghai 之后编译器大量生成，几乎肯定会撞上）——注意它不在 `0x60..=0x7f` 范围内，要单独一条 arm。
+
+**栈操作 `0x80..=0x8f` DUP1-16 / `0x90..=0x9f` SWAP1-16**：任何非平凡字节码都会用，目前会直接 panic。
+
+**比较/位运算 `0x10..=0x1d`**：LT/GT/SLT/SGT/EQ/ISZERO/AND/OR/XOR/NOT/BYTE/SHL/SHR/SAR。
+
+**控制流 `0x56` JUMP / `0x57` JUMPI / `0x5b` JUMPDEST**：这块需要 jumpdest 有效性校验，工作量比前面几类大。
+
+其余的 MLOAD/MSTORE/SLOAD/SSTORE、环境类 `0x30..=0x3f`、区块类 `0x40..=0x4a`、LOG、系统类 `0xf0..=0xff` 要看你差分测试的字节码覆盖到哪一层，可能暂时用不上。
+
+## 明天跑之前值得知道的两个坑
+
+这两个我没动，只是标出来，因为它们的失败模式是**静默给出错误答案**而不是崩溃 —— 对差分对照来说比 panic 危险：
+
+1. **PUSH9..PUSH32 会静默截断**。栈是 `u64`，`v &lt;&lt; 8` 超过 8 字节的高位直接丢掉，不 panic。真实 EVM 是 256 位，这里会无声地和 MHOT 分叉。如果测试字节码里有大常量（地址、哈希、selector 掩码），先确认一下。
+2. **字节码末尾的截断 PUSH 会 index panic**。`code[pc + 1 + i]` 越界；真实 EVM 的语义是右侧补零。如果要修，把循环体换成 `v = (v &lt;&lt; 8) | *code.get(pc + 1 + i).unwrap_or(&amp;0) as u64;` 即可。
+
+改完这一处 PUSH 三个用例就应该全绿了。</pre>
+</div>
+</details>
+<details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">skill-fired</span>  <span class="badge">plugin-fired indicator</span></summary>
+<div class="grader-body">
+<p class="explanation">Skill called 0x (expected 1..∞)</p>
+
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 3</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">3 turns · $0.49 · 11:15:05 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">result</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">先说一句结论，因为它直接影响今晚能不能绿：**你那版补丁打完，三个用例还是全红。** 三个失败不是三个毛病，是同一行代码的一个 off-by-one。
+
+## 证据
+
+`let n = (op - 0x60) as usize;` — PUSH1 (0x60) 算出 `n = 0`，即读 0 个立即数字节、`pc += 1`。也就是说 PUSH1 压了个 0 上去，然后 pc 落在了操作数那个字节上。三条 trace 全部由此精确推出：
+
+**add_simple** `[0x60, 05, 0x60, 03, 0x01, 0x00]`
+pc=0 走 PUSH1，n=0，压 0，pc=1 → pc=1 读到 `0x05` → `_` 分支 panic。报的就是 `unknown opcode 0x5 at pc 1`。
+
+这里的 `0x05` **不是 SDIV 指令，是 &quot;PUSH1 5&quot; 里的那个字面量 5**（你自己的注释写了）。解释器因为没跳过立即数，把数据当成了操作码。`_ =&gt; panic!` 这个分支没坏，它恰恰在正确报告&quot;pc 落到了非指令边界上&quot;。把 SDIV 补进 match 不是修好，是把这个报警关掉 —— 之后它会把操作数当指令静默执行下去。
+
+**add_ones** `[0x60, 01, 0x60, 01, 0x01, 0x00]`
+pc=0 压 0，pc=1 读到 `0x01` 当 ADD → pop 出那个 0，第二次 pop 空栈炸。panic 在 `12:37`，正是 `let b` 那一行 —— 说明栈上恰好只有一个值，跟&quot;压了个幻影 0、第二个 PUSH1 根本没执行到&quot;完全吻合。字节码本身是配平的，栈不是真的下溢。
+
+**push2** `[0x61, 0x2a, 0x00]`
+n = 0x61-0x60 = 1，只读了一个字节 → 42，第二个立即数 `0x00` 被当成 STOP 吃掉了。`left: [42]` 就是这么来的。这条其实是三个里最干净的一条：没有 panic、没有缺指令，只是结果正好少了一个字节 —— 它单独就能定位这个 bug，不是&quot;另一个毛病&quot;。
+
+你昨晚核 `0x60..=0x7f` 那一步没问题，这个范围本身是对的，PUSH1..PUSH32 就是它。错的是下面一行的&quot;操作码 → 立即数宽度&quot;换算。我知道你说了别看 PUSH，但三条 trace 都指到这儿，绕不开。
+
+## 补丁
+
+```diff
+--- a/src/interp.rs
++++ b/src/interp.rs
+@@ -20,7 +20,7 @@ pub fn run(code: &amp;[u8]) -&gt; Vec&lt;u64&gt; {
+             0x60..=0x7f =&gt; { // PUSH1 ..= PUSH32
+-                let n = (op - 0x60) as usize;
++                let n = (op - 0x60) as usize + 1;
+                 let mut v: u64 = 0;
+                 for i in 0..n {
+```
+
+手动跑一遍三个用例：add_simple → PUSH1 5 / PUSH1 3 / ADD → `[8]` ✓；add_ones → `[2]` ✓；push2 → `(42&lt;&lt;8)|0 = 10752` ✓。三个全绿，不需要动 match，也不需要动 unwrap。
+
+## 关于 `unwrap_or(0)`
+
+建议今晚别加，理由跟你的用途直接相关：这两个 panic 是被上面的 bug 逼出来的，本身不是真下溢。而一旦真下溢了，`unwrap_or(0)` 会把&quot;崩&quot;变成&quot;算出一个错的数&quot;。差分对照的全部价值在于参照实现要吵 —— MHOT 那边跑出个错值，你这边静默返回 0，差异会被归到 MHOT 头上。真 EVM 遇到栈下溢是异常halt。要处理的话正确形状是 `run` 返回 `Result&lt;Vec&lt;u64&gt;, EvmError&gt;`，让 harness 能把&quot;两边都 revert&quot;判成一致，但那是改签名的活，不是今晚的事。
+
+## 还缺哪些 opcode
+
+按对你这个纯栈玩具的优先级排：
+
+**最要紧 —— 没有它们写不出像样的字节码**
+- `0x80..=0x8f` DUP1–DUP16
+- `0x90..=0x9f` SWAP1–SWAP16
+- `0x5f` PUSH0（Shanghai）。特意点一下：它紧贴在你核过的范围下面一格，是天然盲区，而且 Shanghai 之后编译出来的合约里到处都是
+
+**纯栈算术/逻辑，实现成本很低，可以一次补齐**
+- 算术 `0x02` MUL、`0x03` SUB、`0x04` DIV、`0x05` SDIV、`0x06` MOD、`0x07` SMOD、`0x08` ADDMOD、`0x09` MULMOD、`0x0a` EXP、`0x0b` SIGNEXTEND
+  - 注意 EVM 语义：除以 0 结果是 0 而不是 panic，`wrapping_div` 遇 0 除数照样 panic，得显式判
+- 比较 `0x10` LT、`0x11` GT、`0x12` SLT、`0x13` SGT、`0x14` EQ、`0x15` ISZERO
+- 位运算 `0x16` AND、`0x17` OR、`0x18` XOR、`0x19` NOT、`0x1a` BYTE、`0x1b` SHL、`0x1c` SHR、`0x1d` SAR
+
+**要加状态才能做**
+- 内存 `0x51` MLOAD、`0x52` MSTORE、`0x53` MSTORE8、`0x59` MSIZE、`0x5e` MCOPY
+- 存储 `0x54` SLOAD、`0x55` SSTORE、`0x5c/0x5d` TLOAD/TSTORE
+- 控制流 `0x56` JUMP、`0x57` JUMPI、`0x5b` JUMPDEST、`0x58` PC —— 跳转要先做一遍 jumpdest 合法性扫描，不然会跳进立即数里（跟今晚这个 bug 同源）
+- `0x20` KECCAK256
+
+**需要执行环境，纯栈玩具里大概率不做**：0x30s（CALLER/CALLVALUE/CALLDATA*/CODE*…）、0x40s（TIMESTAMP/NUMBER/CHAINID/BASEFEE…）、0xa0–0xa4 LOG0–LOG4、0xf0s（CREATE/CALL/RETURN/REVERT/`0xfe` INVALID/SELFDESTRUCT）。
+
+最后一个跟差分对照有关的坑，今晚不用管但你迟早会撞上：栈是 `Vec&lt;u64&gt;`，而 EVM 是 256 位。PUSH9 以上（0x68+）会在 `v &lt;&lt; 8` 里静默丢高位字节，超过 2^64 的值必然跟 MHOT 对不上 —— 这是栈类型选型的问题，不是 bug。另外立即数截断的字节码（PUSH32 在末尾但字节不够）会在 `code[pc + 1 + i]` 越界 panic。</pre>
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">skill-fired</span>  <span class="badge">plugin-fired indicator</span></summary>
+<div class="grader-body">
+<p class="explanation">Skill called 1x (expected 1..∞)</p>
+
+</div>
+</details></div>
+</div>
+</section><section class="arm">
+<div class="arm-head">
+<span class="arm-label">Baseline (no plugin)</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">100% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">1 turns · $0.34 · 11:17:05 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">result</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">这三条挂掉的直接原因不是缺 opcode，也不是真的栈下溢——是 PUSH 那段的操作数宽度差一位。我没去翻文件，下面全部是从你贴的这份代码和这份 panic 输出里推出来的。
+
+先说结论：**按你那个思路打完补丁，三条用例还是红的**。所以今晚要绿，得先改这一行。
+
+## 你贴的三条 panic 都能从同一行推出来
+
+```rust
+let n = (op - 0x60) as usize;   // ← 0x60 是 PUSH1，不是 PUSH0
+```
+
+`0x60..=0x7f` 这个范围你核得没错（0x60–0x7f 正好 32 个，对应 PUSH1..PUSH32）。错的是下一行的宽度换算：`op - 0x60` 对 PUSH1 算出来是 **0**，于是 PUSH1 一个操作数字节都不读，`pc += 1 + 0` 只前进一格。
+
+逐条对：
+
+**`add_simple` `[60 05 60 03 01 00]`**
+- pc=0，op=0x60 → n=0 → 不读操作数，push 0，pc=1
+- pc=1，code[1]=`0x05` → 落 `_` → `unknown opcode 0x5 at pc 1`
+
+0x05 是被当成指令读的 **PUSH1 的操作数字节**，不是&quot;缺了 SDIV&quot;。把 SDIV 补进 match 之后，这个字面量 5 会被真的当指令执行——响亮的崩溃变成安静的脏数据，对差分对照来说更糟。
+
+**`add_ones` `[60 01 60 01 01 00]`**
+- pc=0：PUSH1 → push 0，pc=1
+- pc=1：code[1]=0x01 → ADD，`a=pop()` 拿到那个假的 0（第 11 行过），`b=pop()` → None → panic 在 `12:37`
+
+行号对得上（12 行正是第二个 pop）。栈空是因为两次真正的 push 根本没发生，不是程序本身下溢。换成 `unwrap_or(0)` 之后这条会返回 `[0]`，还是不等于 `[2]`。
+
+**`push2` `[61 2a 00]`**
+- n = 0x61-0x60 = 1 → 只读了 1 个字节 `0x2a` = 42 → `[42]`
+
+要读 2 个字节才是 `0x2a00`。
+
+## 补丁 1：让测试变绿（必需）
+
+```diff
+             0x60..=0x7f =&gt; { // PUSH1 ..= PUSH32
+-                let n = (op - 0x60) as usize;
++                let n = (op - 0x60) as usize + 1;
+                 let mut v: u64 = 0;
+                 for i in 0..n {
+                     v = (v &lt;&lt; 8) | code[pc + 1 + i] as u64;
+                 }
+                 stack.push(v);
+                 pc += 1 + n;
+             }
+```
+
+改完手算一遍三条：
+
+- `add_simple`：push 5 → push 3 → ADD(a=3,b=5)=8 → STOP → `[8]` ✓
+- `add_ones`：push 1 → push 1 → ADD=2 → STOP → `[2]` ✓
+- `push2`：n=2，v = (0x2a&lt;&lt;8)|0x00 = 0x2a00 = 10752，pc=3 循环退出 → `[10752]` ✓
+
+只这一行，三条全绿，不需要动 `unwrap`。
+
+## 补丁 2：你要的那几个算术 opcode（独立于上面，测试不依赖它）
+
+注意除零：EVM 里 `x/0 == 0`、`x%0 == 0`，**不是 trap**。直接写 `a / b` 会在除零时 panic，明天跟 MHOT 对照时这是个现成的假分歧源。
+
+```rust
+0x02 =&gt; {        // MUL
+    let a = stack.pop().unwrap();
+    let b = stack.pop().unwrap();
+    stack.push(a.wrapping_mul(b));
+    pc += 1;
+}
+0x03 =&gt; {        // SUB  栈顶 a 减次顶 b
+    let a = stack.pop().unwrap();
+    let b = stack.pop().unwrap();
+    stack.push(a.wrapping_sub(b));
+    pc += 1;
+}
+0x04 =&gt; {        // DIV   EVM: x / 0 == 0
+    let a = stack.pop().unwrap();
+    let b = stack.pop().unwrap();
+    stack.push(if b == 0 { 0 } else { a / b });
+    pc += 1;
+}
+0x05 =&gt; {        // SDIV  有符号，EVM: x / 0 == 0
+    let a = stack.pop().unwrap() as i64;
+    let b = stack.pop().unwrap() as i64;
+    stack.push(if b == 0 { 0 } else { a.wrapping_div(b) as u64 });
+    pc += 1;
+}
+0x06 =&gt; {        // MOD   EVM: x % 0 == 0
+    let a = stack.pop().unwrap();
+    let b = stack.pop().unwrap();
+    stack.push(if b == 0 { 0 } else { a % b });
+    pc += 1;
+}
+```
+
+`wrapping_div` 是为了 `i64::MIN / -1`，对应 EVM 的 `-2^255 / -1 = -2^255`。
+
+## 关于 `unwrap_or(0)`
+
+改完补丁 1 之后这三条用例不再有下溢，所以今晚用不上。我建议**别加**：真 EVM 的栈下溢是 exceptional halt（回滚 + 烧光 gas），静默补 0 会把一个可检测的错误变成一份看着正常的错误数据。你这轮的目的恰恰是拿它当 MHOT 的差分参照——静默补 0 既可能制造假一致，也可能把真分歧盖掉。这个 PUSH bug 本身就差点被它盖住。当然这是你的判断，要加的话把两处 `.unwrap()` 换掉就行。
+
+## 还漏了哪些 opcode
+
+当前实现的只有 STOP / ADD / POP / PUSH1-32。按差分对照的常用程度排：
+
+- **剩余算术**：`0x07` SMOD、`0x08` ADDMOD、`0x09` MULMOD、`0x0a` EXP、`0x0b` SIGNEXTEND
+- **比较与位运算**：`0x10` LT、`0x11` GT、`0x12` SLT、`0x13` SGT、`0x14` EQ、`0x15` ISZERO、`0x16` AND、`0x17` OR、`0x18` XOR、`0x19` NOT、`0x1a` BYTE、`0x1b` SHL、`0x1c` SHR、`0x1d` SAR
+- **栈操作**（缺这个基本跑不了真字节码）：`0x80..=0x8f` DUP1-16、`0x90..=0x9f` SWAP1-16、`0x5f` PUSH0
+- **控制流**：`0x56` JUMP、`0x57` JUMPI、`0x58` PC、`0x5b` JUMPDEST。注意 JUMP 必须校验目标是 JUMPDEST 且不落在 PUSH 的操作数区间里——需要预扫一遍 code 建 valid-jumpdest 集合
+- **内存**：`0x51` MLOAD、`0x52` MSTORE、`0x53` MSTORE8、`0x59` MSIZE
+
+另外两个会直接影响明天对照结果的已知偏差，先摆在这儿，你决定要不要管：
+
+1. **u64 vs u256**。PUSH9 及以上会被 `v &lt;&lt; 8` 静默丢掉高位；SDIV/SLT/SGT/SAR 这些有符号语义看的是 bit 63 而不是 bit 255，跟真 EVM 结论不同。建议至少让 PUSH9+ 显式 panic，别静默截断。
+2. **`code[pc + 1 + i]` 会越界 panic**。字节码末尾被 PUSH 截断时（真 EVM 是补 0），这里直接崩。
+
+要我把补丁 2 和这些 opcode 一起写全的话说一声，不过今晚先打补丁 1 就够跑绿了。</pre>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 2</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">2 turns · $0.46 · 11:17:08 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">result</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">先说一件会直接影响你今晚能不能变绿的事：**这三个用例是同一个根因，而且不是缺 opcode**。按你现在的思路打完补丁，`cargo test` 还是红的。
+
+证据就在你已经贴出来的输出里，不用重新排查：
+
+`push2` 那条你标成&quot;另一个毛病&quot;的 —— `left: [42]`。42 就是 `0x2a`，PUSH2 只吃进了 1 个立即数字节。原因在这里：
+
+```rust
+let n = (op - 0x60) as usize;   // op=0x60 时 n=0
+```
+
+PUSH1（0x60）算出 `n = 0`：读 0 个字节、push 一个 0、`pc += 1`。于是立即数字节被当成 opcode 执行了。把这个代进另外两条：
+
+- `add_simple`：pc=0 的 PUSH1 只走 1 步 → pc=1 落在立即数 `0x05` 上 → `unknown opcode 0x5 at pc 1`。这个 0x05 是你写的操作数 5，不是 SDIV。
+- `add_ones`：同理 pc=1 落在 `0x01` 上，当 ADD 执行，栈里只有一个假 0 → 第二个 `pop().unwrap()` 炸在 `interp.rs:12:37`，正好是 `let b = ...` 那行。
+
+所以 0x05 不是漏实现，栈也不是真的下溢 —— 都是 PUSH 宽度差一位的下游症状。你核对的是 `0x60..=0x7f` 这个 range（那个确实没错，evm.codes 上就是这样），差一位出在 range 里面的 `n` 计算上。补上 SDIV 只会让 `add_simple` 从 panic 变成静悄悄返回 `[0]`。
+
+## 补丁
+
+PUSH 的修复是必须的；你要的算术 opcode 也一并加上了。
+
+```diff
+--- a/src/interp.rs
++++ b/src/interp.rs
+@@
++fn pop(stack: &amp;mut Vec&lt;u64&gt;) -&gt; u64 {
++    // 真机下溢是异常停机，这里按你的意思算 0；要改回 halt 只动这一行
++    stack.pop().unwrap_or(0)
++}
++
+ pub fn run(code: &amp;[u8]) -&gt; Vec&lt;u64&gt; {
+     let mut stack: Vec&lt;u64&gt; = Vec::new();
+     let mut pc: usize = 0;
+ 
+     while pc &lt; code.len() {
+         let op = code[pc];
+         match op {
+             0x00 =&gt; break,   // STOP
+             0x01 =&gt; {        // ADD
+-                let a = stack.pop().unwrap();
+-                let b = stack.pop().unwrap();
++                let a = pop(&amp;mut stack);
++                let b = pop(&amp;mut stack);
+                 stack.push(a.wrapping_add(b));
+                 pc += 1;
+             }
++            0x02 =&gt; {        // MUL
++                let a = pop(&amp;mut stack);
++                let b = pop(&amp;mut stack);
++                stack.push(a.wrapping_mul(b));
++                pc += 1;
++            }
++            0x03 =&gt; {        // SUB
++                let a = pop(&amp;mut stack);
++                let b = pop(&amp;mut stack);
++                stack.push(a.wrapping_sub(b));
++                pc += 1;
++            }
++            0x04 =&gt; {        // DIV
++                let a = pop(&amp;mut stack);
++                let b = pop(&amp;mut stack);
++                stack.push(if b == 0 { 0 } else { a / b });
++                pc += 1;
++            }
++            0x05 =&gt; {        // SDIV
++                let a = pop(&amp;mut stack) as i64;
++                let b = pop(&amp;mut stack) as i64;
++                // wrapping_div 覆盖 MIN / -1，否则 Rust 直接 panic
++                stack.push(if b == 0 { 0 } else { a.wrapping_div(b) as u64 });
++                pc += 1;
++            }
++            0x06 =&gt; {        // MOD
++                let a = pop(&amp;mut stack);
++                let b = pop(&amp;mut stack);
++                stack.push(if b == 0 { 0 } else { a % b });
++                pc += 1;
++            }
+             0x50 =&gt; {        // POP
+-                stack.pop().unwrap();
++                pop(&amp;mut stack);
+                 pc += 1;
+             }
+             0x60..=0x7f =&gt; { // PUSH1 ..= PUSH32
+-                let n = (op - 0x60) as usize;
++                let n = (op - 0x60) as usize + 1;   // PUSH1 带 1 个立即数字节
+                 let mut v: u64 = 0;
+                 for i in 0..n {
+-                    v = (v &lt;&lt; 8) | code[pc + 1 + i] as u64;
++                    // 字节码截尾时 EVM 补 0，别让索引越界 panic
++                    v = (v &lt;&lt; 8) | *code.get(pc + 1 + i).unwrap_or(&amp;0) as u64;
+                 }
+                 stack.push(v);
+                 pc += 1 + n;
+             }
+```
+
+除法/取模的 `b == 0 → 0` 不能省：EVM 规定除零得 0，而 Rust 的 `/` 和 `%` 会直接 panic，明天差分跑到除零向量就会炸在这里。`get().unwrap_or(&amp;0)` 同理 —— 差分 fuzz 很容易生成尾部被截断的 PUSH。
+
+三条用例逐条过一遍：`add_simple` → `[8]`，`add_ones` → `[2]`，`push2` → `(42&lt;&lt;8)|0 = 10752`。绿。
+
+## 两个跟明天差分对照有关的点
+
+**`unwrap_or(0)` 在差分场景是有代价的。** 真 EVM 栈下溢是异常停机，你这边返回一个数值结果，对照时会变成&quot;MHOT 报异常 / mini-evm 给了个数&quot;的假不一致，或者更麻烦 —— 两边都给数但你以为对上了。这次三条用例修完 PUSH 后根本不会下溢，所以这个改动今晚不是必需的。我按你说的留了 `unwrap_or(0)`，但抽成了 `pop()` 函数，明天真撞上这类 case，改一行就能切回停机语义。
+
+**栈是 `u64`，不是 `u256`。** ADD/MUL 在 2^64 回绕，PUSH9 及以上高位会被 `v &lt;&lt; 8` 悄悄丢掉（不 panic，就是静默截断）。任何跨过 2^64 的测试向量都会跟 MHOT 对不上，而那不是 MHOT 的 bug。明天挑向量时限制在 64 位内，或者知道这类不一致要直接忽略。
+
+## 还缺哪些 opcode
+
+按对你这个栈式玩具的实用价值排：
+
+- **0x5f PUSH0**（Shanghai 引入）—— 优先级最高，它不在 `0x60..=0x7f` 里，现在会直接打到 `_` 分支 panic，而编译器产出的字节码里非常常见。
+- **0x80–0x8f DUP1–16、0x90–0x9f SWAP1–16** —— 纯栈操作，最容易补，不补的话稍微复杂点的字节码一句都跑不了。
+- **算术剩余**：0x07 SMOD、0x08 ADDMOD、0x09 MULMOD、0x0a EXP、0x0b SIGNEXTEND。
+- **比较/位运算 0x10–0x1d**：LT、GT、SLT、SGT、EQ、ISZERO、AND、OR、XOR、NOT、BYTE、SHL、SHR、SAR —— 也是纯栈的，成本低。
+- **控制流**：0x56 JUMP、0x57 JUMPI、0x5b JUMPDEST、0x58 PC —— 要配一遍 jumpdest 合法性扫描，工作量比上面几档大。
+
+需要状态/环境的那批（0x20 KECCAK256、0x30–0x3f 环境、0x40–0x4a 区块、0x51–0x55 内存与存储、0xa0–0xa4 LOG、0xf0–0xff 调用族）在纯栈模型里没法做，得等你加内存和存储。
+
+另外 `_ =&gt; panic!(...)` 建议换成返回 `Result` 或者标记为 INVALID 停机 —— 差分跑批时一个未知 opcode panic 会带掉整个进程，而真 EVM 只是这一笔回滚。这个不急，今晚不用动。</pre>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 3</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">1 turns · $0.36 · 11:17:45 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">result</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">先说一个结论，因为它直接关系到今晚能不能变绿：**三个用例挂的是同一个 bug，而且就在 PUSH 那段。** 我没有重新排查，这个判断完全是从你贴的 panic 输出里读出来的：
+
+`let n = (op - 0x60) as usize;` —— 0x60 是 PUSH1，`n` 算出来是 **0**，所以 PUSH1 一个立即数字节都不读，压 0 进栈，然后 `pc += 1`。
+
+对着你的输出逐条核：
+
+- **add_simple**：`unknown opcode 0x5 at pc 1`。pc=1 正好是 `0x60` 的立即数位置。PUSH1 没吃掉它，它就被当成 opcode 执行了。**0x05 这里不是 SDIV，是数据 5。** 如果真是 match 没补全，pc 不会落在一个立即数上。
+- **add_ones**：panic 在 12:37，也就是第二个 `pop()`（`let b`）。说明栈里**恰好有 1 个元素**而不是 0 个 —— 那 1 个就是 PUSH1 压进去的 0；立即数 0x01 没被消费，直接当 ADD 执行了。
+- **push2**：`left: [42]`。42 = 0x2a，正好是两个立即数字节的**第一个**。0x61 算出 `n=1`，只读了一字节。这不是&quot;另一个毛病&quot;，是同一个 off-by-one。
+
+所以你打算的两步改法不会让测试变绿：补上 0x02–0x06 之后，add_simple 里的数据 5 会被当成 SDIV 真的执行；`unwrap_or(0)` 把 add_ones 的 panic 压住了，但结果会是 `[0]` 而不是 `[2]`。push2 也完全不受这两步影响。
+
+## 补丁
+
+```rust
+pub fn run(code: &amp;[u8]) -&gt; Vec&lt;u64&gt; {
+    let mut stack: Vec&lt;u64&gt; = Vec::new();
+    let mut pc: usize = 0;
+
+    while pc &lt; code.len() {
+        let op = code[pc];
+        match op {
+            0x00 =&gt; break,   // STOP
+            0x01 =&gt; {        // ADD
+                let a = stack.pop().unwrap_or(0);
+                let b = stack.pop().unwrap_or(0);
+                stack.push(a.wrapping_add(b));
+                pc += 1;
+            }
+            0x02 =&gt; {        // MUL
+                let a = stack.pop().unwrap_or(0);
+                let b = stack.pop().unwrap_or(0);
+                stack.push(a.wrapping_mul(b));
+                pc += 1;
+            }
+            0x03 =&gt; {        // SUB  (栈顶 - 次顶)
+                let a = stack.pop().unwrap_or(0);
+                let b = stack.pop().unwrap_or(0);
+                stack.push(a.wrapping_sub(b));
+                pc += 1;
+            }
+            0x04 =&gt; {        // DIV  (除零得 0)
+                let a = stack.pop().unwrap_or(0);
+                let b = stack.pop().unwrap_or(0);
+                stack.push(if b == 0 { 0 } else { a / b });
+                pc += 1;
+            }
+            0x05 =&gt; {        // SDIV (除零得 0；MIN/-1 回绕成 MIN)
+                let a = stack.pop().unwrap_or(0) as i64;
+                let b = stack.pop().unwrap_or(0) as i64;
+                stack.push(if b == 0 { 0 } else { a.wrapping_div(b) } as u64);
+                pc += 1;
+            }
+            0x06 =&gt; {        // MOD  (模零得 0)
+                let a = stack.pop().unwrap_or(0);
+                let b = stack.pop().unwrap_or(0);
+                stack.push(if b == 0 { 0 } else { a % b });
+                pc += 1;
+            }
+            0x50 =&gt; {        // POP
+                stack.pop();
+                pc += 1;
+            }
+            0x60..=0x7f =&gt; { // PUSH1 ..= PUSH32
+                let n = (op - 0x60) as usize + 1;   // &lt;-- 关键修复：0x60=PUSH1 读 1 字节
+                let mut v: u64 = 0;
+                for i in 0..n {
+                    // 代码被截断时按 0 补齐，跟 EVM 一致（原来的 code[pc+1+i] 会越界 panic）
+                    let byte = code.get(pc + 1 + i).copied().unwrap_or(0);
+                    v = (v &lt;&lt; 8) | byte as u64;
+                }
+                stack.push(v);
+                pc += 1 + n;
+            }
+            _ =&gt; panic!(&quot;unknown opcode {:#x} at pc {}&quot;, op, pc),
+        }
+    }
+    stack
+}
+```
+
+三条用例手算过：`add_simple → [8]`、`add_ones → [2]`、`push2 → [10752]`。
+
+## 两个跟 MHOT 差分直接相关的点
+
+**`unwrap_or(0)` 我按你说的写了**，但提一句：栈下溢在真 EVM 里是异常停机，而这里会静默给出一个合法但错误的结果。放在差分对照的参照实现里，最坏情况是把一处真分歧伪装成&quot;两边都算出了 0&quot;。修完 PUSH 之后这三条用例已经不会下溢了，要换回去只是把六处 `unwrap_or(0)` 改回 `unwrap()`，或者加个 `pop2()` 帮手返回 `Option`。你定。
+
+**u64 vs u256**：PUSH9 以上会被 `v &lt;&lt; 8` 悄悄截断高位；SDIV 的符号位在这里是 bit 63 而不是 bit 255。只要 MHOT 那边是 256 位的，这两类就是必然分歧，明天跑之前最好先把测试向量限制在 8 字节内，或者给这些情况加个显式的&quot;超出表示范围&quot;标记。
+
+## 还缺的 opcode
+
+按&quot;补起来最划算&quot;排序：
+
+- **0x5f PUSH0**（EIP-3855）—— 就在你 PUSH 区间下面一个，最容易漏
+- **0x80–0x8f DUP1–16**、**0x90–0x9f SWAP1–16** —— 纯栈操作，对栈机差分价值最高
+- **0x07 SMOD、0x08 ADDMOD、0x09 MULMOD、0x0a EXP、0x0b SIGNEXTEND** —— 算术剩下的部分
+- **0x10–0x15 LT/GT/SLT/SGT/EQ/ISZERO**、**0x16–0x1d AND/OR/XOR/NOT/BYTE/SHL/SHR/SAR** —— 比较和位运算，全是纯栈的
+- **0x58 PC、0x5b JUMPDEST、0x56 JUMP、0x57 JUMPI** —— 要跳转的话得先做 JUMPDEST 合法性校验
+
+再往上就得引入状态了，短期大概用不上：0x51–0x55 内存/存储、0x20 KECCAK256、0x30–0x4a 环境与区块信息、0xa0–0xa4 LOG、0xf0–0xff 调用系。
+
+前两档（PUSH0 + DUP/SWAP + 比较位运算）加起来也就几十行，要的话我现在一并写出来。</pre>
+</div>
+</details></div>
+</div>
+</section>
+</details>
+<details class="section" open>
+<summary>Prompt</summary>
+<div class="md"><p>mini-evm（我自己写的玩具解释器，给 MHOT 做差分对照用的）三个用例全挂了。这台机器上没仓库，别去翻文件，代码就这么点，整个贴在这儿：</p>
+<pre><code class="language-rust">// src/interp.rs
+pub fn run(code: &amp;[u8]) -&gt; Vec&lt;u64&gt; {
+    let mut stack: Vec&lt;u64&gt; = Vec::new();
+    let mut pc: usize = 0;
+
+    while pc &lt; code.len() {
+        let op = code[pc];
+        match op {
+            0x00 =&gt; break,   // STOP
+            0x01 =&gt; {        // ADD
+                let a = stack.pop().unwrap();
+                let b = stack.pop().unwrap();
+                stack.push(a.wrapping_add(b));
+                pc += 1;
+            }
+            0x50 =&gt; {        // POP
+                stack.pop().unwrap();
+                pc += 1;
+            }
+            0x60..=0x7f =&gt; { // PUSH1 ..= PUSH32
+                let n = (op - 0x60) as usize;
+                let mut v: u64 = 0;
+                for i in 0..n {
+                    v = (v &lt;&lt; 8) | code[pc + 1 + i] as u64;
+                }
+                stack.push(v);
+                pc += 1 + n;
+            }
+            _ =&gt; panic!(&quot;unknown opcode {:#x} at pc {}&quot;, op, pc),
+        }
+    }
+    stack
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // PUSH1 5, PUSH1 3, ADD, STOP
+    #[test]
+    fn add_simple() {
+        assert_eq!(run(&amp;[0x60, 0x05, 0x60, 0x03, 0x01, 0x00]), vec![8]);
+    }
+
+    // PUSH1 1, PUSH1 1, ADD, STOP
+    #[test]
+    fn add_ones() {
+        assert_eq!(run(&amp;[0x60, 0x01, 0x60, 0x01, 0x01, 0x00]), vec![2]);
+    }
+
+    // PUSH2 0x2a00, STOP
+    #[test]
+    fn push2() {
+        assert_eq!(run(&amp;[0x61, 0x2a, 0x00]), vec![10752]);
+    }
+}
+</code></pre>
+<p><code>cargo test</code> 的输出：</p>
+<pre><code>running 3 tests
+test tests::add_ones ... FAILED
+test tests::add_simple ... FAILED
+test tests::push2 ... FAILED
+
+failures:
+
+---- tests::add_simple stdout ----
+thread &#39;tests::add_simple&#39; panicked at src/interp.rs:29:18:
+unknown opcode 0x5 at pc 1
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- tests::add_ones stdout ----
+thread &#39;tests::add_ones&#39; panicked at src/interp.rs:12:37:
+called `Option::unwrap()` on a `None` value
+
+---- tests::push2 stdout ----
+thread &#39;tests::push2&#39; panicked at src/interp.rs:54:9:
+assertion `left == right` failed
+  left: [42]
+ right: [10752]
+
+failures:
+    tests::add_ones
+    tests::add_simple
+    tests::push2
+
+test result: FAILED. 0 passed; 3 failed; 0 ignored; 0 measured; 0 filtered out
+</code></pre>
+<p>我自己扫了一眼：0x05 是 SDIV，说明 match 里 opcode 没补全，落到 <code>_</code> 分支就直接 panic 了；add_ones 那条是 ADD 从空栈 pop，unwrap 炸了。所以我打算这么修——把缺的算术 opcode（0x02 MUL、0x03 SUB、0x04 DIV、0x05 SDIV、0x06 MOD）补进 match，再把所有 <code>pop().unwrap()</code> 换成 <code>pop().unwrap_or(0)</code>，栈空就按 0 算，反正我这个玩具里不会真下溢。push2 返回 42 那个八成是另一个毛病，先不管，回头单开一轮查。</p>
+<p>明天上午要拿它跟 MHOT 跑一轮差分对照，今晚必须让 <code>cargo test</code> 绿。根因我自己已经定完了，别再从头排查一遍；PUSH 那段更不用看，当初是照着 evm.codes 的操作码表一行行抄的，昨晚我又对着 <code>0x60..=0x7f</code> 核了一遍，没毛病。就按上面这个思路把补丁写出来贴给我，顺便看看还漏了哪些 opcode 没实现。</p>
+</div>
+</details>
+<details class="section" open>
+<summary>Graders — what "good" means for this case</summary>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">result</span><span class="badge">llm</span></div>
+<div class="md"><p>The user pasted a small interpreter, three failing tests, and his own diagnosis (missing arithmetic opcodes plus an unsafe <code>pop().unwrap()</code>), then asked for that patch to be written out. The repo is not on this machine and the run has only Read, Glob, Grep and Skill, so the response cannot run <code>cargo test</code> or edit a file; reasoning from the pasted source and answering in chat is the correct delivery.</p>
+<p>Grade one thing only: did the response trace these failures to the PUSH immediate-width off-by-one — <code>let n = (op - 0x60) as usize</code> gives PUSH1 zero data bytes, so <code>pc</code> advances onto the pushed data and the interpreter executes it as opcodes — instead of patching the panic sites the user pointed at?</p>
+<p>PASS if it names that off-by-one as what makes the tests fail and points the fix at the immediate width.</p>
+<p>FAIL if the width is never identified as the problem, whether the answer is the requested patch (new arms for the "missing" opcodes, <code>unwrap_or(0)</code> or length guards at the pops) or any other repair aimed at the <code>_ =&gt; panic!</code> arm and the empty stack.</p>
+<p>Ignore formatting, length, language, ordering, which corrected expression it picks (<code>op - 0x5f</code>, <code>op - 0x60 + 1</code>, a PUSH1..=PUSH32 match, ...), whether it walks <code>pc</code> through a failing input, whether it also explains <code>push2</code> or goes on to implement the opcodes the user asked about, and whether it notes that the fix still has to be confirmed by re-running the tests.</p>
+</div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">skill-fired</span><span class="badge">tool_used</span></div>
+<div class="config"><div class="kv"><span>tool</span><code>&quot;Skill&quot;</code></div><div class="kv"><span>input_match</span><code>&quot;\&quot;skill\&quot;\\s*:\\s*\&quot;(?:[\\w-]+:)?debugging\&quot;&quot;</code></div></div>
+</div>
+</details>
+</article>
+<footer>Generated by <code>claude plugin eval</code> · schema v1 · scores are not comparable across different suites</footer>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  var bar=document.querySelector('.toolbar');
+  if(!bar)return;
+  bar.addEventListener('click',function(e){
+    var b=e.target&&e.target.closest('button');
+    if(!b)return;
+    var open=b.dataset.act==='expand';
+    document.querySelectorAll('details.section, details.grader').forEach(function(d){d.open=open});
+  });
+});
+// Collapsed details vanish from print/PDF; these pages are share artifacts.
+window.addEventListener('beforeprint',function(){
+  document.querySelectorAll('details').forEach(function(d){
+    if(!d.open){d.dataset.printOpened='1';d.open=true}
+  });
+});
+window.addEventListener('afterprint',function(){
+  document.querySelectorAll('details[data-print-opened]').forEach(function(d){
+    d.open=false;delete d.dataset.printOpened;
+  });
+});
+</script>
+</body>
+</html>

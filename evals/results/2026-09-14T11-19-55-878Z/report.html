@@ -1,0 +1,2153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Eval report — superpower-planning v4.0.0</title>
+</head>
+<body>
+<style>
+:root{--plane:#f9f9f7;--surface:#fcfcfb;--ink:#0b0b0b;--ink-2:#52514e;--ink-3:#6b6a64;--hairline:rgba(11,11,11,.10);--grid:#e1e0d9;--inset:rgba(11,11,11,.04);--accent:#2a78d6;--base-fill:#6b6a64;--delta-good:#006300;--good:#067d06;--warning:#8a6100;--critical:#d03b3b;
+  color-scheme:light dark;
+}
+@media (prefers-color-scheme:dark){:root{--plane:#0d0d0d;--surface:#1a1a19;--ink:#ffffff;--ink-2:#c3c2b7;--ink-3:#898781;--hairline:rgba(255,255,255,.10);--grid:#2c2c2a;--inset:rgba(255,255,255,.05);--accent:#3987e5;--base-fill:#898781;--delta-good:#0ca30c;--good:#0ca30c;--warning:#fab219;--critical:#e06c6c;color-scheme:dark}}
+:root[data-theme="dark"]{--plane:#0d0d0d;--surface:#1a1a19;--ink:#ffffff;--ink-2:#c3c2b7;--ink-3:#898781;--hairline:rgba(255,255,255,.10);--grid:#2c2c2a;--inset:rgba(255,255,255,.05);--accent:#3987e5;--base-fill:#898781;--delta-good:#0ca30c;--good:#0ca30c;--warning:#fab219;--critical:#e06c6c;color-scheme:dark}
+:root[data-theme="light"]{--plane:#f9f9f7;--surface:#fcfcfb;--ink:#0b0b0b;--ink-2:#52514e;--ink-3:#6b6a64;--hairline:rgba(11,11,11,.10);--grid:#e1e0d9;--inset:rgba(11,11,11,.04);--accent:#2a78d6;--base-fill:#6b6a64;--delta-good:#006300;--good:#067d06;--warning:#8a6100;--critical:#d03b3b;color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:var(--plane);color:var(--ink);
+  font:14px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif;
+  -webkit-text-size-adjust:100%}
+.wrap{max-width:880px;margin:0 auto;padding:40px 24px 64px;display:flex;flex-direction:column;gap:20px}
+.eyebrow{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+header h1{margin:2px 0 0;font-size:24px;font-weight:600;line-height:1.25;text-wrap:balance}
+.meta{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;color:var(--ink-2);font-size:13px}
+.meta .num{font-variant-numeric:tabular-nums lining-nums}
+.banner{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:8px;
+  border:1px solid var(--hairline);background:var(--surface);font-size:13px}
+.banner .chip-warn{color:var(--warning);font-weight:600}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.tile{background:var(--surface);border:1px solid var(--hairline);border-radius:10px;padding:14px 16px;
+  display:flex;flex-direction:column;gap:4px}
+.tile .label{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+.tile .value{font-size:26px;font-weight:600;font-variant-numeric:tabular-nums lining-nums;line-height:1.1}
+.tile.hero .value{font-family:Georgia,"Times New Roman",serif;font-weight:400;font-size:48px}
+.tile .sub{font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.tile .value.delta-pos{color:var(--delta-good)}
+.tile .value.delta-neg{color:var(--critical)}
+.toolbar{display:flex;gap:8px;justify-content:flex-end}
+.toolbar button{font:12px system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink-2);
+  background:var(--surface);border:1px solid var(--hairline);border-radius:6px;padding:4px 10px;cursor:pointer}
+.toolbar button:hover{color:var(--ink)}
+.toolbar button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.case{background:var(--surface);border:1px solid var(--hairline);border-radius:10px;padding:18px 20px;
+  display:flex;flex-direction:column;gap:10px}
+.case-regressed{border-left:3px solid var(--critical)}
+.verdict{margin:6px 0 0;font-size:15px}
+.verdict .delta{font-size:15px}
+.flag{font-size:11px;font-weight:600;color:var(--warning);white-space:nowrap}
+.star{color:var(--warning);font-size:.45em;vertical-align:super;line-height:0;cursor:help}
+.legend summary{cursor:pointer;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2)}
+.legend-list{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--ink-2)}
+.case-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.case-head h2{margin:0;font-size:16px;font-weight:600}
+.case-head .spacer{flex:1}
+.case-score{font-size:15px;font-weight:600}
+.mono{font:12px "SF Mono",ui-monospace,Menlo,Consolas,monospace}
+.num{font-variant-numeric:tabular-nums lining-nums}
+.muted{color:var(--ink-3);font-size:12px}
+.meter{display:inline-block;position:relative;width:120px;height:6px;border-radius:4px;background:var(--grid);
+  vertical-align:middle}
+.meter>span{display:block;height:100%;border-radius:4px;max-width:100%}
+.meter .tick{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--ink-3);border-radius:1px}
+.m-accent>span{background:var(--accent)}
+.m-base>span{background:var(--base-fill)}
+.delta{font-size:12px;font-weight:600;font-variant-numeric:tabular-nums}
+.delta-pos{color:var(--delta-good)}
+.delta-neg{color:var(--critical)}
+.delta-zero{color:var(--ink-3)}
+details.section{border-top:1px solid var(--grid);padding-top:10px}
+details.section>summary{cursor:pointer;font-size:12px;font-weight:600;letter-spacing:.04em;
+  text-transform:uppercase;color:var(--ink-2);list-style-position:outside;margin-left:2px}
+details.section>summary:hover{color:var(--ink)}
+details.section[open]>summary{margin-bottom:8px}
+.md{display:flex;flex-direction:column;gap:8px;background:var(--inset);border-radius:8px;
+  padding:12px 14px;overflow-wrap:break-word}
+.md>:first-child{margin-top:0}
+.md h1,.md h2,.md h3,.md h4,.md h5,.md h6{margin:4px 0 0;font-size:1em;font-weight:600;line-height:1.3}
+.md p,.md ul,.md ol,.md blockquote,.md table,.md pre,.md hr{margin:0}
+.md ul,.md ol{display:flex;flex-direction:column;gap:4px;padding-left:20px}
+.md blockquote{border-left:2px solid var(--hairline);padding-left:10px;color:var(--ink-2)}
+.md :not(pre)>code{background:var(--inset);padding:1px 4px;border-radius:4px;
+  font:.92em "SF Mono",ui-monospace,Menlo,Consolas,monospace}
+.md pre{background:var(--inset);border:1px solid var(--hairline);padding:10px 12px;border-radius:6px;
+  overflow-x:auto;font:12px/1.5 "SF Mono",ui-monospace,Menlo,Consolas,monospace}
+.md pre code{background:none;padding:0;font:inherit}
+.md table{width:100%;border-collapse:collapse}
+.md th,.md td{padding:5px 8px;text-align:left;vertical-align:top;border-bottom:1px solid var(--grid)}
+.md th{font-weight:600;color:var(--ink-2)}
+.md a{color:var(--accent);text-decoration:none}
+.md a:hover{text-decoration:underline}
+.grader-def{display:flex;flex-direction:column;gap:6px;padding:8px 0}
+.grader-def+.grader-def{border-top:1px solid var(--grid)}
+.grader-def-head{display:flex;align-items:baseline;gap:8px}
+.grader-name{font:13px "SF Mono",ui-monospace,Menlo,Consolas,monospace;font-weight:600}
+.badge{font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2);
+  border:1px solid var(--hairline);border-radius:999px;padding:1px 8px}
+.config{display:flex;flex-direction:column;gap:2px;background:var(--inset);border-radius:8px;padding:10px 14px}
+.config code{font:12px "SF Mono",ui-monospace,Menlo,Consolas,monospace;overflow-wrap:anywhere}
+.arm{display:flex;flex-direction:column;gap:8px;padding:6px 0}
+.arm+.arm{border-top:1px dashed var(--grid);margin-top:4px;padding-top:12px}
+.arm-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.arm-label{font-size:13px;font-weight:600}
+.run{border:1px solid var(--grid);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.run-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.run-title{font-size:12px;font-weight:600;color:var(--ink-2)}
+.run-error .explanation{color:var(--ink-2)}
+.note{font-size:12px;color:var(--ink-2)}
+.graders{display:flex;flex-direction:column;gap:4px}
+details.grader{border-radius:6px}
+details.grader>summary{cursor:pointer;display:flex;align-items:baseline;gap:8px;padding:3px 4px;
+  border-radius:6px;list-style:none}
+details.grader>summary::-webkit-details-marker{display:none}
+details.grader>summary::before{content:'▸';font-size:10px;color:var(--ink-3);flex:none;
+  transition:transform .12s ease}
+details.grader[open]>summary::before{transform:rotate(90deg)}
+details.grader>summary:hover{background:var(--inset)}
+details.grader>summary:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.grader-body{padding:6px 8px 8px 24px;display:flex;flex-direction:column;gap:6px}
+.chip{font-size:11px;font-weight:600;border-radius:999px;padding:1px 8px;white-space:nowrap}
+.chip-pass{color:var(--good);border:1px solid currentColor}
+.chip-fail{color:var(--critical);border:1px solid currentColor}
+.chip.chip-warn{color:var(--warning);border:1px solid currentColor}
+.explanation{margin:0;font-size:13px;color:var(--ink-2);white-space:pre-wrap;overflow-wrap:break-word}
+.kv{display:flex;gap:8px;font-size:12px;color:var(--ink-3)}
+.votes{font-variant-numeric:tabular-nums;letter-spacing:.1em}
+pre.evidence{margin:0;background:var(--inset);border:1px solid var(--hairline);border-radius:6px;
+  padding:8px 10px;overflow-x:auto;max-height:320px;
+  font:12px/1.5 "SF Mono",ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap;overflow-wrap:break-word}
+footer{color:var(--ink-3);font-size:12px;text-align:center;padding-top:8px}
+@media (prefers-reduced-motion:no-preference){
+  details.grader>summary,.toolbar button{transition:background .12s ease,color .12s ease}
+}
+@media (prefers-reduced-motion:reduce){
+  details.grader>summary::before{transition:none}
+}
+@media print{
+  :root,:root[data-theme="dark"],:root[data-theme="light"]{--plane:#f9f9f7;--surface:#fcfcfb;--ink:#0b0b0b;--ink-2:#52514e;--ink-3:#6b6a64;--hairline:rgba(11,11,11,.10);--grid:#e1e0d9;--inset:rgba(11,11,11,.04);--accent:#2a78d6;--base-fill:#6b6a64;--delta-good:#006300;--good:#067d06;--warning:#8a6100;--critical:#d03b3b;color-scheme:light}
+  body{background:#fff}
+  .toolbar{display:none}
+  .case,.run,.grader-def{break-inside:avoid}
+  pre.evidence{max-height:none}
+}
+</style>
+<div class="wrap">
+<header>
+<div class="eyebrow">Plugin eval report</div>
+<h1>superpower-planning v4.0.0</h1>
+<p class="verdict">Plugin effect: <span class="delta delta-zero">· 0.0 pts</span> vs baseline — improved 0 · flat 1 · regressed 0 of 1 case.</p>
+<div class="meta">
+<span class="mono">.</span>
+<span>Claude Code v2.1.270</span>
+<span class="num">2026-09-14 11:19 UTC</span>
+<span class="num">9m 59s</span>
+<span class="num">$4.23</span>
+<span class="num">6 runs</span>
+<span class="num">3 in flight</span>
+
+
+<span>judge sonnet</span>
+<span class="num">threshold 100%</span>
+<span>filtered: --case silent-gap-in-backfill-pipeline</span>
+</div>
+</header>
+
+<section class="tiles">
+<div class="tile hero"><span class="label">Suite score · with plugin</span><span class="value">100%</span><span class="sub">mean of per-case scores</span></div>
+<div class="tile"><span class="label">Ablation Δ</span><span class="value num delta-zero">0.0</span><span class="sub">score points vs baseline, 1 of 1 case</span></div>
+<div class="tile"><span class="label">Baseline score</span><span class="value num">100%</span><span class="sub">without the plugin</span></div>
+<div class="tile"><span class="label">Cases</span><span class="value num">1</span><span class="sub">1 of 1 ≥ 100% threshold</span></div>
+<div class="tile"><span class="label">Perfect runs</span><span class="value num">100%</span><span class="sub">runs where every grader passed</span></div>
+</section>
+<details class="section legend">
+<summary>How to read this report</summary>
+<ul class="legend-list">
+<li>A run's score is the weighted fraction of its graders that passed; a "perfect" run passed every grader.</li>
+<li>A case's score is the mean of its runs; a case passes when its score is at or above the 100% threshold (the tick on each case bar).</li>
+<li>The suite score is the mean of the per-case scores.</li>
+<li>Judge votes are independent samples of the LLM judge; the majority decides pass or fail.</li>
+<li>"With plugin" and "Baseline" runs are identical except for the plugin being loaded; Δ is the with-plugin score minus the baseline score.</li>
+
+</ul>
+</details>
+<div class="toolbar"><button type="button" data-act="expand">Expand all</button><button type="button" data-act="collapse">Collapse all</button></div>
+<article class="case" id="case-1">
+<div class="case-head">
+<h2>silent-gap-in-backfill-pipeline</h2>
+<span class="muted mono">evals/silent-gap-in-backfill-pipeline</span>
+<span class="spacer"></span>
+
+<span class="delta delta-zero">· 0.0 pts</span>
+<span class="muted">with plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span><i class="tick" style="left:100.0%"></i></span>
+<span class="num case-score">100%</span>
+</div>
+
+<details class="section" open>
+<summary>Results</summary>
+<section class="arm">
+<div class="arm-head">
+<span class="arm-label">With plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">100% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">3 turns · $0.81 · 11:19:55 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">result</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">## 先说一句必须说的：写库那层是干净的，丢数据在 fetch
+
+我把你们三条都写了，但在贴之前有一个算术必须摆出来，因为它决定周五那批数对不对。
+
+**你自己贴的日志行就是判决书。** `writer.rs` 里那条 `info!(from, to, rows = logs.len(), &quot;range done&quot;)` 打的是 **Rust 里 `logs` 这个切片的长度**，跟 Postgres 一点关系没有。日志打出 `rows=0`，意味着 `write_range` 被调用时切片本来就是空的 —— COPY 那个分支被 `if !logs.is_empty()` 直接跳过了，Postgres 根本没拿到东西，也就无从&quot;吞掉&quot;。
+
+三条独立佐证：
+
+| 证据 | 说明 |
+|---|---|
+| `copy_batches_total` = 113,636 | 117,048 − 3,412 = **113,636**，分毫不差。COPY 对这 3,412 个 range 一次都没执行过 |
+| 事务原子性 | COPY 和 `ranges_done` 的 INSERT 在**同一个事务**里。事务若被回滚，`ranges_done` 那行也不会留下 —— 你库里有那行，就证明事务提交了 |
+| `copy.finish().await?` | 就算 COPY 报错，`?` 会直接 return，INSERT 不执行，`range done` 这行日志也压根打不出来。但它打出来了 |
+
+反过来，超时那条路是对得上的：
+
+```
+04:11:55.318 WARN  request timed out      from=31541248 to=31541375
+04:11:56.883 INFO  range done rows=0      from=31541248 to=31541375   ← 同一个 range
+```
+
+而你 SQL 查出来的第一行，`31541248 | 0 | 2026-09-02 04:11:56.883+00` —— **毫秒级对上了**。第二对 `31542016` 同样对得上。`rpc_timeouts_total` = 3,412 = 零行 range 数，一个不多一个不少，没有剩余需要别的原因来解释。
+
+链路是这样的：`eth_getLogs` 超时 → fetch 返回 `Ok(Vec::new())`（**成功的空结果**）→ `with_retry` 看到 `Ok` 就不重试了，连 `retries_total` 都不加 → 空 vec 一路走到 writer → 标 done、`row_count=0`。
+
+关于 `fetch_errors_total = 0`：超时那个分支加的是 `rpc_timeouts_total`，**代码里就没让它加 `fetch_errors_total`**。这个 0 是分支写法的产物，不是健康证明。而 `fetch.rs` 里&quot;verifier 会兜底&quot;那句注释也没有对应实现 —— `verify()` 只查连续覆盖，已经 done 的 range 永远不会被回头看。这是个注释声明了、但没人写的不变量。
+
+丢失量：3,412 × ~10,600（1,204,551,903 / 113,636）≈ **3,600 万条 log**。
+
+加池子不是坏事（16 个连接喂 24 个 worker 确实在排队，吞吐有损失），但它跟这次丢数据无关：sqlx 拿不到连接返回的是 `PoolTimedOut`，事务压根没开始，不可能留下 `ranges_done` 行；`pg_conn_errors_total` 也是 0。
+
+---
+
+## 补丁
+
+### 0. `src/fetch.rs` —— 真正止血的那行（超纲，但建议一起上）
+
+```rust
+// src/fetch.rs
+
+pub enum FetchError {
+    RateLimited,
+    Timeout,              // ← 新增
+    Rpc(String),
+    Http(reqwest::Error),
+    Exhausted,
+}
+
+pub async fn fetch_logs(client: &amp;Client, from: u64, to: u64) -&gt; Result&lt;Vec&lt;RawLog&gt;, FetchError&gt; {
+    let body = json!({
+        &quot;jsonrpc&quot;: &quot;2.0&quot;, &quot;id&quot;: 1, &quot;method&quot;: &quot;eth_getLogs&quot;,
+        &quot;params&quot;: [{ &quot;fromBlock&quot;: hex(from), &quot;toBlock&quot;: hex(to) }],
+    });
+
+    match client.post(&amp;CFG.rpc_url).json(&amp;body).send().await {
+        Ok(resp) =&gt; {
+            let v: RpcResponse&lt;Vec&lt;RawLog&gt;&gt; = resp.json().await?;
+            if let Some(err) = v.error {
+                if err.code == -32005 {
+                    return Err(FetchError::RateLimited);
+                }
+                return Err(FetchError::Rpc(err.message));
+            }
+            Ok(v.result.unwrap_or_default())
+        }
+        Err(e) if e.is_timeout() =&gt; {
+            // 超时 ≠ 这段没有 log。必须当失败抛出去让 with_retry 重试，
+            // 返回 Ok(vec![]) 会让 range 被静默标成 done 且 row_count=0。
+            warn!(from, to, &quot;request timed out&quot;);
+            metrics::counter!(&quot;rpc_timeouts_total&quot;).increment(1);
+            metrics::counter!(&quot;fetch_errors_total&quot;).increment(1);   // 让这个计数器别再骗人
+            Err(FetchError::Timeout)
+        }
+        Err(e) =&gt; {
+            metrics::counter!(&quot;fetch_errors_total&quot;).increment(1);
+            Err(FetchError::Http(e))
+        }
+    }
+}
+```
+
+`retry.rs` 不用动 —— `Err(e) if attempt &lt; CFG.max_retries` 那条通配分支会自动接住 `Timeout` 并按 200ms 翻倍退避重试。
+
+### 1. `src/writer.rs` —— 你的第 1 条
+
+```rust
+// src/writer.rs
+pub async fn write_range(
+    tx: &amp;mut Transaction&lt;&apos;_, Postgres&gt;,
+    from: u64,
+    to: u64,
+    logs: &amp;[Log],
+) -&gt; Result&lt;(), sqlx::Error&gt; {
+    // 重灌同一个 range 时先清掉旧行，否则 COPY 会把这段 log 再追加一遍。
+    // 需要 logs(block_number) 上有索引，1.2B 行的表上没索引这条会全表扫。
+    sqlx::query(&quot;DELETE FROM logs WHERE block_number BETWEEN $1 AND $2&quot;)
+        .bind(from as i64)
+        .bind(to as i64)
+        .execute(&amp;mut **tx)
+        .await?;
+
+    if !logs.is_empty() {
+        let mut copy = tx.copy_in_raw(
+            &quot;COPY logs (block_number, tx_index, log_index, address, topic0, topics, data) \
+             FROM STDIN WITH (FORMAT csv)&quot;
+        ).await?;
+        copy.send(encode_csv(logs).as_bytes()).await?;
+        let copied = copy.finish().await?;
+
+        if copied != logs.len() as u64 {
+            panic!(
+                &quot;COPY row count mismatch for range {from}..={to}: \
+                 postgres reported {copied} rows, expected {}&quot;,
+                logs.len()
+            );
+        }
+    }
+
+    sqlx::query(
+        &quot;INSERT INTO ranges_done (from_block, to_block, row_count, finished_at) \
+         VALUES ($1, $2, $3, now()) \
+         ON CONFLICT (from_block) DO UPDATE SET \
+             to_block    = EXCLUDED.to_block, \
+             row_count   = EXCLUDED.row_count, \
+             finished_at = EXCLUDED.finished_at&quot;
+    )
+    .bind(from as i64)
+    .bind(to as i64)
+    .bind(logs.len() as i64)
+    .execute(&amp;mut **tx)
+    .await?;
+
+    info!(from, to, rows = logs.len(), &quot;range done&quot;);
+    Ok(())
+}
+```
+
+那条 `DELETE` 不是我顺手加的 —— 它是你第 1 条和第 2 条**合起来之后的必需品**。`DO UPDATE` 加上 verifier 重新入队，等于把&quot;重跑同一个 range&quot;变成常态，而 COPY 没有任何冲突处理，重跑就是纯追加。这次这 3,412 个 range 本来是空的（你的 `SELECT count(*) FROM logs WHERE block_number BETWEEN ...` 返回 0 已经验证过），所以现在重灌不会重复；但 fetch 修好以后，任何一个**已经写过行**的 range 被重新入队，就会把 Transfer 数翻倍 —— 同一个 dbt 指标，错到另一个方向去，而且比偏低难发现得多。
+
+关于那个 `panic!`：按你说的写了，但它几乎不可能触发 —— COPY 协议不会静默少写，这个断言实际能抓到的只有 `encode_csv` 自己的 bug。而且 panic 在 tokio worker 里会带掉整个 task（`panic = &quot;abort&quot;` 的话是整个进程），正跑到一半的 backfill 会断在那儿。想换成返回 `Err` 的话，把 `panic!` 换成 `return Err(sqlx::Error::Protocol(format!(...)))` 就行。
+
+### 2. `src/verify.rs` —— 你的第 2 条
+
+```rust
+// src/verify.rs —— 每天凌晨跑一次
+pub async fn verify(pool: &amp;PgPool, start: u64, head: u64) -&gt; Vec&lt;(u64, u64)&gt; {
+    let rows = sqlx::query_as::&lt;_, (i64, i64, i64)&gt;(
+        &quot;SELECT from_block, to_block, row_count FROM ranges_done ORDER BY from_block&quot;
+    ).fetch_all(pool).await.unwrap();
+
+    let mut gaps = Vec::new();
+    let mut cursor = start;
+    for (f, t, row_count) in rows {
+        let (f, t) = (f as u64, t as u64);
+
+        // 1) ranges_done 没盖到的段
+        if f &gt; cursor {
+            gaps.push((cursor, f - 1));
+        }
+
+        // 2) 盖到了、但一条 log 都没有的段：当前 Base mainnet 体量下
+        //    128 个区块不可能真是零 log，一律按没灌过处理。
+        if row_count == 0 {
+            warn!(from = f, to = t, &quot;range marked done with zero rows, re-queueing&quot;);
+            metrics::counter!(&quot;verify_empty_ranges_total&quot;).increment(1);
+            gaps.push((f, t));
+        }
+
+        cursor = cursor.max(t + 1);
+    }
+    if cursor &lt;= head {
+        gaps.push((cursor, head));
+    }
+
+    metrics::gauge!(&quot;verify_gaps&quot;).set(gaps.len() as f64);
+    gaps
+}
+```
+
+一个脚坑：真的零 log 的 range 会**每晚被无限重新入队**。Base 现在这个体量碰不到，但如果哪天回灌早期区块或者别的冷链，就会变成永久空转。要挡的话给 `ranges_done` 加个 `attempts` 列，试过 3 次还是 0 就不再入队。
+
+### 3. `config.toml` —— 你的第 3 条
+
+```toml
+pg_pool_size     = 32       # = concurrency 24 + verifier/运维余量
+request_timeout  = &quot;30s&quot;    # 可选：2.9% 的超时率，修完 fetch 后每次超时要付一轮重试
+```
+
+**池子不用再往上调了。** 24 个 worker，每个在事务期间最多占 1 个连接，并发需求的硬上限就是 24；加上 verifier 和临时连接，32 已经有富余。再往上加买不到任何东西 —— 连接只能被 worker 用，而 worker 只有 24 个。Postgres 每个 backend 是一个独立进程（约 5–10MB，还没算 `work_mem`），池子开大只是把排队从客户端挪进数据库。以后如果调 `concurrency`，保持 `pg_pool_size ≈ concurrency + 8` 就行。
+
+---
+
+## 周五那批数怎么补
+
+`verify` 要等凌晨才跑，别等。改完直接手动清掉坏 range，让它们变成覆盖缺口：
+
+```sql
+-- 先留底
+CREATE TABLE ranges_done_bad_20260914 AS
+  SELECT * FROM ranges_done WHERE row_count = 0;
+
+-- 确认这些段在 logs 里确实是空的（应该返回 0）
+SELECT count(*) FROM logs l
+  JOIN ranges_done_bad_20260914 b
+    ON l.block_number BETWEEN b.from_block AND b.to_block;
+
+-- 确认无误后再删
+DELETE FROM ranges_done WHERE row_count = 0;
+```
+
+然后正常跑一轮 backfill —— 老的 `verify` 逻辑就能把它们认成缺口。带上 fetch 那个补丁的话这轮不会再丢；不带的话这 3,412 个里还会再掉 ~2.9%，得靠 verifier 每晚收敛三四轮，正好卡在周五上。
+
+只上你那三条其实也能收敛（`DO UPDATE` + 重新入队确实会把数据补回来），但那是每晚一次的被动循环，每轮还在继续静默丢新数据，而且第 1 条那个 panic 永远不会响，只会给你一种&quot;已经有断言守着了&quot;的错觉。fetch 那 4 行才是让它不再发生的地方。
+
+---
+
+## 两件我这边没法确认的
+
+1. **worker 循环怎么处理 `with_retry` 的 `Err`。** 我没看到调用方。如果那里是 `.unwrap_or_default()` 之类，fetch 补丁就白打了 —— 错误会在上一层重新变成空 vec。麻烦确认一下：range 抓失败时必须**不写 `ranges_done`**，直接留成缺口给 verifier。
+2. **要不要加超时二分。** 重试解决的是偶发网络超时；如果某些 range 是因为 log 太多而稳定超时，重试 5 次也救不回来，得拆成 64 块再抓。能加，但那是另一块改动，你说要我再写。
+
+顺带两个跟本案无关的：`rpc_requests_total` = 14,982,110 而 117,048 × 128 = 14,982,144 —— 这个计数器在按**区块**数，不是请求数（按请求该是 ~126k），名字是错的。另外 `normalize.rs` 里两个 `from_str_radix(...).unwrap()` 碰到畸形 hex 会 panic 掉 worker。</pre>
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">skill-fired</span>  <span class="badge">plugin-fired indicator</span></summary>
+<div class="grader-body">
+<p class="explanation">Skill called 1x (expected 1..∞)</p>
+
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 2</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">3 turns · $0.82 · 11:19:55 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">result</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">我把三条都写了，但先说一句必须说的：**这三条都不会修掉这个 bug**，`rpc_timeouts_total` 和 3,412 的相等不是巧合，而且你们自己的 metrics 就能排除 COPY。
+
+## 证据
+
+**1. COPY 一批都没丢**（用你贴的数字）：
+
+```
+117048 (ranges_done) - 3412 (row_count=0) = 113636 = copy_batches_total
+```
+
+非空 range 数和 COPY 批次数**精确相等**。`logs_written_total / 113636 ≈ 10600 行/range`，跟日志里 7735~11048 那些行完全对得上。`pg_conn_errors_total = 0`。COPY 该跑的都跑了，写进去的都落盘了。
+
+**2. 事务结构上也不可能**：`write_range` 里 COPY 和 `ranges_done` 的 INSERT 在**同一个 `tx`** 里。事务被静默回滚的话，`ranges_done` 那行**一起没了** —— 你会看到一个 gap，而不是一条 `row_count = 0` 的 done 记录。&quot;COPY 丢了但 range 标成 done&quot; 这个状态，从这段代码里根本走不出来。同理 `ON CONFLICT DO NOTHING` 也是无辜的：它只在冲突时触发，这 3,412 条是首次插入，`row_count` 是 `logs.len()` 绑上去的 —— 写进去的时候 `logs` 就是空的。而且 `if !logs.is_empty()` 这个 guard 意味着这些 range **压根没调用过 COPY**。
+
+**3. 日志里因果链是直连的**，不是相关性：
+
+```
+04:11:55.318 WARN  request timed out  from=31541248 to=31541375
+04:11:56.883 INFO  range done         from=31541248 to=31541375 rows=0   ← DB 里第 1 条，finished_at 04:11:56.883
+04:11:58.004 WARN  request timed out  from=31542016 to=31542143
+04:11:59.106 INFO  range done         from=31542016 to=31542143 rows=0   ← DB 里第 2 条，finished_at 04:11:59.106
+```
+
+同一个 range、同一个时间戳、相隔 1.5 秒。你截的这段日志里**超时的 range 和零行的 range 是同一批，一个不多一个不少**。
+
+**4. `fetch_errors_total = 0` 是个假象**：超时分支只 `increment` 了 `rpc_timeouts_total`，然后 `return Ok(Vec::new())` —— 它从定义上就不可能让 `fetch_errors_total` 动。这个 0 不是&quot;抓取层没出错&quot;的证据，它不携带任何信息。同理 `retries_total = 8877` 里一次超时重试都没有，因为 `with_retry` 看到的是 `Ok`。
+
+## 链路
+
+```
+20s 超时 → Ok(Vec::new())        ← fetch.rs，把失败伪装成&quot;成功且为空&quot;
+        → with_retry 看到 Ok，不重试
+        → normalize([]) = []
+        → write_range 跳过 COPY，写 row_count = 0，标 done
+        → verify 看到覆盖连续，无 gap
+```
+
+那句注释 `// 超时的 range 后面 verifier 会兜底` 正好说反了：verifier 只能捞**不在 `ranges_done` 里**的段，而超时路径干的事就是往 `ranges_done` 里写一条 done —— 它亲手毁掉了 verifier 唯一的线索。兜底机制对 `Err` 是有效的（不写 ranges_done → 连续性断裂 → 被捞回来重灌），被 `Ok(vec![])` 精确绕过。
+
+---
+
+## Patch
+
+### 1. `src/fetch.rs` —— 真正的修复（这一个 hunk 修掉全部 3,412 个）
+
+```diff
+         Err(e) if e.is_timeout() =&gt; {
+-            // 超时的 range 后面 verifier 会兜底，这里先放过
+             warn!(from, to, &quot;request timed out&quot;);
+             metrics::counter!(&quot;rpc_timeouts_total&quot;).increment(1);
+-            Ok(Vec::new())
++            metrics::counter!(&quot;fetch_errors_total&quot;).increment(1);
++            // 超时必须是 Err：Ok(vec![]) 会被 write_range 记成 row_count=0 标 done，
++            // verifier 只看连续覆盖，捞不回来。
++            Err(FetchError::Http(e))
+         }
+```
+
+用现成的 `Http` 变体，不动 `FetchError` 枚举，免得别处的 match 编译不过。想要 `FetchError::Timeout` 单独分类也行，但那得看你们枚举的其他用法。
+
+`retry.rs` 不用改就能重试它（`Err(e) if attempt &lt; CFG.max_retries` 那条臂会接住）。
+
+### 1b. `src/fetch.rs` —— 同一个洞的第二个入口（建议一起上）
+
+```diff
+-            Ok(v.result.unwrap_or_default())
++            match v.result {
++                Some(logs) =&gt; Ok(logs),
++                // 既没 error 也没 result（截断/畸形响应）同样不能当成空结果
++                None =&gt; Err(FetchError::Rpc(&quot;response had neither result nor error&quot;.into())),
++            }
+```
+
+RPC 返回体既没 `error` 又没 `result` 时，`unwrap_or_default()` 会重新打开我刚堵上的那个洞。
+
+### 2. `src/retry.rs` —— 保留真实错误（小改，但这次要开始用了）
+
+```diff
+     let mut delay = Duration::from_millis(200);
++    let mut last_err = None;
+     for attempt in 0..=CFG.max_retries {
+         match f().await {
+             Ok(v) =&gt; return Ok(v),
+             Err(FetchError::RateLimited) =&gt; {
+                 metrics::counter!(&quot;retries_total&quot;).increment(1);
++                last_err = Some(FetchError::RateLimited);
+                 tokio::time::sleep(delay).await;
+                 delay *= 2;
+             }
+             Err(e) if attempt &lt; CFG.max_retries =&gt; {
+                 metrics::counter!(&quot;retries_total&quot;).increment(1);
+                 warn!(?e, attempt, &quot;retrying&quot;);
++                last_err = Some(e);
+                 tokio::time::sleep(delay).await;
+                 delay *= 2;
+             }
+             Err(e) =&gt; return Err(e),
+         }
+     }
+-    Err(FetchError::Exhausted)
++    Err(last_err.unwrap_or(FetchError::Exhausted))
+ }
+```
+
+超时现在会走到这里，光看到 `Exhausted` 查不出原因。
+
+### 3. `src/writer.rs` —— 你的第 1 条
+
+```rust
+pub async fn write_range(
+    tx: &amp;mut Transaction&lt;&apos;_, Postgres&gt;,
+    from: u64,
+    to: u64,
+    logs: &amp;[Log],
+) -&gt; Result&lt;(), sqlx::Error&gt; {
+    // 让重灌幂等：verify 把 range 扔回来重灌时，不加这段会重复插入。
+    // 前提是 logs.block_number 上有 btree 索引，否则这个 DELETE 会很贵——上线前确认。
+    sqlx::query(&quot;DELETE FROM logs WHERE block_number BETWEEN $1 AND $2&quot;)
+        .bind(from as i64)
+        .bind(to as i64)
+        .execute(&amp;mut **tx)
+        .await?;
+
+    if !logs.is_empty() {
+        let mut copy = tx.copy_in_raw(
+            &quot;COPY logs (block_number, tx_index, log_index, address, topic0, topics, data) \
+             FROM STDIN WITH (FORMAT csv)&quot;
+        ).await?;
+        copy.send(encode_csv(logs).as_bytes()).await?;
+        let copied = copy.finish().await?;
+        if copied != logs.len() as u64 {
+            return Err(sqlx::Error::Protocol(format!(
+                &quot;COPY row count mismatch for range {from}..={to}: \
+                 postgres accepted {copied}, expected {}&quot;,
+                logs.len()
+            )));
+        }
+    }
+
+    sqlx::query(
+        &quot;INSERT INTO ranges_done (from_block, to_block, row_count, finished_at) \
+         VALUES ($1, $2, $3, now()) \
+         ON CONFLICT (from_block) DO UPDATE \
+           SET to_block    = EXCLUDED.to_block, \
+               row_count   = EXCLUDED.row_count, \
+               finished_at = EXCLUDED.finished_at&quot;
+    )
+    .bind(from as i64)
+    .bind(to as i64)
+    .bind(logs.len() as i64)
+    .execute(&amp;mut **tx)
+    .await?;
+
+    info!(from, to, rows = logs.len(), &quot;range done&quot;);
+    Ok(())
+}
+```
+
+### 4. `src/verify.rs` —— 你的第 2 条
+
+```rust
+pub async fn verify(pool: &amp;PgPool, start: u64, head: u64) -&gt; Vec&lt;(u64, u64)&gt; {
+    let rows = sqlx::query_as::&lt;_, (i64, i64, i64)&gt;(
+        &quot;SELECT from_block, to_block, row_count FROM ranges_done ORDER BY from_block&quot;
+    ).fetch_all(pool).await.unwrap();
+
+    let mut gaps = Vec::new();
+    let mut cursor = start;
+    for (f, t, row_count) in rows {
+        let (f, t) = (f as u64, t as u64);
+        if f &gt; cursor {
+            gaps.push((cursor, f - 1));
+        }
+        // Base mainnet 上 128 个区块（约 4 分钟）不可能真的零 log，
+        // 标了 done 但 row_count = 0 一律当作没灌上。
+        if row_count == 0 &amp;&amp; t &gt;= start &amp;&amp; f &lt;= head {
+            gaps.push((f.max(start), t.min(head)));
+        }
+        cursor = cursor.max(t + 1);
+    }
+    if cursor &lt;= head {
+        gaps.push((cursor, head));
+    }
+    gaps
+}
+```
+
+### 5. `config.toml`
+
+```diff
+-pg_pool_size     = 16
++pg_pool_size     = 28       # concurrency 24 + verify/运维留 4
+```
+
+---
+
+## 三处我改了你的写法，说明一下
+
+**panic 改成返回 Err。** worker 里 panic 会连带干掉那个 task（看你们 runtime 配置甚至可能 abort 整个进程），把一个可恢复的单 range 异常升级成掉吞吐或半路崩。返回 `Err` 走 `?` 会回滚事务 → `ranges_done` 不写 → 连续性检查自然捞回来，这正是兜底机制该起作用的形状。你要坚持 panic 就把那个 `return Err(...)` 换成 `panic!(&quot;COPY row count mismatch for range {from}..={to}: got {copied}, expected {}&quot;, logs.len())`。
+
+**加了 DELETE。** 这是你第 2 条引入的新风险：verify 一旦开始把 range 扔回去重灌，`write_range` 就会把 logs 再 COPY 一遍。眼下这 3,412 个是空的没事，但第 1 条的 DO UPDATE 把&quot;重写&quot;变成了常态路径，哪天一个有数据的 range 被重新排队，就是静默重复计数 —— 对 ERC-20 日活来说，重复的 Transfer 比缺失的更糟，因为没有任何东西会报警。不想要这个 hunk 也行，替代方案是在 `(block_number, log_index)` 上建唯一索引 + 走 temp table + `ON CONFLICT DO NOTHING`，但那个改动更大。
+
+**你的第 1 条和第 2 条是互相依赖的**，这点你们俩可能都没注意到：保留 `ON CONFLICT DO NOTHING` 的话，重灌成功后 `row_count` 永远停在 0，verify 会**每天凌晨把同样这 3,412 个 range 重新捞一遍，无限循环**，而且悄无声息。必须有 DO UPDATE 才能收敛。
+
+## 关于 pool
+
+**别再往上调了，28 或 32 都行，超过就有害无益。** 24 个 worker 每个在事务期间占一条连接，峰值需求就是 24；16 条的后果是最多 8 个 worker 在 checkout 上排队 —— 那是**延迟，不是丢数据**，`pg_conn_errors_total = 0` 已经证实没有任何东西报错。每个 backend 大约 5–10MB 加 work_mem，而 COPY 的吞吐瓶颈在 WAL/磁盘不在连接数，超过 2–3 倍核数就开始赔在上下文切换和锁竞争上。
+
+这条改动买的是吞吐，不是正确性 —— 修完 fetch 之后超时会真的重试，3,412 个 range 最坏要多花 6×20s，那部分吞吐损失得从别处找补。真正的解法是**超时后把 range 对半拆再重试**（128 块对 log 密集的区段在 20s 内确实拉不完），而不是原样重试。这个要改 worker 的调度代码，我手上没有，先提一句。
+
+## 周五之前的顺序
+
+```sql
+-- 1) 先确认数量对得上（应该是 3412）
+SELECT count(*) FROM ranges_done WHERE row_count = 0;
+```
+
+1. **先上 fetch.rs 的修复再重灌**，否则重灌会再次撞上同一个吞噬逻辑 —— 靠重试碰运气蒙对一部分反而更糟，那是局部静默错误。
+2. 重新排队：`DELETE FROM ranges_done WHERE row_count = 0;`，然后按 `verify()` 吐出来的 gap 跑一轮。3,412 × 128 = 436,736 个区块，按你日志里的吞吐（24 worker，每个约 1.5s 一个 range）几分钟就完事。
+3. 灌完核对：`SELECT count(*) FROM ranges_done WHERE row_count = 0;` 应该是 0，再挑两个区段跟 explorer 对一下。
+4. 然后再重跑 dbt。
+
+## 两个顺带的观察，跟这次无关
+
+- `rpc_requests_total = 14982110`，而 `117048 × 128 = 14982144`。这个计数器看起来是**按区块**而不是按请求在加的（按请求应该是 117048 + 8877 ≈ 12.6 万）。不影响这次定位，但这次误判本来就是被一个说谎的计数器（`fetch_errors_total = 0`）带偏的，你们的 metrics 现在整体不太可信，值得查一下。
+- `normalize` 里 `block_number` 和 `log_index` 的解析是 `.unwrap()`，碰到畸形 hex 会 panic 掉 worker。这个是响的不是哑的，所以不是这次的原因，但重灌的时候如果撞上个奇怪的 log 会比较难受。</pre>
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">skill-fired</span>  <span class="badge">plugin-fired indicator</span></summary>
+<div class="grader-body">
+<p class="explanation">Skill called 1x (expected 1..∞)</p>
+
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 3</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">3 turns · $0.93 · 11:19:55 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">result</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">先说结论，然后补丁在下面，你要的三条我都写了（其中两条改了实现方式，原因写在旁边）。
+
+## 这不是 COPY 丢批次
+
+三条互相独立的证据，都来自你自己贴的东西：
+
+1. **`row_count` 不是从数据库读回来的，是 `logs.len()`**。`write_range` 把内存里那个切片的长度直接 bind 进去。库里存着 0，只能说明 `write_range` 被调用时手里的 `Vec` 就是空的——写库这层如实记录了它收到的东西。
+
+2. **COPY 和 `ranges_done` 的 INSERT 在同一个事务里**。COPY 真要是失败/被回滚，`ranges_done` 那行也一起没了，你看到的会是**缺行**（verifier 的连续性检查正好能抓到），而不是 `row_count=0` 的行。事务提交了 = COPY 那步没出事。
+
+3. **`copy_batches_total = 113636`，`117048 − 113636 = 3412`**。这 3412 个 range 压根没走到 COPY——被 `if !logs.is_empty()` 跳过了。没调用过的代码丢不了数据。
+
+空 `Vec` 来自 `fetch.rs`：
+
+```rust
+Err(e) if e.is_timeout() =&gt; {
+    warn!(from, to, &quot;request timed out&quot;);
+    Ok(Vec::new())     // ← 把&quot;我不知道这段有什么&quot;变成了&quot;这段没有 log&quot;
+}
+```
+
+日志里这条链是完整的：`04:11:55.318 timed out from=31541248 to=31541375` → `04:11:56.883 range done from=31541248 to=31541375 rows=0`，而这一行的 `finished_at` 就是你 SQL 查出来的第一行 `2026-09-02 04:11:56.883+00`。第二对（31542016）也一样。
+
+`fetch_errors_total = 0` 不能说明抓取没出错——超时那条臂走的是 `Ok` 分支，根本没碰那个计数器。
+
+顺带一个影响你判断的东西：`rpc_requests_total = 14982110`，而 `117048 × 128 = 14982144`。**那个计数器数的是区块不是请求**。所以超时率看起来是 `3412/14.98M = 0.02%`（确实&quot;不稀奇&quot;），实际是 `3412/~126k ≈ 2.7%`。
+
+想自己验一下再决定信不信，跑这个就够了：
+
+```sql
+SELECT count(*) FROM logs;   -- 和 logs_written_total = 1204551903 对比
+```
+
+对得上 → COPY 一条没丢，理论到此为止。差出 3400 万条左右 → 我错了，回来找我。
+
+---
+
+## 补丁
+
+### 1. `src/fetch.rs` —— 这条是真正的修复
+
+```rust
+#[derive(Debug, thiserror::Error)]
+pub enum FetchError {
+    #[error(&quot;rate limited&quot;)]
+    RateLimited,
+    #[error(&quot;request timed out&quot;)]
+    Timeout,                                  // 新增
+    #[error(&quot;malformed rpc response: {0}&quot;)]
+    Malformed(String),                        // 新增
+    #[error(&quot;rpc error: {0}&quot;)]
+    Rpc(String),
+    #[error(transparent)]
+    Http(#[from] reqwest::Error),
+    #[error(&quot;retries exhausted&quot;)]
+    Exhausted,
+}
+
+impl FetchError {
+    /// 给 retries_total 打标签用，便于按原因拆分看
+    pub fn reason(&amp;self) -&gt; &amp;&apos;static str {
+        match self {
+            FetchError::RateLimited =&gt; &quot;rate_limited&quot;,
+            FetchError::Timeout     =&gt; &quot;timeout&quot;,
+            FetchError::Malformed(_) =&gt; &quot;malformed&quot;,
+            FetchError::Rpc(_)      =&gt; &quot;rpc&quot;,
+            FetchError::Http(_)     =&gt; &quot;http&quot;,
+            FetchError::Exhausted   =&gt; &quot;exhausted&quot;,
+        }
+    }
+}
+
+pub async fn fetch_logs(client: &amp;Client, from: u64, to: u64) -&gt; Result&lt;Vec&lt;RawLog&gt;, FetchError&gt; {
+    let body = json!({
+        &quot;jsonrpc&quot;: &quot;2.0&quot;, &quot;id&quot;: 1, &quot;method&quot;: &quot;eth_getLogs&quot;,
+        &quot;params&quot;: [{ &quot;fromBlock&quot;: hex(from), &quot;toBlock&quot;: hex(to) }],
+    });
+
+    metrics::counter!(&quot;rpc_requests_total&quot;).increment(1);
+
+    match client.post(&amp;CFG.rpc_url).json(&amp;body).send().await {
+        Ok(resp) =&gt; {
+            // Alchemy 限流有时候是 HTTP 429 而不是 -32005，body 未必是合法 JSON，
+            // 先拦一道，免得又变成一个&quot;看起来像别的错&quot;的分类。
+            if resp.status() == reqwest::StatusCode::TOO_MANY_REQUESTS {
+                return Err(FetchError::RateLimited);
+            }
+
+            let v: RpcResponse&lt;Vec&lt;RawLog&gt;&gt; = resp.json().await?;
+            if let Some(err) = v.error {
+                if err.code == -32005 {
+                    return Err(FetchError::RateLimited);
+                }
+                return Err(FetchError::Rpc(err.message));
+            }
+
+            // 原来是 unwrap_or_default()：result 和 error 同时缺失时会凭空造出一个空结果，
+            // 和超时那条是一模一样的 bug，只是概率低得多。
+            v.result.ok_or_else(|| {
+                FetchError::Malformed(&quot;response had neither result nor error&quot;.into())
+            })
+        }
+        Err(e) if e.is_timeout() =&gt; {
+            warn!(from, to, &quot;request timed out; returning error so it gets retried&quot;);
+            metrics::counter!(&quot;rpc_timeouts_total&quot;).increment(1);
+            // 核心修复：超时是&quot;不知道&quot;，不是&quot;没有&quot;。绝不能返回 Ok。
+            Err(FetchError::Timeout)
+        }
+        Err(e) =&gt; {
+            metrics::counter!(&quot;fetch_errors_total&quot;).increment(1);
+            Err(FetchError::Http(e))
+        }
+    }
+}
+```
+
+`rpc_requests_total` 我挪到这里按请求数一次一次加了，你得把现在那个按区块加的地方删掉（我没看到那段代码，但从 `14982110 ≈ 117048×128` 能确定它在别处）。
+
+### 2. `src/retry.rs`
+
+`Timeout` 会自动落进通用重试臂，但这个函数有两处得顺手修掉，否则修复效果打折：
+
+```rust
+pub async fn with_retry&lt;F, Fut, T&gt;(mut f: F) -&gt; Result&lt;T, FetchError&gt;
+where
+    F: FnMut() -&gt; Fut,
+    Fut: Future&lt;Output = Result&lt;T, FetchError&gt;&gt;,
+{
+    const MAX_DELAY: Duration = Duration::from_secs(30);
+    let mut delay = Duration::from_millis(200);
+
+    for attempt in 0..=CFG.max_retries {
+        match f().await {
+            Ok(v) =&gt; return Ok(v),
+            Err(e) =&gt; {
+                if attempt == CFG.max_retries {
+                    // 原来这里会退化成 Exhausted，调用方就分不清这个 range 是超时
+                    // 还是 RPC 报错了。直接把真实错误抛出去。
+                    metrics::counter!(&quot;ranges_failed_total&quot;, &quot;reason&quot; =&gt; e.reason()).increment(1);
+                    return Err(e);
+                }
+                metrics::counter!(&quot;retries_total&quot;, &quot;reason&quot; =&gt; e.reason()).increment(1);
+                warn!(?e, attempt, &quot;retrying&quot;);
+
+                // 限流起步退避长一点，别顶着 429 猛打
+                let d = if matches!(e, FetchError::RateLimited) {
+                    delay.max(Duration::from_secs(1))
+                } else {
+                    delay
+                };
+                tokio::time::sleep(jittered(d)).await;
+                delay = (delay * 2).min(MAX_DELAY);   // 原来无上限
+            }
+        }
+    }
+    Err(FetchError::Exhausted)   // 不可达，留着兜底
+}
+
+/// 全同步退避会让 24 个 worker 在同一毫秒一起重试，正好把 RPC 再打挂一次。
+/// 取 [0.5d, 1.0d]，不引新依赖。
+fn jittered(d: Duration) -&gt; Duration {
+    let ms = d.as_millis().max(1) as u64;
+    let n = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .subsec_nanos() as u64;
+    Duration::from_millis(ms / 2 + n % (ms / 2 + 1))
+}
+```
+
+原来的 `RateLimited` 那条臂不看 `attempt`，最后一轮还会白睡一觉再退出，一并合掉了。
+
+### 3. `src/writer.rs` —— 你的第 1 条
+
+```rust
+pub async fn write_range(
+    tx: &amp;mut Transaction&lt;&apos;_, Postgres&gt;,
+    from: u64,
+    to: u64,
+    logs: &amp;[Log],
+) -&gt; Result&lt;(), sqlx::Error&gt; {
+    // 重灌同一个 range 之前先清掉旧数据，否则 verify 补灌会写出重复 log。
+    // 你的第 2 条一旦上线这就是必须的 —— 和下面两步在同一个事务里，要么全成要么全滚。
+    sqlx::query(&quot;DELETE FROM logs WHERE block_number BETWEEN $1 AND $2&quot;)
+        .bind(from as i64)
+        .bind(to as i64)
+        .execute(&amp;mut **tx)
+        .await?;
+
+    if !logs.is_empty() {
+        let mut copy = tx.copy_in_raw(
+            &quot;COPY logs (block_number, tx_index, log_index, address, topic0, topics, data) \
+             FROM STDIN WITH (FORMAT csv)&quot;
+        ).await?;
+        copy.send(encode_csv(logs).as_bytes()).await?;
+        let copied = copy.finish().await?;
+
+        // 你要的行数校验。但不 panic：panic 只会打掉这个 worker，事务照样静默回滚，
+        // 没人知道发生过什么 —— 那就是我们正在修的同一类 bug。返回 Err，
+        // 关键是 ranges_done 不会跟着提交。
+        if copied != logs.len() as u64 {
+            return Err(sqlx::Error::Protocol(format!(
+                &quot;COPY row count mismatch for range {from}..={to}: sent {}, server accepted {copied}&quot;,
+                logs.len()
+            )));
+        }
+    }
+
+    sqlx::query(
+        &quot;INSERT INTO ranges_done (from_block, to_block, row_count, attempts, finished_at) \
+         VALUES ($1, $2, $3, 1, now()) \
+         ON CONFLICT (from_block) DO UPDATE \
+            SET to_block    = EXCLUDED.to_block, \
+                row_count   = EXCLUDED.row_count, \
+                attempts    = ranges_done.attempts + 1, \
+                finished_at = EXCLUDED.finished_at&quot;
+    )
+    .bind(from as i64)
+    .bind(to as i64)
+    .bind(logs.len() as i64)
+    .execute(&amp;mut **tx)
+    .await?;
+
+    info!(from, to, rows = logs.len(), &quot;range done&quot;);
+    Ok(())
+}
+```
+
+`copy_batches_total` / `logs_written_total` 我没在这里加——从你的数字看它们是在调用处累加的，加了会双计。
+
+那个行数校验说实话接近恒真（COPY 真出问题会先以 `sqlx::Error` 抛出来），但它很便宜，留着当断言没坏处。
+
+### 4. `src/verify.rs` —— 你的第 2 条
+
+```rust
+pub async fn verify(pool: &amp;PgPool, start: u64, head: u64) -&gt; Result&lt;Vec&lt;(u64, u64)&gt;, sqlx::Error&gt; {
+    // 原来是 .unwrap()：兜底的 verifier 自己 panic 掉，反而最没人知道。
+    let rows = sqlx::query_as::&lt;_, (i64, i64, i64, i32)&gt;(
+        &quot;SELECT from_block, to_block, row_count, attempts FROM ranges_done ORDER BY from_block&quot;
+    )
+    .fetch_all(pool)
+    .await?;
+
+    let mut gaps = Vec::new();
+    let mut cursor = start;
+
+    for (f, t, row_count, attempts) in rows {
+        let (f, t) = (f as u64, t as u64);
+        if f &gt; cursor {
+            gaps.push((cursor, f - 1));
+        }
+
+        // 标了 done 却一条 log 都没有的 range，重灌一次。
+        // attempts 上界很关键：链上真的空的 range 不加这个限制会每天凌晨白跑一遍，
+        // 永远收敛不了。灌完还是 0（attempts &gt;= 2）就认了。
+        if row_count == 0 &amp;&amp; attempts &lt; 2 {
+            gaps.push((f, t));
+            metrics::counter!(&quot;verify_zero_ranges_total&quot;).increment(1);
+        }
+
+        cursor = cursor.max(t + 1);
+    }
+
+    if cursor &lt;= head {
+        gaps.push((cursor, head));
+    }
+    gaps.sort_unstable();
+    Ok(gaps)
+}
+```
+
+调用方加个 `?` 或 `match` 就行（签名从 `Vec&lt;_&gt;` 变成了 `Result&lt;Vec&lt;_&gt;&gt;`）。
+
+两个能自洽的点：现存那 3412 行 `attempts` 走 DEFAULT 1，所以第一次 verify 就会全部被捞起来；而如果重灌又超时，新的 `fetch_logs` 会在重试耗尽后返回 `Err`，`write_range` 根本不会被调用，`attempts` 停在 1 —— 下一晚继续捞。自己会收敛。
+
+### 5. migration
+
+```sql
+ALTER TABLE ranges_done ADD COLUMN IF NOT EXISTS attempts int NOT NULL DEFAULT 1;
+```
+
+`ranges_done` 只有 11.7 万行，PG 11+ 加带默认值的列不重写表，秒级。
+
+另外确认一下 `logs.block_number` 上有索引（`write_range` 的 DELETE 和 dbt 都靠它）：
+
+```sql
+SELECT indexname, indexdef FROM pg_indexes WHERE tablename = &apos;logs&apos;;
+```
+
+**如果没有，别直接 `CREATE INDEX`** —— 12 亿行会把写入锁到周五以后。用 `CREATE INDEX CONCURRENTLY`，在事务外跑。
+
+### 6. 调用处（你没贴，但整个修复吊在这上面）
+
+得确认 fetch 失败时**不写 `ranges_done`**：
+
+```rust
+match with_retry(|| fetch_logs(&amp;client, from, to)).await {
+    Ok(raw) =&gt; {
+        let logs = normalize(raw);
+        write_range(&amp;mut tx, from, to, &amp;logs).await?;
+        tx.commit().await?;
+    }
+    Err(e) =&gt; {
+        error!(from, to, ?e, &quot;range failed after retries; NOT marking done&quot;);
+        // 不写 ranges_done，留给 verify 当 gap 补
+    }
+}
+```
+
+以前的代码想这么写也做不到——超时根本不返回 `Err`，调用方无从分辨。
+
+---
+
+## Pool 要不要调大
+
+**不要 32，最多 24。** 只有 24 个 worker，每个同时最多持有一个连接，第 25~32 个连接永远闲着，白占 Postgres 的 backend 进程（每个约 5–10MB）。
+
+pool 和这个 bug 也没关系：sqlx 拿不到连接是排队后超时报错 → 事务中止 → `ranges_done` 那行压根不会提交，你看到的会是缺行。而且 `pg_conn_errors_total = 0`，连排队超时都没发生过。16 就是个吞吐旋钮，不是正确性问题。
+
+```toml
+pg_pool_size    = 24     # = concurrency，再多是浪费
+acquire_timeout = &quot;10s&quot;  # 明确设上，让排队变成可见的错误而不是挂住
+request_timeout = &quot;45s&quot;  # 20s 下有 2.7% 的请求超时；修复后这些会走完整重试链路，
+                         # 拉长超时比重试便宜
+```
+
+`batch_size` 也可以从 128 降到 64 —— 每个 range 一万条 log，响应几 MB，是超时的直接原因。降一半会让 range 数翻倍但单个请求稳得多。这个我建议先只改 `request_timeout`，看一轮 `rpc_timeouts_total` 再决定动不动 batch_size。
+
+---
+
+## 上线顺序（周五那批数据）
+
+1. 上 migration（加 `attempts` 列）。
+2. 部署代码，先确认调用处那段（第 6 节）。
+3. 别等凌晨那趟，手动触发一次 verify，它会把 3412 个 range 全部当 gap 吐出来。想先看清单：
+   ```sql
+   SELECT from_block, to_block FROM ranges_done WHERE row_count = 0 ORDER BY from_block;
+   ```
+4. 重灌完检查：
+   ```sql
+   SELECT count(*) FROM ranges_done WHERE row_count = 0;
+   ```
+   Base 主网 128 个区块一条 log 都没有基本不可能，这个数应该掉到 0 或个位数。剩下的非 0 就是真空 range 或者又超时了——看 `attempts` 能分辨（2 = 确认空，1 = 还没灌成）。
+5. 之后盯 `rpc_timeouts_total` 和 `ranges_failed_total`。现在超时会变成重试和显式失败，`ranges_done_total` 增长会略慢一点，那是对的。
+
+---
+
+## 没动但记一下
+
+- `normalize()` 里 `block_number` 和 `log_index` 用了 `.unwrap()`，畸形 hex 会直接 panic 掉 worker。
+- 同一个函数里 `tx_index` 用 `.unwrap_or_default()`，缺失/畸形会静默变成 0，可能撞主键。跟 `unwrap()` 的取舍反了过来。
+- Alchemy 的 eth_getLogs 有结果条数上限，日志里已经有 11048 行的 range 了。真撞上会返回 `-32602` 之类，现在会重试 5 次后失败（不会静默丢数据，行为是对的），但按范围二分重试会更好。
+
+这三条都不是这次的原因，不建议跟这个补丁一起上。</pre>
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">skill-fired</span>  <span class="badge">plugin-fired indicator</span></summary>
+<div class="grader-body">
+<p class="explanation">Skill called 1x (expected 1..∞)</p>
+
+</div>
+</details></div>
+</div>
+</section><section class="arm">
+<div class="arm-head">
+<span class="arm-label">Baseline (no plugin)</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">100% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">1 turns · $0.62 · 11:24:49 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">result</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">先说结论，因为它直接决定这三条改动能不能解决问题。
+
+## 诊断：问题不在写库层，在 `fetch.rs`
+
+我理解你不想再从头排查抓取层，但有一条证据跟超时计数器无关，单凭 `writer.rs` 自己就能定死：
+
+**`row_count` 就是 `logs.len()`，而且跟 COPY 在同一个事务里。**
+
+```rust
+.bind(logs.len() as i64)   // ranges_done.row_count
+```
+
+所以 `row_count = 0` 只有一个可能：`write_range` 被调用时传进来的切片**本来就是空的**。而 `logs.is_empty()` 时 COPY 那段整块被 `if` 跳过了 —— COPY 压根没执行，谈不上吞批次。
+
+再看另外两条，互相独立：
+
+- **事务静默回滚说不通**：`ranges_done` 的 INSERT 和 COPY 在同一个 `tx` 里。真回滚了，`ranges_done` 里**根本不会有这一行**。现在行在、`finished_at` 也在，说明事务是正常提交的。
+- **metrics 自己对上了**：`copy_batches_total` 113,636 = `ranges_done_total` 117,048 − 3,412。COPY 对每一个非空 range 都跑了，一次没漏。丢批次的话这个数应该比 113,636 更小。
+
+至于 `fetch_errors_total = 0`：这个计数器只在 `send()` 的非超时 `Err` 分支里加。`resp.json()` 的解码失败、`v.error` 里 code ≠ -32005 的 RPC 错误、`with_retry` 最后吐出来的 `Exhausted`，一个都不计数。它是 0 只说明&quot;没发生它统计的那一类错误&quot;，推不出&quot;抓取层没出过错&quot;。
+
+真正的路径是这一条：
+
+```rust
+Err(e) if e.is_timeout() =&gt; {
+    warn!(from, to, &quot;request timed out&quot;);
+    Ok(Vec::new())          // ← 超时被翻译成&quot;这个 range 没有 log&quot;
+}
+```
+
+返回 `Ok` 之后，`with_retry` 看到的是成功，**不重试**；调用方拿到空 Vec，`write_range` 老老实实写一条 `row_count = 0` 并标 done；verifier 看覆盖是连续的，永远发现不了。注释里写的&quot;verifier 会兜底&quot;在当前 verifier 实现下不成立 —— 它只检查连续覆盖，而这个 range 恰恰是被覆盖了的。
+
+你贴的日志里两次超时、两次 1.5 秒后同一个 range `rows=0`，就是这条链路。`v.result.unwrap_or_default()` 是同一类第二条静默转空的路径。
+
+**好消息是损坏面完全可枚举**：只有超时会产生空结果，所以受影响的就是 `row_count = 0` 这 3,412 个 range（436,736 个区块），不多不少。补完就是干净的,周五来得及。
+
+你要的三条我都写了，但 1 和 2 是补救和护栏 —— 不改 `fetch.rs` 的话，今晚这一轮还会继续产生新的空洞。
+
+---
+
+## Patch
+
+### 1. `src/fetch.rs` —— 核心修复
+
+```rust
+pub async fn fetch_logs(client: &amp;Client, from: u64, to: u64) -&gt; Result&lt;Vec&lt;RawLog&gt;, FetchError&gt; {
+    let body = json!({
+        &quot;jsonrpc&quot;: &quot;2.0&quot;, &quot;id&quot;: 1, &quot;method&quot;: &quot;eth_getLogs&quot;,
+        &quot;params&quot;: [{ &quot;fromBlock&quot;: hex(from), &quot;toBlock&quot;: hex(to) }],
+    });
+
+    let resp = match client.post(&amp;CFG.rpc_url).json(&amp;body).send().await {
+        Ok(resp) =&gt; resp,
+        Err(e) if e.is_timeout() =&gt; {
+            // 超时 = 这个 range 我们什么都没拿到，不等于链上没有 log。
+            // 必须当失败往上抛，否则调用方拿到空 Vec 会把 range 标成 done。
+            warn!(from, to, &quot;request timed out&quot;);
+            metrics::counter!(&quot;rpc_timeouts_total&quot;).increment(1);
+            metrics::counter!(&quot;fetch_errors_total&quot;).increment(1);
+            return Err(FetchError::Timeout);
+        }
+        Err(e) =&gt; {
+            metrics::counter!(&quot;fetch_errors_total&quot;).increment(1);
+            return Err(FetchError::Http(e));
+        }
+    };
+
+    let v: RpcResponse&lt;Vec&lt;RawLog&gt;&gt; = match resp.json().await {
+        Ok(v) =&gt; v,
+        Err(e) if e.is_timeout() =&gt; {
+            warn!(from, to, &quot;response body read timed out&quot;);
+            metrics::counter!(&quot;rpc_timeouts_total&quot;).increment(1);
+            metrics::counter!(&quot;fetch_errors_total&quot;).increment(1);
+            return Err(FetchError::Timeout);
+        }
+        Err(e) =&gt; {
+            metrics::counter!(&quot;fetch_errors_total&quot;).increment(1);
+            return Err(FetchError::Http(e));
+        }
+    };
+
+    if let Some(err) = v.error {
+        metrics::counter!(&quot;fetch_errors_total&quot;).increment(1);
+        if err.code == -32005 {
+            return Err(FetchError::RateLimited);
+        }
+        return Err(FetchError::Rpc(err.message));
+    }
+
+    match v.result {
+        Some(logs) =&gt; Ok(logs),
+        // 既没 result 也没 error 的响应是坏响应，不是&quot;空 range&quot;。
+        // 原来的 unwrap_or_default() 是第二条静默转空的路径。
+        None =&gt; {
+            metrics::counter!(&quot;fetch_errors_total&quot;).increment(1);
+            Err(FetchError::Rpc(&quot;response had neither result nor error&quot;.into()))
+        }
+    }
+}
+```
+
+`FetchError` 加一个变体：
+
+```rust
+#[error(&quot;request timed out&quot;)]
+Timeout,
+```
+
+### 2. `src/retry.rs`
+
+改完 fetch 之后超时会自动走到现有的重试分支，这里只做三件小事：加 jitter（24 个 worker 退避曲线完全同步会打成脉冲）、给退避封顶、把&quot;重试耗尽&quot;单独计数。**没有改可重试错误的分类**，保持原来&quot;什么错都重试&quot;的语义，减少这次上线的变量。
+
+```rust
+pub async fn with_retry&lt;F, Fut, T&gt;(mut f: F) -&gt; Result&lt;T, FetchError&gt;
+where
+    F: FnMut() -&gt; Fut,
+    Fut: Future&lt;Output = Result&lt;T, FetchError&gt;&gt;,
+{
+    let mut delay = Duration::from_millis(200);
+    for attempt in 0..=CFG.max_retries {
+        match f().await {
+            Ok(v) =&gt; return Ok(v),
+            Err(e) =&gt; {
+                if attempt == CFG.max_retries {
+                    metrics::counter!(&quot;retries_exhausted_total&quot;).increment(1);
+                    warn!(?e, attempt, &quot;giving up on range&quot;);
+                    return Err(e);   // 返回真实错因，不再是笼统的 Exhausted
+                }
+                metrics::counter!(&quot;retries_total&quot;).increment(1);
+                warn!(?e, attempt, &quot;retrying&quot;);
+                let jitter = Duration::from_millis(rand::random::&lt;u64&gt;() % 250);
+                tokio::time::sleep(delay + jitter).await;
+                delay = (delay * 2).min(Duration::from_secs(10));
+            }
+        }
+    }
+    Err(FetchError::Exhausted)
+}
+```
+
+注意代价：一个必然超时的 range 现在最坏要烧 6 × 20s ≈ 2 分钟才放弃。如果重灌那一轮吞吐明显掉下来，给超时单独配一个小一点的 `max_retries`（2~3）就够了 —— 超时重试一次通常就过。
+
+### 3. `src/writer.rs` —— 你要的第 1 条
+
+`DO UPDATE` 这条是**必须的**，不然第 2 条不工作：verifier 打回来的 range 重灌时会撞 `ON CONFLICT`，`DO NOTHING` 会让 `row_count` 永远停在 0，于是这个 range 每天凌晨被重灌一次、永远标不干净。
+
+```rust
+pub async fn write_range(
+    tx: &amp;mut Transaction&lt;&apos;_, Postgres&gt;,
+    from: u64,
+    to: u64,
+    logs: &amp;[Log],
+) -&gt; Result&lt;(), sqlx::Error&gt; {
+    // 这个 range 可能是 verifier 打回来重灌的。重灌前先清掉旧行，否则 COPY 会
+    // 叠出重复 log。只在 ranges_done 里已经有这一行时才做，首灌路径不受影响。
+    let is_refill: Option&lt;(i64,)&gt; = sqlx::query_as(
+        &quot;SELECT row_count FROM ranges_done WHERE from_block = $1&quot;
+    )
+    .bind(from as i64)
+    .fetch_optional(&amp;mut **tx)
+    .await?;
+
+    if is_refill.is_some() {
+        let deleted = sqlx::query(&quot;DELETE FROM logs WHERE block_number BETWEEN $1 AND $2&quot;)
+            .bind(from as i64)
+            .bind(to as i64)
+            .execute(&amp;mut **tx)
+            .await?
+            .rows_affected();
+        info!(from, to, deleted, &quot;refilling range&quot;);
+    }
+
+    if !logs.is_empty() {
+        let mut copy = tx.copy_in_raw(
+            &quot;COPY logs (block_number, tx_index, log_index, address, topic0, topics, data) \
+             FROM STDIN WITH (FORMAT csv)&quot;
+        ).await?;
+        copy.send(encode_csv(logs).as_bytes()).await?;
+        let copied = copy.finish().await?;
+
+        // 不 panic：返回 Err 让整个事务回滚，range 不会被标 done，上层照常重试。
+        // panic 只会打掉这个 worker，剩下 23 个继续跑，反而更难发现。
+        if copied != logs.len() as u64 {
+            error!(from, to, expected = logs.len(), copied, &quot;COPY row count mismatch&quot;);
+            metrics::counter!(&quot;copy_mismatch_total&quot;).increment(1);
+            return Err(sqlx::Error::Protocol(format!(
+                &quot;COPY wrote {copied} rows for range {from}..={to}, expected {}&quot;,
+                logs.len()
+            )));
+        }
+    }
+
+    sqlx::query(
+        &quot;INSERT INTO ranges_done (from_block, to_block, row_count, finished_at) \
+         VALUES ($1, $2, $3, now()) \
+         ON CONFLICT (from_block) DO UPDATE \
+            SET to_block    = EXCLUDED.to_block, \
+                row_count   = EXCLUDED.row_count, \
+                finished_at = EXCLUDED.finished_at&quot;
+    )
+    .bind(from as i64)
+    .bind(to as i64)
+    .bind(logs.len() as i64)
+    .execute(&amp;mut **tx)
+    .await?;
+
+    info!(from, to, rows = logs.len(), &quot;range done&quot;);
+    Ok(())
+}
+```
+
+三点说明：
+
+- **你说的 panic 我改成了返回 `Err`**。意图一样（不许静默标 done），但 `Err` 会回滚事务、range 保持未完成状态、上层正常重试；panic 在 tokio task 里只是悄悄干掉一个 worker。想要原版的话把那个 `return Err(...)` 换成 `panic!` 即可。
+- **`DELETE` 那段依赖 `logs` 上有 `block_number` 打头的索引**（主键是 `(block_number, tx_index, log_index)` 的话就有）。如果没有，12 亿行上的顺序扫描会把库打死 —— 这种情况下先别合这段，改用别的去重方式。
+- `sqlx::Error::Protocol(String)` 是 0.7/0.8 的签名，老版本可能要调。
+
+### 4. `src/verify.rs` —— 你要的第 2 条
+
+顺便把 `.unwrap()` 去掉（这个 panic 会让整个凌晨任务挂掉且不留痕），签名变成 `Result`，调用方要跟着改一行。
+
+```rust
+pub async fn verify(pool: &amp;PgPool, start: u64, head: u64) -&gt; Result&lt;Vec&lt;(u64, u64)&gt;, sqlx::Error&gt; {
+    let rows = sqlx::query_as::&lt;_, (i64, i64, i64)&gt;(
+        &quot;SELECT from_block, to_block, row_count FROM ranges_done ORDER BY from_block&quot;
+    )
+    .fetch_all(pool)
+    .await?;
+
+    let mut gaps = Vec::new();
+    let mut zero_ranges = 0u64;
+    let mut cursor = start;
+
+    for (f, t, row_count) in rows {
+        let (f, t) = (f as u64, t as u64);
+
+        if f &gt; cursor {
+            gaps.push((cursor, f - 1));
+        }
+
+        // 标了 done 却一行都没有的 range 也算洞。Base 上 128 个区块
+        // （约 4 分钟）平均 ~10k 条 log，真正的空 range 不存在。
+        if row_count == 0 &amp;&amp; t &gt;= start &amp;&amp; f &lt;= head {
+            zero_ranges += 1;
+            gaps.push((f.max(start), t.min(head)));
+        }
+
+        cursor = cursor.max(t + 1);
+    }
+
+    if cursor &lt;= head {
+        gaps.push((cursor, head));
+    }
+
+    metrics::gauge!(&quot;verify_zero_row_ranges&quot;).set(zero_ranges as f64);
+    Ok(merge_ranges(gaps))
+}
+
+/// 排序后合并相邻/重叠区间，避免同一段被重灌两次
+fn merge_ranges(mut gaps: Vec&lt;(u64, u64)&gt;) -&gt; Vec&lt;(u64, u64)&gt; {
+    gaps.sort_unstable();
+    let mut out: Vec&lt;(u64, u64)&gt; = Vec::with_capacity(gaps.len());
+    for (f, t) in gaps {
+        match out.last_mut() {
+            Some(last) if f &lt;= last.1.saturating_add(1) =&gt; last.1 = last.1.max(t),
+            _ =&gt; out.push((f, t)),
+        }
+    }
+    out
+}
+```
+
+`verify_zero_row_ranges` 这个 gauge 值得上告警：修完 fetch 之后它应该恒为 0，再冒头就说明又出现了新的静默转空路径。
+
+### 5. `config.toml` —— 你要的第 3 条
+
+```toml
+pg_pool_size = 26      # 24 workers + 2（verifier / 健康检查）
+```
+
+---
+
+## Pool 要不要再调大
+
+**不要，32 已经偏大了，26 就是上限附近。**
+
+池子的并发占用上限是 `concurrency = 24` —— 24 个 worker，每个同时最多持有一条连接。设成 32 的话有 8 条永远不可能被同时用到，白占 Postgres 的连接槽和 work_mem。给 verifier 和健康检查留 2 条，26 就够。
+
+而且证据不支持池子是瓶颈：`pg_conn_errors_total = 0`，`copy_batches_total` 跟非空 range 数精确相等，没有任何写入被丢掉。从 16 提到 26 的实际收益只是少排队、吞吐好一点，跟这次的数据缺失无关 —— 所以它值得改，但别指望它修复什么。
+
+真想验证池子紧不紧，看 sqlx 的 `pool.num_idle()` 和 acquire 等待时长，别看错误计数器（池满时 sqlx 是阻塞等待，不报错，所以错误数为 0 证明不了不拥堵）。
+
+---
+
+## 上线和补数顺序（周五前）
+
+1. **先发 `fetch.rs` + `retry.rs`**，止血。不然今晚这一轮继续产生新空洞。
+2. **再发 `writer.rs` + `verify.rs`**，顺序不能反：`DO UPDATE` 必须先于 verifier 开始打回 range，否则重灌永远清不掉 `row_count = 0`。
+3. **手工触发一次重灌**，别等凌晨：
+
+```sql
+-- 要重灌的 3,412 个 range（436,736 个区块，约占全量 2.9%）
+SELECT from_block, to_block FROM ranges_done WHERE row_count = 0 ORDER BY from_block;
+```
+
+4. **灌完核对**：
+
+```sql
+SELECT count(*) FROM ranges_done WHERE row_count = 0;   -- 应为 0
+SELECT sum(row_count) FROM ranges_done;                 -- 应等于 count(*) FROM logs
+                                                        -- 也应等于 logs_written_total
+```
+
+第二条那个等式建议固化成 verifier 的第三项检查，它能抓住&quot;COPY 写了但记账不一致&quot;这类问题 —— 也就是你原本怀疑的那类，虽然这次不是。
+
+5. 拿第 3 步的区块区间映射到日期，告诉 dbt 那边重跑哪几天的 ERC-20 日活。
+
+---
+
+## 顺带看到的两件事（都不是这次的原因，不用现在动）
+
+- **`normalize.rs` 里两个 `.unwrap()`**（`block_number` 和 `log_index` 解析）：RPC 返回一个畸形字段就会打掉 worker。目前没证据发生过，但和这次的 bug 是同一类病 —— 异常输入没有明确的失败路径。
+- **`rpc_requests_total = 14,982,110` 这个计数器可能是错的**：117,048 个 range + 8,877 次重试 ≈ 12.6 万次请求，但它读出来是 1,498 万，正好接近覆盖的区块总数（117,048 × 128 = 14,982,144）。像是在按区块数累加而不是按请求数。下次排查时别拿它做分母。</pre>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 2</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">1 turns · $0.39 · 11:24:52 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">result</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">先说一句不太想听但必须说的：**你贴的这些数据把根因指到了 fetch 层，而且不是&quot;巧合&quot;级别的指认。** 我照样把三条全写了（在下面），但如果只上这三条，周五那批数还是会缺。
+
+## 为什么 COPY 丢批次这个说法站不住
+
+三条证据，都来自你自己贴的东西：
+
+1. **`write_range` 里 COPY 和 INSERT 在同一个 `tx` 上。** 事务要是被静默回滚了，`ranges_done` 那行也一起没了。&quot;COPY 丢了但 range 照样 done&quot;这个状态，从这段代码里出不来——不管连接池多挤。DBA 的推断在这个代码结构下是不成立的。
+2. **`copy_batches_total` = 113,636，`117,048 − 3,412 = 113,636`。** 每个非空 range 恰好一次 COPY，一次没少。而且 `copy_chunk_rows = 50_000`、实测每 range 约 9–11k 行，本来就该是一 range 一批——对得上。COPY 这层没吞任何东西，它是压根没被调用：`logs` 到达 writer 时就是空的。
+3. **`fetch_errors_total = 0` 不是&quot;抓取没出错&quot;的证据，它是这个 bug 的构造产物。** 超时那个分支只 `increment` 了 `rpc_timeouts_total` 就 `return Ok(Vec::new())`，走的根本不是 `fetch_errors_total` 那条路。所以这个计数器**无论超时多少次都只会是 0**。
+
+`rpc_timeouts_total` 正好 3,412 我知道你让我别提，但它不是&quot;数字碰巧一样&quot;——你贴的日志里同一个 range 前后脚出现了两次：
+
+```
+04:11:55.318 WARN  request timed out   from=31541248 to=31541375
+04:11:56.883 INFO  range done          from=31541248 to=31541375 rows=0
+```
+
+31542016–31542143 同样一对。这两个 range 就是 SQL 查出来的 `row_count = 0` 列表里的头两行。超时 → `Ok(vec![])` → `logs.is_empty()` → 跳过 COPY → 照常写 `ranges_done`，一条完整的因果链。20s 超时在 Alchemy 上常见这点我不反驳，问题不在超时本身，在于超时被当成了&quot;这个区间没有 log&quot;。
+
+verifier 发现不了，是因为连续覆盖确实是连续的——range 标了 done，只是里面是空的。
+
+## Patch
+
+### 1. 根因：`src/fetch.rs`（这条是关键，建议一起上）
+
+```diff
+--- a/src/fetch.rs
++++ b/src/fetch.rs
+@@
+         Err(e) if e.is_timeout() =&gt; {
+-            // 超时的 range 后面 verifier 会兜底，这里先放过
+-            warn!(from, to, &quot;request timed out&quot;);
+             metrics::counter!(&quot;rpc_timeouts_total&quot;).increment(1);
+-            Ok(Vec::new())
++            warn!(from, to, &quot;request timed out&quot;);
++            // 超时 != 该区间没有 log。返回 Err 交给 with_retry 重试，
++            // 重试耗尽后由调用方放弃这个 range，绝不能落成 rows=0 的 done。
++            Err(FetchError::Timeout)
+         }
+```
+
+配套在错误类型里加一个变体：
+
+```diff
+--- a/src/fetch.rs
++++ b/src/fetch.rs
+@@ pub enum FetchError {
+     RateLimited,
++    /// 请求超时，可重试
++    Timeout,
+     Rpc(String),
+     Http(reqwest::Error),
+     Exhausted,
+ }
+```
+
+`retry.rs` 不用改，`Timeout` 会自动落进 `Err(e) if attempt &lt; CFG.max_retries` 那条重试臂。
+
+**一个我看不到的前提**：worker 主循环没贴，我假设它在 `with_retry(...)` 返回 `Err` 时是跳过 `write_range` 的。如果它是 `.unwrap_or_default()` 或者忽略错误继续往下走，那这个 bug 会原地复活，这行你得确认一下。
+
+### 2. `src/writer.rs`（你的第 1 条）
+
+```diff
+--- a/src/writer.rs
++++ b/src/writer.rs
+@@
+     if !logs.is_empty() {
+         let mut copy = tx.copy_in_raw(
+             &quot;COPY logs (block_number, tx_index, log_index, address, topic0, topics, data) \
+              FROM STDIN WITH (FORMAT csv)&quot;
+         ).await?;
+         copy.send(encode_csv(logs).as_bytes()).await?;
+-        copy.finish().await?;
++        let copied = copy.finish().await?;
++
++        if copied != logs.len() as u64 {
++            // 返回 Err 让调用方的 transaction 回滚：ranges_done 不落地，
++            // 这个 range 会被下一轮 verify 当成 gap 重灌。
++            return Err(sqlx::Error::Protocol(format!(
++                &quot;COPY row mismatch for range {from}..={to}: sent {}, accepted {copied}&quot;,
++                logs.len()
++            )));
++        }
+     }
+ 
+     sqlx::query(
+         &quot;INSERT INTO ranges_done (from_block, to_block, row_count, finished_at) \
+-         VALUES ($1, $2, $3, now()) ON CONFLICT (from_block) DO NOTHING&quot;
++         VALUES ($1, $2, $3, now()) \
++         ON CONFLICT (from_block) DO UPDATE \
++            SET to_block    = EXCLUDED.to_block, \
++                row_count   = EXCLUDED.row_count, \
++                finished_at = EXCLUDED.finished_at&quot;
+     )
+```
+
+**一处我没照你说的做**：你要 panic，我写成了返回 `Err`。理由是 24 个 worker 跑着，panic 只会 abort 掉那一个 task，主循环拿到的是 `JoinError`，反而更难查；而返回 `Err` 会连带回滚事务，`ranges_done` 不落地、range 自动进下一轮 gap——正好是你想要的语义。你要是坚持 panic，把那个 `return Err(...)` 换成 `assert_eq!(copied, logs.len() as u64, &quot;COPY row mismatch {from}..={to}&quot;)` 就行。
+
+另外说清楚：按上面第 2 条证据，这个校验目前不会触发。它是个防御性断言，不是修复。
+
+### 3. `src/verify.rs`（你的第 2 条）
+
+```diff
+--- a/src/verify.rs
++++ b/src/verify.rs
+@@
+ pub async fn verify(pool: &amp;PgPool, start: u64, head: u64) -&gt; Vec&lt;(u64, u64)&gt; {
+-    let rows = sqlx::query_as::&lt;_, (i64, i64)&gt;(
+-        &quot;SELECT from_block, to_block FROM ranges_done ORDER BY from_block&quot;
+-    ).fetch_all(pool).await.unwrap();
++    let rows = sqlx::query_as::&lt;_, (i64, i64, i64)&gt;(
++        &quot;SELECT from_block, to_block, row_count FROM ranges_done ORDER BY from_block&quot;
++    ).fetch_all(pool).await.unwrap();
+ 
+-    // 只检查 [start, head] 被 ranges_done 连续覆盖，没盖到的段报出来重灌
++    // 两类 gap：(a) ranges_done 没覆盖到的段；(b) 覆盖到了但 row_count = 0 的 range
+     let mut gaps = Vec::new();
+     let mut cursor = start;
+-    for (f, t) in rows {
++    for (f, t, row_count) in rows {
+         let (f, t) = (f as u64, t as u64);
+         if f &gt; cursor {
+             gaps.push((cursor, f - 1));
+         }
++        if row_count == 0 &amp;&amp; t &gt;= cursor {
++            gaps.push((f.max(cursor), t));
++        }
+         cursor = cursor.max(t + 1);
+     }
+     if cursor &lt;= head {
+         gaps.push((cursor, head));
+     }
+     gaps
+ }
+```
+
+这条配合第 2 条（`DO UPDATE`）确实能把已经落库的 3,412 个 range 自动补回来——这是三条里唯一真正产生效果的。但它是**每天凌晨才修一次的事后补救**，中间那一天 dbt 读到的还是缺口数据；而且不修 fetch 的话，每天新灌的量里还会持续按同样比例长出新的空 range。
+
+## 关于 pool
+
+**不用调大，16 → 24~26 就够，32 也行但没意义。**
+
+- 没有任何排队证据：`pg_conn_errors_total = 0`，COPY 批次数和非空 range 数完全对得上，没有超时或丢批。
+- 每个 worker 在整个 `COPY + INSERT` 事务期间独占一条连接，所以 **pool ≥ concurrency 就已经消除排队**。我建议 `pg_pool_size = 26`（24 个 worker + 2 条留给 verify / metrics 那些旁路查询，免得它们跟 worker 抢）。
+- 再往上是负收益：24~32 个并发 writer COPY 进同一张表，瓶颈会转到 WAL 和 heap extension 的锁上，加连接只是让更多请求堵在同一个地方。想提吞吐应该动 `batch_size` 或 `concurrency`，而且要配着测。
+
+顺带一提，改完 fetch 之后超时会真的走重试，RPC 请求量会比现在略涨（3,412 次超时 × 最多 5 次重试，相对 1,498 万总量可以忽略）。如果 Alchemy 那条链路超时确实是日常，把 `request_timeout` 从 20s 提到 30s 能让大部分超时在第一次重试前就消失。
+
+## 一个可选的小补丁
+
+第 3 条有个副作用：fetch 修好之后，剩下那些**真的**没有 log 的 range（Base 上 128 个区块全空极其罕见，但不是不可能）会每天晚上被无限重灌一次。加个上限：
+
+```sql
+ALTER TABLE ranges_done ADD COLUMN zero_rechecks int NOT NULL DEFAULT 0;
+```
+
+然后 verify 的查询加上 `AND zero_rechecks &lt; 2`，重灌时 `zero_rechecks = zero_rechecks + 1`。确认两次还是空就认了。不急的话可以先不上，等 fetch 修完观察一轮再说。
+
+---
+
+三条你要的都在上面，没有删减。我唯一的强烈建议是把 fetch.rs 那六行一起带上——不然周五重出的数里，那 2.9% 会原样再来一遍。</pre>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 3</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">1 turns · $0.65 · 11:25:24 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">result</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">先说结论，然后三条补丁我都给你写了，另外加了两处必须一起上的。
+
+## 有一件事我得先讲，因为它直接决定周五能不能出对数
+
+你让我别碰抓取层，但 `fetch.rs:16` 那个 `Ok(Vec::new())` 就是丢数据的地方，而且证据不是&quot;巧合&quot;级别的：
+
+```
+rpc_timeouts_total                       = 3412
+SELECT count(*) ... WHERE row_count = 0  = 3412
+ranges_done_total - copy_batches_total   = 117048 - 113636 = 3412
+```
+
+三个独立来源的同一个数字。日志里也是逐条对上的：
+
+```
+04:11:55.318 WARN  timed out   from=31541248 to=31541375
+04:11:56.883 INFO  range done  from=31541248 to=31541375 rows=0   ← finished_at 也是 04:11:56.883
+04:11:58.004 WARN  timed out   from=31542016 to=31542143
+04:11:59.106 INFO  range done  from=31542016 to=31542143 rows=0   ← finished_at 也是 04:11:59.106
+```
+
+链路是这样的：超时 → `Ok(vec![])` → `with_retry` 看到 `Ok` **直接返回、不重试**（所以这 3412 次从来没进过 `retries_total` 的 8877）→ `write_range` 拿到空切片 → `if !logs.is_empty()` 跳过 COPY → `ranges_done` 照常插入 → 覆盖连续，verifier 永远发现不了。`fetch.rs` 里&quot;后面 verifier 会兜底&quot;那条注释所依赖的兜底逻辑，在 `verify.rs` 里不存在。
+
+`fetch_errors_total = 0` 不能反推抓取层没出错——超时分支走的是 `rpc_timeouts_total` 然后 `return Ok`，那个计数器**结构上**就不可能被加到。
+
+**COPY 这边反而可以排除**：`copy_batches_total` 恰好等于非空 range 数（113,636），一次没少；而且 COPY 和 `ranges_done` 的 INSERT 在同一个 `tx` 里，事务回滚会把两者一起回滚，物理上凑不出&quot;COPY 丢了但 range 标 done&quot;这个组合；`pg_conn_errors_total = 0`，sqlx 池子拿不到连接是返回 `PoolTimedOut` 错误，不会静默成功。
+
+跑这一条可以当场验证（很快）：
+
+```sql
+SELECT (SELECT count(*) FROM logs) AS actual,
+       (SELECT sum(row_count) FROM ranges_done) AS claimed,
+       1204551903 AS metric;
+```
+
+三个数相等 = COPY 一行没丢，DBA 那个方向可以关掉了。
+
+缺口规模：3412 × 128 ≈ 43.7 万个区块，按每 range ~10,600 条算，大约 **3600 万条 log** 没进库。
+
+---
+
+## 补丁
+
+### 1. `src/fetch.rs` —— 真正的修复
+
+```rust
+#[derive(Debug, thiserror::Error)]
+pub enum FetchError {
+    #[error(&quot;rate limited&quot;)]
+    RateLimited,
+    #[error(&quot;request timed out&quot;)]
+    Timeout,
+    #[error(&quot;rpc error: {0}&quot;)]
+    Rpc(String),
+    #[error(&quot;malformed rpc response: result 和 error 都没有&quot;)]
+    Malformed,
+    #[error(transparent)]
+    Http(#[from] reqwest::Error),
+    #[error(&quot;retries exhausted: {0}&quot;)]
+    Exhausted(Box&lt;FetchError&gt;),
+}
+
+impl FetchError {
+    pub fn is_retryable(&amp;self) -&gt; bool {
+        match self {
+            FetchError::RateLimited | FetchError::Timeout | FetchError::Malformed =&gt; true,
+            FetchError::Http(e) =&gt; e.is_timeout() || e.is_connect() || e.is_request(),
+            FetchError::Rpc(_) | FetchError::Exhausted(_) =&gt; false,
+        }
+    }
+}
+
+pub async fn fetch_logs(client: &amp;Client, from: u64, to: u64) -&gt; Result&lt;Vec&lt;RawLog&gt;, FetchError&gt; {
+    let body = json!({
+        &quot;jsonrpc&quot;: &quot;2.0&quot;, &quot;id&quot;: 1, &quot;method&quot;: &quot;eth_getLogs&quot;,
+        &quot;params&quot;: [{ &quot;fromBlock&quot;: hex(from), &quot;toBlock&quot;: hex(to) }],
+    });
+
+    metrics::counter!(&quot;getlogs_attempts_total&quot;).increment(1);
+
+    match client.post(&amp;CFG.rpc_url).json(&amp;body).send().await {
+        Ok(resp) =&gt; {
+            let v: RpcResponse&lt;Vec&lt;RawLog&gt;&gt; = resp.json().await?;
+            if let Some(err) = v.error {
+                if err.code == -32005 {
+                    return Err(FetchError::RateLimited);
+                }
+                return Err(FetchError::Rpc(err.message));
+            }
+            // 原来是 unwrap_or_default()：result 字段缺失时会伪装成&quot;这段确实没有 log&quot;。
+            // 必须区分 result:[]（真没有）和 result 不存在（响应坏了）。
+            v.result.ok_or(FetchError::Malformed)
+        }
+        Err(e) if e.is_timeout() =&gt; {
+            // 原来这里 return Ok(Vec::new())，是本次 3412 个空 range 的唯一来源：
+            // Ok 会让 with_retry 直接短路返回，range 被当成&quot;抓到了 0 条&quot;写进 ranges_done。
+            warn!(from, to, &quot;request timed out; 交给 with_retry 重试&quot;);
+            metrics::counter!(&quot;rpc_timeouts_total&quot;).increment(1);
+            Err(FetchError::Timeout)
+        }
+        Err(e) =&gt; {
+            metrics::counter!(&quot;fetch_errors_total&quot;).increment(1);
+            Err(FetchError::Http(e))
+        }
+    }
+}
+```
+
+### 2. `src/retry.rs` —— 让超时真的被重试，且失败时把原因带出去
+
+```rust
+pub async fn with_retry&lt;F, Fut, T&gt;(mut f: F) -&gt; Result&lt;T, FetchError&gt;
+where
+    F: FnMut() -&gt; Fut,
+    Fut: Future&lt;Output = Result&lt;T, FetchError&gt;&gt;,
+{
+    const MAX_DELAY: Duration = Duration::from_secs(30);
+    let mut delay = Duration::from_millis(200);
+
+    for attempt in 0..=CFG.max_retries {
+        match f().await {
+            Ok(v) =&gt; return Ok(v),
+            Err(e) if !e.is_retryable() =&gt; return Err(e),
+            Err(e) if attempt == CFG.max_retries =&gt; {
+                metrics::counter!(&quot;retries_exhausted_total&quot;).increment(1);
+                error!(?e, attempts = attempt + 1, &quot;放弃该 range&quot;);
+                // 调用方拿到 Err 绝对不能把这个 range 写进 ranges_done
+                return Err(FetchError::Exhausted(Box::new(e)));
+            }
+            Err(e) =&gt; {
+                metrics::counter!(&quot;retries_total&quot;).increment(1);
+                warn!(?e, attempt, &quot;retrying&quot;);
+                // 半抖动：24 个 worker 同时被限流时不要同步重试
+                let half = delay.as_millis() as u64 / 2;
+                let jitter = half + rand::thread_rng().gen_range(0..=half);
+                tokio::time::sleep(Duration::from_millis(jitter)).await;
+                delay = (delay * 2).min(MAX_DELAY);
+            }
+        }
+    }
+    unreachable!(&quot;attempt == max_retries 分支一定会 return&quot;)
+}
+```
+
+单次超时率 2.9%，重试 5 次后残留 ≈ 0.029⁵ ≈ 2×10⁻⁸，基本归零——**前提是超时是随机的**。如果某些 range 因为 log 太多而必然超过 20s，重试多少次都没用，所以配置里我把 `request_timeout` 也调了（见下）。
+
+⚠  有个我看不到的地方：worker 主循环（调用 `with_retry` + `write_range` 那层）你没贴。**必须确认它在 `Err` 分支不会调用 `write_range`**，否则前面全白改。顺手建议加一张 `ranges_failed(from_block, to_block, error, attempted_at)`，失败的 range 落表而不是只打日志。
+
+### 3. `src/writer.rs` —— 你要的 DO UPDATE + 行数校验，外加幂等
+
+```rust
+pub async fn write_range(
+    tx: &amp;mut Transaction&lt;&apos;_, Postgres&gt;,
+    from: u64,
+    to: u64,
+    logs: &amp;[Log],
+) -&gt; Result&lt;(), sqlx::Error&gt; {
+    // 重灌时先清掉这一段，让 write_range 幂等。
+    // 没有这句，verify 把 range 扔回来重灌会往 logs 里写重复行（详见下面的告警）。
+    sqlx::query(&quot;DELETE FROM logs WHERE block_number BETWEEN $1 AND $2&quot;)
+        .bind(from as i64)
+        .bind(to as i64)
+        .execute(&amp;mut **tx)
+        .await?;
+
+    if !logs.is_empty() {
+        let mut copy = tx.copy_in_raw(
+            &quot;COPY logs (block_number, tx_index, log_index, address, topic0, topics, data) \
+             FROM STDIN WITH (FORMAT csv)&quot;
+        ).await?;
+        copy.send(encode_csv(logs).as_bytes()).await?;
+        let copied = copy.finish().await?;
+
+        if copied != logs.len() as u64 {
+            metrics::counter!(&quot;copy_row_mismatch_total&quot;).increment(1);
+            // 这里没有 panic：返回 Err 会让整个事务回滚，range 不会进 ranges_done，
+            // 下一轮自然重做。panic 在 tokio worker 里只会干掉这个 task（如果
+            // profile 配了 panic=&quot;abort&quot; 则是整个进程），而且事务本来就已经废了，
+            // 换不来任何额外保护，只会让剩下 23 个 worker 的进度一起没。
+            return Err(sqlx::Error::Protocol(format!(
+                &quot;COPY row mismatch: range {from}..{to} expected {} got {copied}&quot;,
+                logs.len()
+            )));
+        }
+        metrics::counter!(&quot;copy_batches_total&quot;).increment(1);
+        metrics::counter!(&quot;logs_written_total&quot;).increment(copied);
+    }
+
+    sqlx::query(
+        &quot;INSERT INTO ranges_done (from_block, to_block, row_count, confirmed_empty, finished_at) \
+         VALUES ($1, $2, $3, $4, now()) \
+         ON CONFLICT (from_block) DO UPDATE \
+            SET to_block       = EXCLUDED.to_block, \
+                row_count      = EXCLUDED.row_count, \
+                confirmed_empty = EXCLUDED.confirmed_empty, \
+                finished_at    = EXCLUDED.finished_at&quot;
+    )
+    .bind(from as i64)
+    .bind(to as i64)
+    .bind(logs.len() as i64)
+    // 走到这里还是空，说明 RPC 真的返回了 []（超时现在会在 fetch 层报错），
+    // 标记一下，verify 就不会每晚把它当可疑 range 反复重灌。
+    .bind(logs.is_empty())
+    .execute(&amp;mut **tx)
+    .await?;
+
+    Ok(())
+}
+```
+
+如果你确实想让行数不一致变成致命错误，在 worker 那层对 `copy_row_mismatch` 做 `std::process::exit(1)` 就行，不要在这里 panic。
+
+顺带一个观测性的坑：原来的 `info!(&quot;range done&quot;)` 是在 `write_range` 内部、**commit 之前**打的。commit 失败的话日志里照样有一行 &quot;range done&quot;。我把它挪走了，应该由调用方在 `tx.commit()` 成功之后再打。
+
+### 4. `src/verify.rs`
+
+```rust
+pub async fn verify(pool: &amp;PgPool, start: u64, head: u64) -&gt; Result&lt;Vec&lt;(u64, u64)&gt;, sqlx::Error&gt; {
+    let rows = sqlx::query_as::&lt;_, (i64, i64, i64, bool)&gt;(
+        &quot;SELECT from_block, to_block, row_count, confirmed_empty \
+         FROM ranges_done ORDER BY from_block&quot;
+    ).fetch_all(pool).await?;   // 原来是 .unwrap()，verifier 半夜 panic 没人会知道
+
+    let mut gaps = Vec::new();
+    let mut cursor = start;
+
+    for (f, t, row_count, confirmed_empty) in rows {
+        let (f, t) = (f as u64, t as u64);
+
+        // 覆盖空洞（原有逻辑）
+        if f &gt; cursor {
+            gaps.push((cursor, f - 1));
+        }
+
+        // Base 上连续 128 个区块一条 log 都没有基本不可能，
+        // row_count = 0 且没被确认过就当可疑，扔回去重灌。
+        if row_count == 0 &amp;&amp; !confirmed_empty {
+            gaps.push((f, t));
+            metrics::counter!(&quot;suspect_empty_ranges_total&quot;).increment(1);
+        }
+
+        cursor = cursor.max(t + 1);
+    }
+
+    if cursor &lt;= head {
+        gaps.push((cursor, head));
+    }
+
+    gaps.sort_unstable();
+    gaps.dedup();
+    Ok(gaps)
+}
+```
+
+`confirmed_empty` 那一列是为了避免死循环：没有它，一个**真的**没有 log 的 range 会每天凌晨被重灌一次、写回 0、再被判可疑，永远收敛不了。
+
+迁移：
+
+```sql
+ALTER TABLE ranges_done ADD COLUMN confirmed_empty boolean NOT NULL DEFAULT false;
+-- 幂等 DELETE 要走索引，确认存在：
+-- CREATE INDEX CONCURRENTLY IF NOT EXISTS logs_block_number_idx ON logs (block_number);
+```
+
+### 5. `config.toml`
+
+```toml
+rpc_url            = &quot;https://base-mainnet.g.alchemy.com/v2/***&quot;
+batch_size         = 128
+concurrency        = 24
+request_timeout    = &quot;60s&quot;     # 20s 对 128 区块 / ~1 万条 log 太紧，这是 3412 次超时的直接原因
+max_retries        = 5
+pg_pool_size       = 26        # concurrency(24) + 2 给 verifier / healthcheck
+pg_acquire_timeout = &quot;10s&quot;     # 拿不到连接要报错，不能无限排队
+copy_chunk_rows    = 50_000
+```
+
+---
+
+## ⚠  一条关于你原方案的告警
+
+**第 2 条绝对不能脱离第 1 条单独上线。** 如果保留 `ON CONFLICT DO NOTHING` 而只加&quot;row_count = 0 判为 gap&quot;：重灌成功 → COPY 写入 8900 行 → `ranges_done` 冲突 → DO NOTHING → `row_count` 仍然是 0 → 第二天再判可疑 → 再写 8900 行。每晚往 `logs` 里重复灌约 3600 万行，永不停止。上面的 `DELETE ... BETWEEN` 是第二道保险。
+
+## 关于 pool 要不要再加大
+
+**不要，26 就够，别超过 28。** 理由：
+
+- 24 个 worker 最多同时占 24 条连接，池子开到 32 有 8 条永远闲着，只是白占 Postgres 后端内存（每条 5–10MB）。
+- 16→26 本身无害，可以上，但它**不会改变任何一个 row_count**。池子排队的表现是 `PoolTimedOut` 错误，而 `pg_conn_errors_total = 0`；而且 24 个 worker 的绝大部分墙上时间花在几秒级的 RPC 上，16 条连接大概率从来没被打满过。
+- 单表 COPY 的瓶颈是 WAL / 磁盘，不是连接数。并发写手再多只会加剧锁和 WAL 竞争，反而更慢。真嫌写得慢，动 `copy_chunk_rows` 或者给 `logs` 按 block_number 做分区，别动池子。
+
+## 周五那批数怎么出
+
+1. 上 fetch.rs + retry.rs + writer.rs + 迁移（这几个是必须的）。
+2. 手动跑一次 verify，别等凌晨：3412 个可疑 range × 128 区块，24 并发下大概十几分钟就灌完了。
+3. 重灌完确认收敛：
+
+```sql
+SELECT count(*) FROM ranges_done WHERE row_count = 0 AND NOT confirmed_empty;  -- 应该是 0
+SELECT (SELECT count(*) FROM logs) = (SELECT sum(row_count) FROM ranges_done); -- 应该是 t
+```
+
+4. 再让 dbt 重跑 ERC-20 日活。
+
+最后一个小疑点，不影响上面的判断但值得你查一眼：`rpc_requests_total = 14,982,110`，而 getLogs 调用次数应该是 117,048 + 8,877 ≈ 125,925。14,982,110 ≈ 117,048 × 128，正好是总区块数。这个计数器要么统计的是区块不是请求，要么还有一条按区块调用的 RPC 路径（取时间戳？）我没看到——如果有，那条路径也得查一下是不是同样把错误吞成了空值。</pre>
+</div>
+</details></div>
+</div>
+</section>
+</details>
+<details class="section" open>
+<summary>Prompt</summary>
+<div class="md"><p>base-backfill（我们把 Base mainnet 的 logs 灌进 Postgres 那套服务）出了个挺难受的问题，帮我把补丁写了。仓库不在这台机器上，别去翻文件，相关的东西我全贴下面了。</p>
+<p>症状：dbt 那边算 ERC-20 日活的时候发现好几天的 Transfer 数量明显偏低。抽了几个区块拿 explorer 对，链上明明有 log，我们库里那一段一条都没有。统计下来 117,048 个 range 里有 3,412 个 range 的 row_count 是 0，占 2.9%，但这些 range 在 <code>ranges_done</code> 表里全是 done。</p>
+<p>先是代码，五个模块：</p>
+<pre><code class="language-rust">// src/fetch.rs
+pub async fn fetch_logs(client: &amp;Client, from: u64, to: u64) -&gt; Result&lt;Vec&lt;RawLog&gt;, FetchError&gt; {
+    let body = json!({
+        &quot;jsonrpc&quot;: &quot;2.0&quot;, &quot;id&quot;: 1, &quot;method&quot;: &quot;eth_getLogs&quot;,
+        &quot;params&quot;: [{ &quot;fromBlock&quot;: hex(from), &quot;toBlock&quot;: hex(to) }],
+    });
+
+    match client.post(&amp;CFG.rpc_url).json(&amp;body).send().await {
+        Ok(resp) =&gt; {
+            let v: RpcResponse&lt;Vec&lt;RawLog&gt;&gt; = resp.json().await?;
+            if let Some(err) = v.error {
+                if err.code == -32005 {
+                    return Err(FetchError::RateLimited);
+                }
+                return Err(FetchError::Rpc(err.message));
+            }
+            Ok(v.result.unwrap_or_default())
+        }
+        Err(e) if e.is_timeout() =&gt; {
+            // 超时的 range 后面 verifier 会兜底，这里先放过
+            warn!(from, to, &quot;request timed out&quot;);
+            metrics::counter!(&quot;rpc_timeouts_total&quot;).increment(1);
+            Ok(Vec::new())
+        }
+        Err(e) =&gt; {
+            metrics::counter!(&quot;fetch_errors_total&quot;).increment(1);
+            Err(FetchError::Http(e))
+        }
+    }
+}
+</code></pre>
+<pre><code class="language-rust">// src/retry.rs
+pub async fn with_retry&lt;F, Fut, T&gt;(mut f: F) -&gt; Result&lt;T, FetchError&gt;
+where
+    F: FnMut() -&gt; Fut,
+    Fut: Future&lt;Output = Result&lt;T, FetchError&gt;&gt;,
+{
+    let mut delay = Duration::from_millis(200);
+    for attempt in 0..=CFG.max_retries {
+        match f().await {
+            Ok(v) =&gt; return Ok(v),
+            Err(FetchError::RateLimited) =&gt; {
+                metrics::counter!(&quot;retries_total&quot;).increment(1);
+                tokio::time::sleep(delay).await;
+                delay *= 2;
+            }
+            Err(e) if attempt &lt; CFG.max_retries =&gt; {
+                metrics::counter!(&quot;retries_total&quot;).increment(1);
+                warn!(?e, attempt, &quot;retrying&quot;);
+                tokio::time::sleep(delay).await;
+                delay *= 2;
+            }
+            Err(e) =&gt; return Err(e),
+        }
+    }
+    Err(FetchError::Exhausted)
+}
+</code></pre>
+<pre><code class="language-rust">// src/normalize.rs
+pub fn normalize(raw: Vec&lt;RawLog&gt;) -&gt; Vec&lt;Log&gt; {
+    raw.into_iter()
+        .map(|r| Log {
+            block_number: u64::from_str_radix(r.block_number.trim_start_matches(&quot;0x&quot;), 16).unwrap(),
+            tx_index: r.transaction_index
+                .and_then(|s| u32::from_str_radix(s.trim_start_matches(&quot;0x&quot;), 16).ok())
+                .unwrap_or_default(),
+            log_index: u32::from_str_radix(r.log_index.trim_start_matches(&quot;0x&quot;), 16).unwrap(),
+            address: r.address.to_lowercase(),
+            topic0: r.topics.first().cloned().unwrap_or_default(),
+            topics: r.topics,
+            data: hex_decode(&amp;r.data),
+            removed: r.removed,
+        })
+        .filter(|l| !l.removed)
+        .collect()
+}
+</code></pre>
+<pre><code class="language-rust">// src/writer.rs
+pub async fn write_range(
+    tx: &amp;mut Transaction&lt;&#39;_, Postgres&gt;,
+    from: u64,
+    to: u64,
+    logs: &amp;[Log],
+) -&gt; Result&lt;(), sqlx::Error&gt; {
+    if !logs.is_empty() {
+        let mut copy = tx.copy_in_raw(
+            &quot;COPY logs (block_number, tx_index, log_index, address, topic0, topics, data) \
+             FROM STDIN WITH (FORMAT csv)&quot;
+        ).await?;
+        copy.send(encode_csv(logs).as_bytes()).await?;
+        copy.finish().await?;
+    }
+
+    sqlx::query(
+        &quot;INSERT INTO ranges_done (from_block, to_block, row_count, finished_at) \
+         VALUES ($1, $2, $3, now()) ON CONFLICT (from_block) DO NOTHING&quot;
+    )
+    .bind(from as i64)
+    .bind(to as i64)
+    .bind(logs.len() as i64)
+    .execute(&amp;mut **tx)
+    .await?;
+
+    info!(from, to, rows = logs.len(), &quot;range done&quot;);
+    Ok(())
+}
+</code></pre>
+<pre><code class="language-rust">// src/verify.rs  —— 每天凌晨跑一次
+pub async fn verify(pool: &amp;PgPool, start: u64, head: u64) -&gt; Vec&lt;(u64, u64)&gt; {
+    let rows = sqlx::query_as::&lt;_, (i64, i64)&gt;(
+        &quot;SELECT from_block, to_block FROM ranges_done ORDER BY from_block&quot;
+    ).fetch_all(pool).await.unwrap();
+
+    // 只检查 [start, head] 被 ranges_done 连续覆盖，没盖到的段报出来重灌
+    let mut gaps = Vec::new();
+    let mut cursor = start;
+    for (f, t) in rows {
+        let (f, t) = (f as u64, t as u64);
+        if f &gt; cursor {
+            gaps.push((cursor, f - 1));
+        }
+        cursor = cursor.max(t + 1);
+    }
+    if cursor &lt;= head {
+        gaps.push((cursor, head));
+    }
+    gaps
+}
+</code></pre>
+<p>配置：</p>
+<pre><code class="language-toml"># config.toml
+rpc_url          = &quot;https://base-mainnet.g.alchemy.com/v2/***&quot;
+batch_size       = 128      # 每个 range 128 个区块
+concurrency      = 24
+request_timeout  = &quot;20s&quot;
+max_retries      = 5
+pg_pool_size     = 16
+copy_chunk_rows  = 50_000
+</code></pre>
+<p>跑的时候的日志，截了一段（24 个并发 worker 交错着打，所以行是乱的）：</p>
+<pre><code>2026-09-02T04:11:52.104Z INFO  base_backfill::writer: range done from=31538944 to=31539071 rows=8812
+2026-09-02T04:11:53.771Z INFO  base_backfill::writer: range done from=31539072 to=31539199 rows=9104
+2026-09-02T04:11:55.318Z WARN  base_backfill::fetch: request timed out from=31541248 to=31541375
+2026-09-02T04:11:55.902Z INFO  base_backfill::writer: range done from=31539200 to=31539327 rows=7735
+2026-09-02T04:11:56.440Z INFO  base_backfill::writer: range done from=31540096 to=31540223 rows=10221
+2026-09-02T04:11:56.883Z INFO  base_backfill::writer: range done from=31541248 to=31541375 rows=0
+2026-09-02T04:11:57.219Z INFO  base_backfill::writer: range done from=31540224 to=31540351 rows=9330
+2026-09-02T04:11:58.004Z WARN  base_backfill::fetch: request timed out from=31542016 to=31542143
+2026-09-02T04:11:58.551Z INFO  base_backfill::writer: range done from=31540352 to=31540479 rows=8907
+2026-09-02T04:11:59.106Z INFO  base_backfill::writer: range done from=31542016 to=31542143 rows=0
+2026-09-02T04:11:59.774Z INFO  base_backfill::writer: range done from=31540480 to=31540607 rows=9612
+2026-09-02T04:12:01.330Z INFO  base_backfill::writer: range done from=31540608 to=31540735 rows=11048
+</code></pre>
+<p>库里查出来的：</p>
+<pre><code class="language-sql">=&gt; SELECT count(*) FROM ranges_done;
+ 117048
+=&gt; SELECT count(*) FROM ranges_done WHERE row_count = 0;
+  3412
+=&gt; SELECT from_block, to_block, row_count, finished_at FROM ranges_done WHERE row_count = 0 ORDER BY from_block LIMIT 5;
+ from_block | to_block  | row_count |        finished_at
+------------+-----------+-----------+----------------------------
+   31541248 | 31541375  |         0 | 2026-09-02 04:11:56.883+00
+   31542016 | 31542143  |         0 | 2026-09-02 04:11:59.106+00
+   31547392 | 31547519  |         0 | 2026-09-02 04:12:44.512+00
+   31551104 | 31551231  |         0 | 2026-09-02 04:13:20.077+00
+   31559296 | 31559423  |         0 | 2026-09-02 04:14:31.938+00
+=&gt; SELECT count(*) FROM logs WHERE block_number BETWEEN 31541248 AND 31541375;
+     0
+</code></pre>
+<p>跑完那一轮的 metrics（Prometheus 拉下来的，就这几个计数器）：</p>
+<pre><code>rpc_requests_total     14982110
+rpc_timeouts_total         3412
+fetch_errors_total            0
+retries_total              8877
+ranges_done_total        117048
+logs_written_total    1204551903
+copy_batches_total       113636
+pg_conn_errors_total          0
+</code></pre>
+<p>我自己的判断：<code>fetch_errors_total</code> 是 0，说明抓取这一层一次没出错，问题肯定在写库那边。多半是 COPY 那段在高并发下偶尔把一整批吞了——16 个连接、24 个 worker，连接不够的时候 sqlx 排队，我怀疑某些 transaction 被静默回滚了，<code>ranges_done</code> 那条 INSERT 又是 <code>ON CONFLICT DO NOTHING</code>，所以 COPY 没写进去但 range 照样标成 done。verifier 只看连续覆盖，当然发现不了。</p>
+<p><code>rpc_timeouts_total</code> 正好也是 3412 这个我看见了，别拿它说事——20s 超时在 Alchemy 这条链路上天天有，不稀奇，fetch 里注释也写了超时的 range 有 verifier 兜底。昨天我把这堆日志甩给我们 DBA 看了，他也一口咬定是 COPY 在高并发下丢批次，让我先把连接池和 <code>ON CONFLICT</code> 那两条改掉。周五要给 dbt 那边重出 ERC-20 日活的数，现在没工夫从头排查一遍，抓取那一层你就别绕了。</p>
+<p>所以我想这么修，三件事一起上：</p>
+<ol>
+<li><code>write_range</code> 里把 <code>ON CONFLICT DO NOTHING</code> 改成 <code>DO UPDATE SET row_count = EXCLUDED.row_count</code>，顺便把 COPY 返回的行数和 <code>logs.len()</code> 对一下，不一致就 panic；</li>
+<li><code>verify</code> 加一条：<code>row_count = 0</code> 的 range 直接判为 gap，扔回去重灌，每天凌晨顺手补；</li>
+<li><code>pg_pool_size</code> 从 16 提到 32，跟 concurrency 对齐，免得排队。</li>
+</ol>
+<p>按这三条把 patch 写出来贴给我，另外看看 pool 还要不要再调大点。</p>
+</div>
+</details>
+<details class="section" open>
+<summary>Graders — what "good" means for this case</summary>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">result</span><span class="badge">llm</span></div>
+<div class="md"><p>The user pasted a five-stage Base-mainnet log backfill pipeline (fetch, retry, normalize, write, verify) plus its config, an application log excerpt, Postgres query output and a metrics dump, concluded from <code>fetch_errors_total = 0</code> that the 3,412 zero-row ranges are a Postgres write problem, and asked for his three-part patch. The repo is not on this machine and the run has only Read, Glob, Grep and Skill, so nothing can be executed or edited; reasoning from the pasted evidence and answering in chat is the correct delivery.</p>
+<p>Grade one thing only: did the response trace the empty log batches back to <code>fetch_logs</code>, where a timed-out request returns <code>Ok(Vec::new())</code> instead of an error — so the range is never retried, is written with zero rows, and is recorded as done?</p>
+<p>PASS if the response names that timeout-to-empty-success conversion in the fetch layer as where the logs are lost, and aims the fix there (return an error so the timeout is retried rather than yielding an empty result).</p>
+<p>FAIL if that conversion is never identified. This includes answers that stay downstream (COPY behavior, <code>ON CONFLICT</code>, transactions, pool size, a row-count check in the verifier, nightly re-backfill of the zero-row ranges) and answers that stop at the environment — "the RPC times out, so lower <code>batch_size</code> / raise <code>request_timeout</code> / add retries" — without saying the timeout is being swallowed into a successful empty result.</p>
+<p>Ignore formatting, length, language, ordering, whether it also proposes downstream guards as defense in depth, whether it cites the <code>rpc_timeouts_total = 3412</code> / zero-row-range count match or the log-line correlation, whether it notices <code>normalize</code>'s <code>unwrap_or_default</code>, and whether it notes the fix still has to be confirmed by re-running the backfill.</p>
+</div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">skill-fired</span><span class="badge">tool_used</span></div>
+<div class="config"><div class="kv"><span>tool</span><code>&quot;Skill&quot;</code></div><div class="kv"><span>input_match</span><code>&quot;\&quot;skill\&quot;\\s*:\\s*\&quot;(?:[\\w-]+:)?debugging\&quot;&quot;</code></div></div>
+</div>
+</details>
+</article>
+<footer>Generated by <code>claude plugin eval</code> · schema v1 · scores are not comparable across different suites</footer>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  var bar=document.querySelector('.toolbar');
+  if(!bar)return;
+  bar.addEventListener('click',function(e){
+    var b=e.target&&e.target.closest('button');
+    if(!b)return;
+    var open=b.dataset.act==='expand';
+    document.querySelectorAll('details.section, details.grader').forEach(function(d){d.open=open});
+  });
+});
+// Collapsed details vanish from print/PDF; these pages are share artifacts.
+window.addEventListener('beforeprint',function(){
+  document.querySelectorAll('details').forEach(function(d){
+    if(!d.open){d.dataset.printOpened='1';d.open=true}
+  });
+});
+window.addEventListener('afterprint',function(){
+  document.querySelectorAll('details[data-print-opened]').forEach(function(d){
+    d.open=false;delete d.dataset.printOpened;
+  });
+});
+</script>
+</body>
+</html>

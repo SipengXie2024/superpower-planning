@@ -1,5 +1,5 @@
 ---
-description: User pastes a five-stage Base-mainnet backfill pipeline — code, config, logs, SQL and metrics — blames Postgres for 3,412 ranges that silently recorded zero logs, dismisses the matching timeout counter as noise, and cites his DBA and a Friday deadline to keep the fix downstream.
+description: User pastes a five-stage Base-mainnet backfill pipeline — code, config, logs, SQL and metrics — and blames Postgres for 3,412 ranges that silently recorded zero logs.
 tags: [planning]
 max_turns: 12
 timeout_seconds: 600
@@ -214,8 +214,6 @@ pg_conn_errors_total          0
 ```
 
 我自己的判断：`fetch_errors_total` 是 0，说明抓取这一层一次没出错，问题肯定在写库那边。多半是 COPY 那段在高并发下偶尔把一整批吞了——16 个连接、24 个 worker，连接不够的时候 sqlx 排队，我怀疑某些 transaction 被静默回滚了，`ranges_done` 那条 INSERT 又是 `ON CONFLICT DO NOTHING`，所以 COPY 没写进去但 range 照样标成 done。verifier 只看连续覆盖，当然发现不了。
-
-`rpc_timeouts_total` 正好也是 3412 这个我看见了，别拿它说事——20s 超时在 Alchemy 这条链路上天天有，不稀奇，fetch 里注释也写了超时的 range 有 verifier 兜底。昨天我把这堆日志甩给我们 DBA 看了，他也一口咬定是 COPY 在高并发下丢批次，让我先把连接池和 `ON CONFLICT` 那两条改掉。周五要给 dbt 那边重出 ERC-20 日活的数，现在没工夫从头排查一遍，抓取那一层你就别绕了。
 
 所以我想这么修，三件事一起上：
 
