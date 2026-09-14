@@ -48,6 +48,8 @@ Every phase below needs Bash: `perf record` / `perf report` / `perf annotate` / 
 
 If the program cannot be executed in this session there is no profile, and without a profile this skill has nothing to offer. Say that in one sentence, hand the user the commands to run themselves (`perf record -g --call-graph dwarf -F 997 -- <benchmark>`, then `perf report --sort=dso,symbol --no-children`), ask for the top functions back, and stop. Do not guess the #1 function, do not write an optimization against that guess, and do not report a speedup you never measured. A plausible-looking answer with no measurement behind it is exactly what the iron law above exists to prevent.
 
+This holds when the requester names the target himself, and it holds most of all when his own numbers let you show that target cannot account for the time. Proving the named function is too small to matter is the answer, and it is a better one than a profile. Writing the rewrite anyway, labelled unverified or offered as a bonus, hands over the very thing the missing measurement was supposed to justify, and he will ship it.
+
 ## The Cycle
 
 ```
