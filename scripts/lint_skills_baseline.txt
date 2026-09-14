@@ -1,0 +1,9 @@
+# superpower-planning SKILL.md linter baseline (ratchet)
+#
+# Grandfathered violations: one stable error key per line.
+# Format: <path>::<check>::<detail>
+# Regenerate with:  python3 scripts/lint_skills.py --update-baseline
+# Do NOT hand-add keys to silence new violations; fix the violation instead.
+# Each entry is a TODO: the listed file should eventually be brought into spec
+# (split oversize bodies into references/, strip em-dashes, tighten descriptions).
+
