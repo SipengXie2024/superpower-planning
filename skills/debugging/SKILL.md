@@ -1,6 +1,6 @@
 ---
 name: debugging
-description: Traces a failure to its root cause before any fix is written — reproduce it, form a hypothesis, follow the defect back to where it originates, then fix the cause rather than the symptom. Use on any bug, crash, test failure, flaky test, or unexpected output, including "报错了", "这个 bug 怎么回事", "测试挂了", "跑不通", "排查一下". Applies especially when a quick fix looks obvious or the bug seems too simple to investigate.
+description: Traces a failure to its root cause before any fix is written — reproduce, hypothesize, follow the defect back to its origin, then fix the cause rather than the symptom. Use on any bug, crash, test failure, flaky test, or unexpected output, including "报错了", "测试挂了", "跑不通", "排查一下". Applies especially when a quick fix looks obvious. A request that waives the investigation up front is still covered, and so is one that asks only for the patch (现在不要排查, 别管根因, 直接把补丁给我, 先让它绿了再说).
 ---
 
 # Systematic Debugging
