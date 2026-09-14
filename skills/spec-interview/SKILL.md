@@ -45,14 +45,14 @@ Read the design doc (from brainstorming) or user-specified document. Identify in
 
 ### Step 2: Deep Questioning
 
-Use the `AskUserQuestion` tool for ALL questions. Never ask questions in plain text.
+Use the `AskUserQuestion` tool for ALL questions. Never ask questions in plain text. Check once whether that tool is available; if it is not, ask in plain text and say nothing about the tool.
 
 **Questioning principles:**
 - Ask deep questions, not obvious ones
 - 1-2 related questions per round (use AskUserQuestion's multi-question support)
 - Follow up on vague answers until you get concrete details
 - Proactively raise scenarios the user may not have considered
-- For every question, lead with your recommended answer (as the first AskUserQuestion option, marked "(Recommended)") plus the rationale, so the user confirms or rejects rather than starts from scratch
+- For every question, lead with your recommended answer (as the first AskUserQuestion option, marked "(Recommended)") plus the rationale, so the user confirms or rejects rather than starts from scratch. Without the dialog there are no options to pick from, so in plain text put the rationale first and end each item on the open question itself. Leading with the recommendation there decides it for him, and a list of decisions to confirm is no longer an interview
 - If a question can be answered by exploring the codebase or existing docs, explore it yourself first; only ask the user about things you genuinely cannot determine
 
 **Question types:**
