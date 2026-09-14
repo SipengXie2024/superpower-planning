@@ -1,5 +1,13 @@
 # Defense-in-Depth Validation
 
+## Contents
+
+- Why one validation point is not enough
+- The four layers to validate at
+- Applying the pattern to a real fix
+- Example from session
+- Key insight
+
 ## Overview
 
 When you fix a bug caused by invalid data, adding validation at one place feels sufficient. But that single check can be bypassed by different code paths, refactoring, or mocks.

@@ -4,6 +4,16 @@
 > read SKILL.md first — it explains the seven-phase optimization cycle that gives
 > these commands their context and sequence.
 
+## Contents
+
+- Setup — enabling perf on restricted kernels
+- Recording a profile
+- Analysis — report, annotate, diff
+- Hardware counters
+- Flame graphs
+- Common gotchas
+- Interpreting output
+
 ## Setup
 
 ```bash

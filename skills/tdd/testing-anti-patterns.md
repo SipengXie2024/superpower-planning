@@ -2,6 +2,18 @@
 
 **Load this reference when:** writing or changing tests, adding mocks, or tempted to add test-only methods to production code.
 
+## Contents
+
+- The Iron Laws — the non-negotiables
+- Anti-pattern 1: testing mock behavior
+- Anti-pattern 2: test-only methods in production code
+- Anti-pattern 3: mocking without understanding
+- Anti-pattern 4: incomplete mocks
+- Anti-pattern 5: integration tests as an afterthought
+- When mocks become too complex to be worth it
+- How TDD prevents all five
+- Quick reference, red flags, and the bottom line
+
 ## Overview
 
 Tests must verify real behavior, not mock behavior. Mocks are a means to isolate, not the thing being tested.
@@ -48,18 +60,6 @@ test('renders sidebar', () => {
 // Don't assert on the mock - test Page's behavior with sidebar present
 ```
 
-### Gate Function
-
-```
-BEFORE asserting on any mock element:
-  Ask: "Am I testing real component behavior or just mock existence?"
-
-  IF testing mock existence:
-    STOP - Delete the assertion or unmock the component
-
-  Test real behavior instead
-```
-
 ## Anti-Pattern 2: Test-Only Methods in Production
 
 **The violation:**
@@ -99,21 +99,7 @@ export async function cleanupSession(session: Session) {
 afterEach(() => cleanupSession(session));
 ```
 
-### Gate Function
-
-```
-BEFORE adding any method to production class:
-  Ask: "Is this only used by tests?"
-
-  IF yes:
-    STOP - Don't add it
-    Put it in test utilities instead
-
-  Ask: "Does this class own this resource's lifecycle?"
-
-  IF no:
-    STOP - Wrong class for this method
-```
+**Placement rule:** a method belongs on the class that owns the resource's lifecycle. If the class does not own it, the method is on the wrong class, whether or not tests are what exposed it.
 
 ## Anti-Pattern 3: Mocking Without Understanding
 
@@ -148,31 +134,7 @@ test('detects duplicate server', () => {
 });
 ```
 
-### Gate Function
-
-```
-BEFORE mocking any method:
-  STOP - Don't mock yet
-
-  1. Ask: "What side effects does the real method have?"
-  2. Ask: "Does this test depend on any of those side effects?"
-  3. Ask: "Do I fully understand what this test needs?"
-
-  IF depends on side effects:
-    Mock at lower level (the actual slow/external operation)
-    OR use test doubles that preserve necessary behavior
-    NOT the high-level method the test depends on
-
-  IF unsure what test depends on:
-    Run test with real implementation FIRST
-    Observe what actually needs to happen
-    THEN add minimal mocking at the right level
-
-  Red flags:
-    - "I'll mock this to be safe"
-    - "This might be slow, better mock it"
-    - Mocking without understanding the dependency chain
-```
+If unsure what the test depends on, run it with the real implementation first, observe what actually needs to happen, then add minimal mocking at the right level.
 
 ## Anti-Pattern 4: Incomplete Mocks
 
@@ -207,23 +169,7 @@ const mockResponse = {
 };
 ```
 
-### Gate Function
-
-```
-BEFORE creating mock responses:
-  Check: "What fields does the real API response contain?"
-
-  Actions:
-    1. Examine actual API response from docs/examples
-    2. Include ALL fields system might consume downstream
-    3. Verify mock matches real response schema completely
-
-  Critical:
-    If you're creating a mock, you must understand the ENTIRE structure
-    Partial mocks fail silently when code depends on omitted fields
-
-  If uncertain: Include all documented fields
-```
+Read the real response from the API docs or a captured example, check your mock against that schema, and when you are unsure include every documented field.
 
 ## Anti-Pattern 5: Integration Tests as Afterthought
 

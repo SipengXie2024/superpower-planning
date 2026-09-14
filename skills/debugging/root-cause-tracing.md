@@ -1,5 +1,14 @@
 # Root Cause Tracing
 
+## Contents
+
+- When to trace backward instead of fixing where the error surfaced
+- The tracing process
+- Adding stack traces to find the caller
+- Finding which test causes state pollution
+- Worked example: the empty projectDir bug
+- Key principle, stack trace tips, real-world impact
+
 ## Overview
 
 Bugs often manifest deep in the call stack (git init in wrong directory, file created in wrong location, database opened with wrong path). Your instinct is to fix where the error appears, but that's treating a symptom.

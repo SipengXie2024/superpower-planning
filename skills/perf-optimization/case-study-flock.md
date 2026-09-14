@@ -1,5 +1,16 @@
 # Case Study: Flock x86 Prover — 965ms → 297ms (3.25×)
 
+## Contents
+
+- Context: the 965ms baseline
+- Round 0: guessing, and why it wasted the first attempt
+- Round 1: profile → `inv_table::apply_scalar` (65.76%)
+- Round 2: re-profile → `bit_transpose` (60% of what remained)
+- Round 3: re-profile → NTT `forward_transform` (9.5%)
+- Round 4: re-profile → the decision to stop
+- Summary table, key takeaways
+- The verify-optimization anti-pattern
+
 ## Context
 
 Flock is a binary-field (F2/F128) batch SNARK prover for keccak hash proofs.
