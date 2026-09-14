@@ -218,6 +218,22 @@ def check_description(path: str, fm: str) -> list[Finding]:
     flat = re.sub(r"\s+", " ", desc).strip()
     words = [w for w in flat.split(" ") if w]
     out: list[Finding] = []
+    # An unquoted YAML scalar containing ": " parses as a nested mapping, so the
+    # whole frontmatter fails to load in any real parser. The tolerant reader above
+    # recovers the text anyway, which is exactly why this needs its own check.
+    raw = re.search(r"^description:[ \t]*(.*)$", fm, re.M)
+    if raw:
+        val = raw.group(1).strip()
+        if val and val[0] not in "\"'|>" and ": " in val:
+            out.append(
+                Finding(
+                    path,
+                    "description",
+                    "yaml-colon",
+                    "unquoted description contains ': ', which YAML reads as a nested mapping; quote the value or rewrite",
+                    "error",
+                )
+            )
     if len(words) < DESC_MIN_WORDS:
         out.append(
             Finding(
