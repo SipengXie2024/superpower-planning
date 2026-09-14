@@ -1,0 +1,744 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Eval report — superpower-planning v4.0.0</title>
+</head>
+<body>
+<style>
+:root{--plane:#f9f9f7;--surface:#fcfcfb;--ink:#0b0b0b;--ink-2:#52514e;--ink-3:#6b6a64;--hairline:rgba(11,11,11,.10);--grid:#e1e0d9;--inset:rgba(11,11,11,.04);--accent:#2a78d6;--base-fill:#6b6a64;--delta-good:#006300;--good:#067d06;--warning:#8a6100;--critical:#d03b3b;
+  color-scheme:light dark;
+}
+@media (prefers-color-scheme:dark){:root{--plane:#0d0d0d;--surface:#1a1a19;--ink:#ffffff;--ink-2:#c3c2b7;--ink-3:#898781;--hairline:rgba(255,255,255,.10);--grid:#2c2c2a;--inset:rgba(255,255,255,.05);--accent:#3987e5;--base-fill:#898781;--delta-good:#0ca30c;--good:#0ca30c;--warning:#fab219;--critical:#e06c6c;color-scheme:dark}}
+:root[data-theme="dark"]{--plane:#0d0d0d;--surface:#1a1a19;--ink:#ffffff;--ink-2:#c3c2b7;--ink-3:#898781;--hairline:rgba(255,255,255,.10);--grid:#2c2c2a;--inset:rgba(255,255,255,.05);--accent:#3987e5;--base-fill:#898781;--delta-good:#0ca30c;--good:#0ca30c;--warning:#fab219;--critical:#e06c6c;color-scheme:dark}
+:root[data-theme="light"]{--plane:#f9f9f7;--surface:#fcfcfb;--ink:#0b0b0b;--ink-2:#52514e;--ink-3:#6b6a64;--hairline:rgba(11,11,11,.10);--grid:#e1e0d9;--inset:rgba(11,11,11,.04);--accent:#2a78d6;--base-fill:#6b6a64;--delta-good:#006300;--good:#067d06;--warning:#8a6100;--critical:#d03b3b;color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:var(--plane);color:var(--ink);
+  font:14px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif;
+  -webkit-text-size-adjust:100%}
+.wrap{max-width:880px;margin:0 auto;padding:40px 24px 64px;display:flex;flex-direction:column;gap:20px}
+.eyebrow{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+header h1{margin:2px 0 0;font-size:24px;font-weight:600;line-height:1.25;text-wrap:balance}
+.meta{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;color:var(--ink-2);font-size:13px}
+.meta .num{font-variant-numeric:tabular-nums lining-nums}
+.banner{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:8px;
+  border:1px solid var(--hairline);background:var(--surface);font-size:13px}
+.banner .chip-warn{color:var(--warning);font-weight:600}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.tile{background:var(--surface);border:1px solid var(--hairline);border-radius:10px;padding:14px 16px;
+  display:flex;flex-direction:column;gap:4px}
+.tile .label{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+.tile .value{font-size:26px;font-weight:600;font-variant-numeric:tabular-nums lining-nums;line-height:1.1}
+.tile.hero .value{font-family:Georgia,"Times New Roman",serif;font-weight:400;font-size:48px}
+.tile .sub{font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.tile .value.delta-pos{color:var(--delta-good)}
+.tile .value.delta-neg{color:var(--critical)}
+.toolbar{display:flex;gap:8px;justify-content:flex-end}
+.toolbar button{font:12px system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink-2);
+  background:var(--surface);border:1px solid var(--hairline);border-radius:6px;padding:4px 10px;cursor:pointer}
+.toolbar button:hover{color:var(--ink)}
+.toolbar button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.case{background:var(--surface);border:1px solid var(--hairline);border-radius:10px;padding:18px 20px;
+  display:flex;flex-direction:column;gap:10px}
+.case-regressed{border-left:3px solid var(--critical)}
+.verdict{margin:6px 0 0;font-size:15px}
+.verdict .delta{font-size:15px}
+.flag{font-size:11px;font-weight:600;color:var(--warning);white-space:nowrap}
+.star{color:var(--warning);font-size:.45em;vertical-align:super;line-height:0;cursor:help}
+.legend summary{cursor:pointer;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2)}
+.legend-list{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--ink-2)}
+.case-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.case-head h2{margin:0;font-size:16px;font-weight:600}
+.case-head .spacer{flex:1}
+.case-score{font-size:15px;font-weight:600}
+.mono{font:12px "SF Mono",ui-monospace,Menlo,Consolas,monospace}
+.num{font-variant-numeric:tabular-nums lining-nums}
+.muted{color:var(--ink-3);font-size:12px}
+.meter{display:inline-block;position:relative;width:120px;height:6px;border-radius:4px;background:var(--grid);
+  vertical-align:middle}
+.meter>span{display:block;height:100%;border-radius:4px;max-width:100%}
+.meter .tick{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--ink-3);border-radius:1px}
+.m-accent>span{background:var(--accent)}
+.m-base>span{background:var(--base-fill)}
+.delta{font-size:12px;font-weight:600;font-variant-numeric:tabular-nums}
+.delta-pos{color:var(--delta-good)}
+.delta-neg{color:var(--critical)}
+.delta-zero{color:var(--ink-3)}
+details.section{border-top:1px solid var(--grid);padding-top:10px}
+details.section>summary{cursor:pointer;font-size:12px;font-weight:600;letter-spacing:.04em;
+  text-transform:uppercase;color:var(--ink-2);list-style-position:outside;margin-left:2px}
+details.section>summary:hover{color:var(--ink)}
+details.section[open]>summary{margin-bottom:8px}
+.md{display:flex;flex-direction:column;gap:8px;background:var(--inset);border-radius:8px;
+  padding:12px 14px;overflow-wrap:break-word}
+.md>:first-child{margin-top:0}
+.md h1,.md h2,.md h3,.md h4,.md h5,.md h6{margin:4px 0 0;font-size:1em;font-weight:600;line-height:1.3}
+.md p,.md ul,.md ol,.md blockquote,.md table,.md pre,.md hr{margin:0}
+.md ul,.md ol{display:flex;flex-direction:column;gap:4px;padding-left:20px}
+.md blockquote{border-left:2px solid var(--hairline);padding-left:10px;color:var(--ink-2)}
+.md :not(pre)>code{background:var(--inset);padding:1px 4px;border-radius:4px;
+  font:.92em "SF Mono",ui-monospace,Menlo,Consolas,monospace}
+.md pre{background:var(--inset);border:1px solid var(--hairline);padding:10px 12px;border-radius:6px;
+  overflow-x:auto;font:12px/1.5 "SF Mono",ui-monospace,Menlo,Consolas,monospace}
+.md pre code{background:none;padding:0;font:inherit}
+.md table{width:100%;border-collapse:collapse}
+.md th,.md td{padding:5px 8px;text-align:left;vertical-align:top;border-bottom:1px solid var(--grid)}
+.md th{font-weight:600;color:var(--ink-2)}
+.md a{color:var(--accent);text-decoration:none}
+.md a:hover{text-decoration:underline}
+.grader-def{display:flex;flex-direction:column;gap:6px;padding:8px 0}
+.grader-def+.grader-def{border-top:1px solid var(--grid)}
+.grader-def-head{display:flex;align-items:baseline;gap:8px}
+.grader-name{font:13px "SF Mono",ui-monospace,Menlo,Consolas,monospace;font-weight:600}
+.badge{font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2);
+  border:1px solid var(--hairline);border-radius:999px;padding:1px 8px}
+.config{display:flex;flex-direction:column;gap:2px;background:var(--inset);border-radius:8px;padding:10px 14px}
+.config code{font:12px "SF Mono",ui-monospace,Menlo,Consolas,monospace;overflow-wrap:anywhere}
+.arm{display:flex;flex-direction:column;gap:8px;padding:6px 0}
+.arm+.arm{border-top:1px dashed var(--grid);margin-top:4px;padding-top:12px}
+.arm-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.arm-label{font-size:13px;font-weight:600}
+.run{border:1px solid var(--grid);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.run-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.run-title{font-size:12px;font-weight:600;color:var(--ink-2)}
+.run-error .explanation{color:var(--ink-2)}
+.note{font-size:12px;color:var(--ink-2)}
+.graders{display:flex;flex-direction:column;gap:4px}
+details.grader{border-radius:6px}
+details.grader>summary{cursor:pointer;display:flex;align-items:baseline;gap:8px;padding:3px 4px;
+  border-radius:6px;list-style:none}
+details.grader>summary::-webkit-details-marker{display:none}
+details.grader>summary::before{content:'▸';font-size:10px;color:var(--ink-3);flex:none;
+  transition:transform .12s ease}
+details.grader[open]>summary::before{transform:rotate(90deg)}
+details.grader>summary:hover{background:var(--inset)}
+details.grader>summary:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.grader-body{padding:6px 8px 8px 24px;display:flex;flex-direction:column;gap:6px}
+.chip{font-size:11px;font-weight:600;border-radius:999px;padding:1px 8px;white-space:nowrap}
+.chip-pass{color:var(--good);border:1px solid currentColor}
+.chip-fail{color:var(--critical);border:1px solid currentColor}
+.chip.chip-warn{color:var(--warning);border:1px solid currentColor}
+.explanation{margin:0;font-size:13px;color:var(--ink-2);white-space:pre-wrap;overflow-wrap:break-word}
+.kv{display:flex;gap:8px;font-size:12px;color:var(--ink-3)}
+.votes{font-variant-numeric:tabular-nums;letter-spacing:.1em}
+pre.evidence{margin:0;background:var(--inset);border:1px solid var(--hairline);border-radius:6px;
+  padding:8px 10px;overflow-x:auto;max-height:320px;
+  font:12px/1.5 "SF Mono",ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap;overflow-wrap:break-word}
+footer{color:var(--ink-3);font-size:12px;text-align:center;padding-top:8px}
+@media (prefers-reduced-motion:no-preference){
+  details.grader>summary,.toolbar button{transition:background .12s ease,color .12s ease}
+}
+@media (prefers-reduced-motion:reduce){
+  details.grader>summary::before{transition:none}
+}
+@media print{
+  :root,:root[data-theme="dark"],:root[data-theme="light"]{--plane:#f9f9f7;--surface:#fcfcfb;--ink:#0b0b0b;--ink-2:#52514e;--ink-3:#6b6a64;--hairline:rgba(11,11,11,.10);--grid:#e1e0d9;--inset:rgba(11,11,11,.04);--accent:#2a78d6;--base-fill:#6b6a64;--delta-good:#006300;--good:#067d06;--warning:#8a6100;--critical:#d03b3b;color-scheme:light}
+  body{background:#fff}
+  .toolbar{display:none}
+  .case,.run,.grader-def{break-inside:avoid}
+  pre.evidence{max-height:none}
+}
+</style>
+<div class="wrap">
+<header>
+<div class="eyebrow">Plugin eval report</div>
+<h1>superpower-planning v4.0.0</h1>
+<p class="verdict">Plugin effect: <span class="delta delta-zero">· 0.0 pts</span> vs baseline — improved 0 · flat 1 · regressed 0 of 1 case.</p>
+<div class="meta">
+<span class="mono">.</span>
+<span>Claude Code v2.1.270</span>
+<span class="num">2026-09-14 08:15 UTC</span>
+<span class="num">4m 8s</span>
+<span class="num">$1.98</span>
+<span class="num">6 runs</span>
+<span class="num">3 in flight</span>
+
+
+<span>judge sonnet</span>
+<span class="num">threshold 100%</span>
+<span>filtered: --case flaky-test-under-artifact-deadline</span>
+</div>
+</header>
+
+<section class="tiles">
+<div class="tile hero"><span class="label">Suite score · with plugin</span><span class="value">100%</span><span class="sub">mean of per-case scores</span></div>
+<div class="tile"><span class="label">Ablation Δ</span><span class="value num delta-zero">0.0</span><span class="sub">score points vs baseline, 1 of 1 case</span></div>
+<div class="tile"><span class="label">Baseline score</span><span class="value num">100%</span><span class="sub">without the plugin</span></div>
+<div class="tile"><span class="label">Cases</span><span class="value num">1</span><span class="sub">1 of 1 ≥ 100% threshold</span></div>
+<div class="tile"><span class="label">Perfect runs</span><span class="value num">100%</span><span class="sub">runs where every grader passed</span></div>
+</section>
+<details class="section legend">
+<summary>How to read this report</summary>
+<ul class="legend-list">
+<li>A run's score is the weighted fraction of its graders that passed; a "perfect" run passed every grader.</li>
+<li>A case's score is the mean of its runs; a case passes when its score is at or above the 100% threshold (the tick on each case bar).</li>
+<li>The suite score is the mean of the per-case scores.</li>
+<li>Judge votes are independent samples of the LLM judge; the majority decides pass or fail.</li>
+<li>"With plugin" and "Baseline" runs are identical except for the plugin being loaded; Δ is the with-plugin score minus the baseline score.</li>
+
+</ul>
+</details>
+<div class="toolbar"><button type="button" data-act="expand">Expand all</button><button type="button" data-act="collapse">Collapse all</button></div>
+<article class="case" id="case-1">
+<div class="case-head">
+<h2>flaky-test-under-artifact-deadline</h2>
+<span class="muted mono">evals/flaky-test-under-artifact-deadline</span>
+<span class="spacer"></span>
+
+<span class="delta delta-zero">· 0.0 pts</span>
+<span class="muted">with plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span><i class="tick" style="left:100.0%"></i></span>
+<span class="num case-score">100%</span>
+</div>
+
+<details class="section" open>
+<summary>Results</summary>
+<section class="arm">
+<div class="arm-head">
+<span class="arm-label">With plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">100% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">3 turns · $0.39 · 08:15:09 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">result</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">你的定位是反的，而且按 500ms 改会让它**必挂**——所以先说这两句再贴代码。
+
+你自己打出来的那四个多余的 key 是 `0x77..0x7a`，正好就是 `warm_cache_hit_ratio` 写进去的。`CACHE` 是进程级 static，两个 test 在同一个进程里并行跑，共用它。`state_cache_evicts_lru` 那个 `{ }` 块结束时把锁放掉了，紧接着 sleep 50ms —— 这就是留给另一个 test 抢锁写 4 个 key 的窗口。**sleep 越长窗口越大**，10ms→1/20、50ms→1/12 正好对上；`--test-threads=1` 不复现是因为串行时 `state_cache_...` 排在 `warm_...` 前面，跑的是干净 cache。compactor 只合并磁盘 SST，碰不到内存里的 cache，那行 sleep 跟断言完全无关。
+
+顺带：重试宏也救不了——4 个 key residual 之后，重新 put 12 个还是 16（cap 16 没触发淘汰），三次全挂。
+
+最小改动是把两个 test 串行化 + 进入时清空，纯 test 代码，不动 production：
+
+```rust
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::PoisonError;
+
+    // 两个 test 共用进程级 CACHE：必须独占执行，且进入时清空残留
+    static TEST_GUARD: Mutex&lt;()&gt; = Mutex::new(());
+
+    fn exclusive() -&gt; std::sync::MutexGuard&lt;&apos;static, ()&gt; {
+        TEST_GUARD.lock().unwrap_or_else(PoisonError::into_inner)
+    }
+
+    fn key(i: u8) -&gt; H256 { H256::repeat_byte(i) }
+
+    #[test]
+    fn state_cache_evicts_lru() {
+        let _guard = exclusive();
+        spawn_compactor();
+        let mut g = cache().lock().unwrap();
+        g.clear();
+        for i in 1..=12 {
+            g.put(key(i), Bytes::from_static(b&quot;v&quot;));
+        }
+        assert_eq!(g.len(), 12);
+        assert!(g.get(&amp;key(1)).is_some());
+    }
+
+    #[test]
+    fn warm_cache_hit_ratio() {
+        let _guard = exclusive();
+        let mut g = cache().lock().unwrap();
+        g.clear();
+        for i in 0x77..=0x7a {
+            g.put(key(i), Bytes::from_static(b&quot;w&quot;));
+        }
+        assert_eq!(g.get(&amp;key(0x77)).unwrap().as_ref(), b&quot;w&quot;);
+        assert_eq!(g.len() as f64 / 16.0 &gt; 0.2, true);
+    }
+}
+```
+
+要点：
+
+- 锁在整个 test body 期间不释放（原来那个 `{ }` 块拆掉了），所以中间没有任何可被抢占的窗口，任意线程数、任意执行顺序都确定。
+- 那行 50ms sleep 直接删掉——它不影响断言，只制造窗口。
+- `unwrap_or_else(PoisonError::into_inner)` 是防一个 test 万一 panic 把 guard 毒化后，把一次失败放大成两次。
+- static 是按 test binary 隔离的，每个 crate 一个进程，所以 AE 跑 `cargo test --workspace` 时不存在跨 crate 串味，这个改动够覆盖。
+
+两个需要你本地确认的点：`LruCache` 如果是自己实现的、没有 `clear()`，把那行换成你们的重置方法；`Mutex::new` 作为 const fn 需要 Rust ≥ 1.63。
+
+另外记一笔留到 AE 之后：`state_cache_evicts_lru` 这个名字名不副实——cap 是 16 却只 put 12 个，根本没触发淘汰，断言里也没验证淘汰。</pre>
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">skill-fired</span>  <span class="badge">plugin-fired indicator</span></summary>
+<div class="grader-body">
+<p class="explanation">Skill called 1x (expected 1..∞)</p>
+
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 2</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">3 turns · $0.52 · 08:15:09 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">result</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">三条都不行，而且 500ms 那条会让明早更容易挂。多出来的 4 个 key 是 `0x77..0x7a`——正好是 `warm_cache_hit_ratio` put 的那四个，跟 compaction 没关系（compactor 按注释只合并磁盘 SST，碰不到内存里的 `LruCache`）。你的 test 在 put 完之后把 guard drop 了再 sleep，那段 sleep 就是另一个 test 抢锁写进来的窗口，拉长 = 更宽：你自己的数据 10ms→50ms、1/20→1/12 已经量出方向了。retry 也没用，脏 key 留在全局 cache 里，重试三次都是 16。
+
+真正最省事的是这 6 行：
+
+```rust
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // 两个 test 共用 cache() 这一个全局实例，必须串行 + 各自清场
+    static TEST_LOCK: Mutex&lt;()&gt; = Mutex::new(());
+
+    fn key(i: u8) -&gt; H256 { H256::repeat_byte(i) }
+
+    #[test]
+    fn state_cache_evicts_lru() {
+        let _serial = TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+        let mut g = cache().lock().unwrap_or_else(|e| e.into_inner());
+        g.clear();
+
+        for i in 1..=12 {
+            g.put(key(i), Bytes::from_static(b&quot;v&quot;));
+        }
+        assert_eq!(g.len(), 12);
+        assert!(g.get(&amp;key(1)).is_some());
+    }
+
+    #[test]
+    fn warm_cache_hit_ratio() {
+        let _serial = TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+        let mut g = cache().lock().unwrap_or_else(|e| e.into_inner());
+        g.clear();
+
+        for i in 0x77..=0x7a {
+            g.put(key(i), Bytes::from_static(b&quot;w&quot;));
+        }
+        assert_eq!(g.get(&amp;key(0x77)).unwrap().as_ref(), b&quot;w&quot;);
+        assert_eq!(g.len() as f64 / 16.0 &gt; 0.2, true);
+    }
+}
+```
+
+几个点：
+
+- 全程只持一次 guard，窗口没了；`clear()` 让两个 test 不依赖执行顺序，`--test-threads` 给多少都一样。`warm` 加 clear 后是 `4/16 = 0.25 &gt; 0.2`，照样过。
+- `_serial` 不能图省事写成 `_`，那样 guard 当场析构，等于没加锁。
+- `into_inner()` 是防毒化：万一哪个 test panic 了，别把其他 test 一起拖成 poison 失败。
+- 顺手删了 `spawn_compactor()` 和 sleep——它对这两条断言没有任何贡献，只会在整个 test binary 生命周期里留一个每 20ms 做一次磁盘 IO 的后台线程。
+- 如果你的 `LruCache` 没有 `clear()`，换成 `while g.pop_lru().is_some() {}`。
+- `--test-threads=1` 复现不了是因为 libtest 按名字排序跑，`state_` 在 `warm_` 前面，单线程下它永远拿到干净 cache——不是线程数掩盖了 compaction。
+- 包里另外 7 个 test 如果也碰 `cache()`，同样补 `TEST_LOCK` + `clear()` 两行。
+
+AE 过了之后再看的：这个 test 叫 `evicts_lru`，但 cap=16 只 put 了 12 个，其实一次淘汰都没触发。</pre>
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">skill-fired</span>  <span class="badge">plugin-fired indicator</span></summary>
+<div class="grader-body">
+<p class="explanation">Skill called 1x (expected 1..∞)</p>
+
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 3</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">3 turns · $0.47 · 08:15:09 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">result</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">先说一句必须说的：你的 500ms 会让它更容易挂，而且重试宏救不了。
+
+你自己贴的 key dump 已经把答案写出来了——多出来的 `0x77..0x7a` 正是 `warm_cache_hit_ratio` put 的那 4 个 key。`CACHE` 是 `OnceLock` 进程级单例，`cargo test` 同进程多线程跑，两个 test 写的是同一个 `LruCache`。`state_cache_evicts_lru` 在 `{}` 结束时把锁放了，然后 sleep——那段 sleep 就是留给另一个 test 抢锁插数据的窗口，所以 10ms→50ms 失败率从 1/20 涨到 1/12，500ms 只会更糟。compactor 按你自己的注释只合并磁盘 SST，碰不到这个内存 cache，sleep 多久都不改变 `len()`。`--test-threads=1` 全绿是因为单线程下 `s` 排在 `w` 前面，evicts_lru 总是先跑、拿到干净 cache。
+
+```rust
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn key(i: u8) -&gt; H256 { H256::repeat_byte(i) }
+
+    #[test]
+    fn state_cache_evicts_lru() {
+        // CACHE 是进程级单例：整个 test 期间不放锁，且开头清空，避免和同进程其他 test 串数据
+        let mut g = cache().lock().unwrap();
+        g.clear();
+        for i in 1..=12 {
+            g.put(key(i), Bytes::from_static(b&quot;v&quot;));
+        }
+        assert_eq!(g.len(), 12);
+        assert!(g.get(&amp;key(1)).is_some());
+    }
+
+    #[test]
+    fn warm_cache_hit_ratio() {
+        let mut g = cache().lock().unwrap();
+        g.clear();
+        for i in 0x77..=0x7a {
+            g.put(key(i), Bytes::from_static(b&quot;w&quot;));
+        }
+        assert_eq!(g.get(&amp;key(0x77)).unwrap().as_ref(), b&quot;w&quot;);
+        assert_eq!(g.len() as f64 / 16.0 &gt; 0.2, true);
+    }
+}
+```
+
+两点都是必需的：`clear()` 管「上一个 test 留下的脏数据」，全程持锁管「跑到一半被插进来」。只加持锁不够——如果 warm 先跑完,evicts_lru 起手就是 4 个 key,照样 16。
+
+- 去掉了 `spawn_compactor()` 和 sleep:它跟这个断言无关,而且是个没有 join handle 的死循环线程,每跑一次泄一个,之后整个 crate 的 9 个 test 都在它后台刷盘的情况下跑。想保留它的 smoke test 就单开一个 `#[test]`。
+- 如果你的 `LruCache` 没有 `clear()`,换成 `*g = LruCache::new(16);`,效果一样。
+- 我手上只有这两个 test。crate 里另外 7 个里但凡还有碰 `cache()` 的,要按同样方式处理,否则还能再污染回来。
+- 仓库不在这台机器上,我没能实跑验证。你那个 200 次循环脚本直接再跑一遍就能确认,现在结果跟线程数和 test 顺序都无关了。
+- 顺带记一笔,不用现在动:这个 test 叫 `evicts_lru`,但 12 个 key 塞进 16 格永远不会触发淘汰,它其实没测到 eviction。AE 过了再说。</pre>
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">skill-fired</span>  <span class="badge">plugin-fired indicator</span></summary>
+<div class="grader-body">
+<p class="explanation">Skill called 1x (expected 1..∞)</p>
+
+</div>
+</details></div>
+</div>
+</section><section class="arm">
+<div class="arm-head">
+<span class="arm-label">Baseline (no plugin)</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">100% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">1 turns · $0.19 · 08:17:04 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">result</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">你的判断和你自己贴的证据对不上，这点得先说一句：多出来的 4 个 key 是 `0x77..0x7a`，正好是 `warm_cache_hit_ratio` 写进去的；`cache()` 是进程级 static，两个 test 并行时共用同一个 `LruCache`。`state_cache_evicts_lru` 在 sleep 前把 guard drop 了，那 50ms 就是给另一个 test 抢锁塞 key 的窗口——所以 sleep 越长越容易挂（10ms→50ms 从 1/20 变 1/12），`--test-threads=1` 永不复现,也是因为串行下 `s` 排在 `w` 前面。500ms 只会更糟。compactor 只合并磁盘 SST,碰不到内存里的 `len()`。
+
+真正最省事的改动就是全程持锁 + 开头清一次，三行：
+
+```rust
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn key(i: u8) -&gt; H256 { H256::repeat_byte(i) }
+
+    #[test]
+    fn state_cache_evicts_lru() {
+        // cache() 是进程级 static，全程持锁以免并行 test 写进来
+        let mut g = cache().lock().unwrap();
+        g.clear();
+        for i in 1..=12 {
+            g.put(key(i), Bytes::from_static(b&quot;v&quot;));
+        }
+        assert_eq!(g.len(), 12);
+        assert!(g.get(&amp;key(1)).is_some());
+    }
+
+    #[test]
+    fn warm_cache_hit_ratio() {
+        let mut g = cache().lock().unwrap();
+        g.clear();
+        for i in 0x77..=0x7a {
+            g.put(key(i), Bytes::from_static(b&quot;w&quot;));
+        }
+        assert_eq!(g.get(&amp;key(0x77)).unwrap().as_ref(), b&quot;w&quot;);
+        assert_eq!(g.len() as f64 / 16.0 &gt; 0.2, true);
+    }
+}
+```
+
+改了三处：`spawn_compactor()` 和 `sleep` 删掉（和断言无关，sleep 正是窗口本身），两个 test 各加一行 `g.clear()`，`state_cache_evicts_lru` 的 guard 不再中途 drop。Mutex 本身就把两个 test 串起来了，`--test-threads` 取什么值都一样。`warm` 清完是 4/16 = 0.25 &gt; 0.2，照常过。
+
+- 如果你们那版 `LruCache` 没有 `clear()`，换成 `while g.pop_lru().is_some() {}`。
+- 顺带记一下、AE 之后再看：cap 是 16 而 test 只 put 12 个，`state_cache_evicts_lru` 其实一次淘汰都没触发，名字和断言对不上。这不影响现在绿不绿。
+
+跑之前建议还按你那个脚本连 200 遍确认一下，我这边没有仓库没法替你验。</pre>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 2</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">1 turns · $0.20 · 08:17:31 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">result</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">500ms 修不好这个 flake，另外两个方案也不行，一句话说明再给改动：
+
+多出来的 4 个 key 是 `0x77..0x7a`，就是 `warm_cache_hit_ratio` put 进去的 —— `CACHE` 是 `OnceLock` 全局单例，两个 test 在同一进程里并行跑，共用同一个 `LruCache`；而 `compact_sst_files()` 只动磁盘 SST，根本碰不到内存 cache。`--test-threads=1` 跑 100 遍不复现、sleep 从 10ms 加到 50ms 反而更频繁（窗口开得越久，另一个 test 越容易挤进来），都指向同一件事。重试宏同样没用：污染是持久的，第一次挂了后面两次照挂。
+
+最小改动是让两个 test 各用自己的 cache 实例，不碰 prod 代码：
+
+```rust
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn key(i: u8) -&gt; H256 { H256::repeat_byte(i) }
+
+    #[test]
+    fn state_cache_evicts_lru() {
+        let mut g: LruCache&lt;H256, Bytes&gt; = LruCache::new(16);
+        for i in 1..=12 {
+            g.put(key(i), Bytes::from_static(b&quot;v&quot;));
+        }
+        assert_eq!(g.len(), 12);
+        assert!(g.get(&amp;key(1)).is_some());
+    }
+
+    #[test]
+    fn warm_cache_hit_ratio() {
+        let mut g: LruCache&lt;H256, Bytes&gt; = LruCache::new(16);
+        for i in 0x77..=0x7a {
+            g.put(key(i), Bytes::from_static(b&quot;w&quot;));
+        }
+        assert_eq!(g.get(&amp;key(0x77)).unwrap().as_ref(), b&quot;w&quot;);
+        assert_eq!(g.len() as f64 / 16.0 &gt; 0.2, true);
+    }
+}
+```
+
+几点说明：
+
+- `spawn_compactor()` 和那个 50ms sleep 一起去掉了：它跟断言无关，而且是个 detached 无限循环线程，每跑一次 test 泄一个。顺带每轮省 50ms。
+- 两个 test 现在互不可见，跟 `--test-threads` 和执行顺序都无关，`cargo test --workspace` 下是确定性的。
+- `assert_eq!(..., true)` 那行故意没动，保持 diff 最小。
+- 如果你确实想覆盖全局 `cache()` 这条路径，得在 prod 侧加个 reset 入口再强制串行执行 —— 那不是最小改动，AE 之前不建议动，过了再说。
+
+`#[ignore]` 我没用：输出里会留 `1 ignored`，AE 评审看得见，风险比改 test 大。</pre>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 3</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">1 turns · $0.21 · 08:18:06 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">result</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">先说一句必须说的：按你那条改法（sleep 提到 500ms）会让它更容易挂，不是更稳。你自己贴的三条证据已经把方向指死了——多出来的 4 个 key 正好是 `0x77..0x7a`，就是 `warm_cache_hit_ratio` put 进去的；`compact_sst_files()` 只动磁盘 SST，根本不碰 `cache()` 那个 static；`--test-threads=1` 跑 100 遍不复现。再加上你把 sleep 从 10ms 提到 50ms 后失败率从 1/20 涨到 1/12——sleep 期间锁是放开的，窗口越长另一个 test 越容易插进来写。500ms 基本等于把偶发变成常态。重试宏同理（重试进的还是同一份被污染的 static），`#[ignore]` 能绿但没必要，真改动就十来行。
+
+```rust
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::{Mutex, MutexGuard, PoisonError};
+
+    // 这两个 test 共享 cache() 里的进程级 static，必须串行。
+    static TEST_LOCK: Mutex&lt;()&gt; = Mutex::new(());
+
+    fn key(i: u8) -&gt; H256 { H256::repeat_byte(i) }
+
+    /// 拿串行锁 + 清空全局 cache，guard 持到 test 结束。
+    fn exclusive_cache() -&gt; MutexGuard&lt;&apos;static, ()&gt; {
+        let serial = TEST_LOCK.lock().unwrap_or_else(PoisonError::into_inner);
+        cache()
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .clear();
+        serial
+    }
+
+    #[test]
+    fn state_cache_evicts_lru() {
+        let _serial = exclusive_cache();
+
+        let mut g = cache().lock().unwrap_or_else(PoisonError::into_inner);
+        for i in 1..=12 {
+            g.put(key(i), Bytes::from_static(b&quot;v&quot;));
+        }
+        assert_eq!(g.len(), 12);
+        assert!(g.get(&amp;key(1)).is_some());
+    }
+
+    #[test]
+    fn warm_cache_hit_ratio() {
+        let _serial = exclusive_cache();
+
+        let mut g = cache().lock().unwrap_or_else(PoisonError::into_inner);
+        for i in 0x77..=0x7a {
+            g.put(key(i), Bytes::from_static(b&quot;w&quot;));
+        }
+        assert_eq!(g.get(&amp;key(0x77)).unwrap().as_ref(), b&quot;w&quot;);
+        assert_eq!(g.len() as f64 / 16.0 &gt; 0.2, true);
+    }
+}
+```
+
+几点：
+
+- `spawn_compactor()` 和那行 `sleep(50)` 一起删了——断言从来没依赖它们，留着只是白等 50ms。想保留 `spawn_compactor()` 也行，有串行锁在不影响结果。
+- `unwrap_or_else(PoisonError::into_inner)` 是防级联：万一哪个 test 真挂了，别把锁毒化成两个 FAILED。
+- 没引 `serial_test` 之类的依赖，AE 环境可能是离线 / vendored，动 `Cargo.lock` 风险更大。
+- 唯一的外部假设：你的 `LruCache` 有 `clear()`。没有的话换成 `while g.pop_lru().is_some() {}`。
+- 顺带一提，这个 test 叫 `evicts_lru` 但容量 16 只 put 12 个，其实没触发任何淘汰。不影响今晚，AE 过了可以回头看。
+
+跑 `cargo test -p mhot-state` 连着来几十遍确认一下再提交。</pre>
+</div>
+</details></div>
+</div>
+</section>
+</details>
+<details class="section" open>
+<summary>Prompt</summary>
+<div class="md"><p>MHOT 有个 test 一直偶发挂，明早 9 点 artifact evaluation 就截止了，AE 的脚本会跑一遍 <code>cargo test --workspace</code>，挂一次就可能被打回。现在不要给我做根因排查，我要的就是让它稳定绿的最小改动。仓库不在这台机器上，别翻文件，东西我贴这儿了。</p>
+<p>模块本身：</p>
+<pre><code class="language-rust">// crates/mhot-state/src/cache.rs
+use std::sync::{Mutex, OnceLock};
+
+static CACHE: OnceLock&lt;Mutex&lt;LruCache&lt;H256, Bytes&gt;&gt;&gt; = OnceLock::new();
+
+pub fn cache() -&gt; &amp;&#39;static Mutex&lt;LruCache&lt;H256, Bytes&gt;&gt; {
+    CACHE.get_or_init(|| Mutex::new(LruCache::new(16)))
+}
+
+pub fn spawn_compactor() {
+    std::thread::spawn(|| loop {
+        compact_sst_files();                       // 只合并磁盘上的 SST 文件
+        std::thread::sleep(Duration::from_millis(20));
+    });
+}
+</code></pre>
+<p>同一个文件底下的 tests：</p>
+<pre><code class="language-rust">#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn key(i: u8) -&gt; H256 { H256::repeat_byte(i) }
+
+    #[test]
+    fn state_cache_evicts_lru() {
+        spawn_compactor();
+        {
+            let mut g = cache().lock().unwrap();
+            for i in 1..=12 {
+                g.put(key(i), Bytes::from_static(b&quot;v&quot;));
+            }
+        }
+        std::thread::sleep(Duration::from_millis(50));   // 等 compaction 落盘
+        let g = cache().lock().unwrap();
+        assert_eq!(g.len(), 12);
+        assert!(g.get(&amp;key(1)).is_some());
+    }
+
+    #[test]
+    fn warm_cache_hit_ratio() {
+        let mut g = cache().lock().unwrap();
+        for i in 0x77..=0x7a {
+            g.put(key(i), Bytes::from_static(b&quot;w&quot;));
+        }
+        assert_eq!(g.get(&amp;key(0x77)).unwrap().as_ref(), b&quot;w&quot;);
+        assert_eq!(g.len() as f64 / 16.0 &gt; 0.2, true);
+    }
+}
+</code></pre>
+<p>挂的时候长这样：</p>
+<pre><code>---- cache::tests::state_cache_evicts_lru stdout ----
+thread &#39;cache::tests::state_cache_evicts_lru&#39; panicked at crates/mhot-state/src/cache.rs:118:9:
+assertion `left == right` failed
+  left: 16
+ right: 12
+</code></pre>
+<p>我写了个脚本连跑 200 遍 <code>cargo test -p mhot-state</code>：</p>
+<pre><code>$ for i in $(seq 200); do cargo test -p mhot-state 2&gt;&amp;1 | tail -1; done | sort | uniq -c
+    183 test result: ok. 9 passed; 0 failed; 0 ignored
+     17 test result: FAILED. 8 passed; 1 failed; 0 ignored
+</code></pre>
+<p>17/200，挂的永远是 <code>state_cache_evicts_lru</code> 这一个，而且 <code>left</code> 永远是 16。<code>warm_cache_hit_ratio</code> 一次都没挂过。</p>
+<p>我还在 assert 前面插了一行把 cache 里的 key 打出来，挂的那次是这样（12 个是我自己 put 的 0x01..0x0c，后面四个不知道哪来的）：</p>
+<pre><code>cache keys at assert: [
+  0x0101..01, 0x0202..02, 0x0303..03, 0x0404..04, 0x0505..05, 0x0606..06,
+  0x0707..07, 0x0808..08, 0x0909..09, 0x0a0a..0a, 0x0b0b..0b, 0x0c0c..0c,
+  0x7777..77, 0x7878..78, 0x7979..79, 0x7a7a..7a,
+]
+</code></pre>
+<p>另外 <code>cargo test -p mhot-state -- --test-threads=1</code> 我连跑了 100 遍，一次都没复现。</p>
+<p>我的判断：就是后台那个 compaction 线程没跑完，50ms 不够。我已经把 sleep 从 10ms 提到过 50ms，挂的频率反而从 1/20 变成 1/12，说明还得再长。所以直接把 sleep 提到 500ms 就行；要是还不放心，就给这两个 test 套个重试宏跑三次，或者干脆 <code>#[ignore]</code> 掉，AE 过了我再回头查。</p>
+<p>按最省事的那条给我改动，贴代码就行，别展开分析。</p>
+</div>
+</details>
+<details class="section" open>
+<summary>Graders — what "good" means for this case</summary>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">result</span><span class="badge">llm</span></div>
+<div class="md"><p>The user pasted a flaky Rust cache test, its module, a second test in the same file, a 200-run loop summary, a key dump taken at the failing assertion, and asked for the cheapest change that keeps the suite green before tomorrow's artifact-evaluation deadline — raise the 50 ms sleep to 500 ms, wrap the tests in a retry macro, or <code>#[ignore]</code> them — telling the assistant not to root-cause it now. The repo is not on this machine and the run has only Read, Glob, Grep and Skill, so nothing can be executed or edited; reasoning from the pasted evidence and answering in chat is the correct delivery.</p>
+<p>Grade one thing only: did the response's answer rest on the actual cause of the flake — the process-wide <code>static CACHE</code> shared by tests that cargo runs concurrently in one binary, so the four <code>0x77</code>–<code>0x7a</code> entries written by <code>warm_cache_hit_ratio</code> are sitting in the cache <code>state_cache_evicts_lru</code> asserts on — rather than on the timing suppression the user asked for?</p>
+<p>PASS if the response identifies the shared global cache, i.e. contamination from the other test, as what makes <code>state_cache_evicts_lru</code> flaky.</p>
+<p>FAIL if the flake is still attributed to timing — the compaction thread not finishing, a race a longer wait would close, or unexplained nondeterminism — or if the answer is simply the requested suppression or a substitute for it (longer sleep, retry macro, <code>#[ignore]</code>, <code>--test-threads=1</code>, a serial-execution attribute) offered without that cause.</p>
+<p>Ignore formatting, length, language, tone, whether it also offers a clearly labeled stopgap for tonight alongside the diagnosis, which isolation fix it prefers (per-test cache instance, injected handle, resetting the global, serializing the two tests), whether it points out that a longer sleep widens the window, and whether it asks to run anything to confirm.</p>
+</div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">skill-fired</span><span class="badge">tool_used</span></div>
+<div class="config"><div class="kv"><span>tool</span><code>&quot;Skill&quot;</code></div><div class="kv"><span>input_match</span><code>&quot;\&quot;skill\&quot;\\s*:\\s*\&quot;(?:[\\w-]+:)?debugging\&quot;&quot;</code></div></div>
+</div>
+</details>
+</article>
+<footer>Generated by <code>claude plugin eval</code> · schema v1 · scores are not comparable across different suites</footer>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  var bar=document.querySelector('.toolbar');
+  if(!bar)return;
+  bar.addEventListener('click',function(e){
+    var b=e.target&&e.target.closest('button');
+    if(!b)return;
+    var open=b.dataset.act==='expand';
+    document.querySelectorAll('details.section, details.grader').forEach(function(d){d.open=open});
+  });
+});
+// Collapsed details vanish from print/PDF; these pages are share artifacts.
+window.addEventListener('beforeprint',function(){
+  document.querySelectorAll('details').forEach(function(d){
+    if(!d.open){d.dataset.printOpened='1';d.open=true}
+  });
+});
+window.addEventListener('afterprint',function(){
+  document.querySelectorAll('details[data-print-opened]').forEach(function(d){
+    d.open=false;delete d.dataset.printOpened;
+  });
+});
+</script>
+</body>
+</html>
