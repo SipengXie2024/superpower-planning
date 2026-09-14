@@ -1,0 +1,1660 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Eval report — superpower-planning v4.0.0</title>
+</head>
+<body>
+<style>
+:root{--plane:#f9f9f7;--surface:#fcfcfb;--ink:#0b0b0b;--ink-2:#52514e;--ink-3:#6b6a64;--hairline:rgba(11,11,11,.10);--grid:#e1e0d9;--inset:rgba(11,11,11,.04);--accent:#2a78d6;--base-fill:#6b6a64;--delta-good:#006300;--good:#067d06;--warning:#8a6100;--critical:#d03b3b;
+  color-scheme:light dark;
+}
+@media (prefers-color-scheme:dark){:root{--plane:#0d0d0d;--surface:#1a1a19;--ink:#ffffff;--ink-2:#c3c2b7;--ink-3:#898781;--hairline:rgba(255,255,255,.10);--grid:#2c2c2a;--inset:rgba(255,255,255,.05);--accent:#3987e5;--base-fill:#898781;--delta-good:#0ca30c;--good:#0ca30c;--warning:#fab219;--critical:#e06c6c;color-scheme:dark}}
+:root[data-theme="dark"]{--plane:#0d0d0d;--surface:#1a1a19;--ink:#ffffff;--ink-2:#c3c2b7;--ink-3:#898781;--hairline:rgba(255,255,255,.10);--grid:#2c2c2a;--inset:rgba(255,255,255,.05);--accent:#3987e5;--base-fill:#898781;--delta-good:#0ca30c;--good:#0ca30c;--warning:#fab219;--critical:#e06c6c;color-scheme:dark}
+:root[data-theme="light"]{--plane:#f9f9f7;--surface:#fcfcfb;--ink:#0b0b0b;--ink-2:#52514e;--ink-3:#6b6a64;--hairline:rgba(11,11,11,.10);--grid:#e1e0d9;--inset:rgba(11,11,11,.04);--accent:#2a78d6;--base-fill:#6b6a64;--delta-good:#006300;--good:#067d06;--warning:#8a6100;--critical:#d03b3b;color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:var(--plane);color:var(--ink);
+  font:14px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif;
+  -webkit-text-size-adjust:100%}
+.wrap{max-width:880px;margin:0 auto;padding:40px 24px 64px;display:flex;flex-direction:column;gap:20px}
+.eyebrow{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+header h1{margin:2px 0 0;font-size:24px;font-weight:600;line-height:1.25;text-wrap:balance}
+.meta{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;color:var(--ink-2);font-size:13px}
+.meta .num{font-variant-numeric:tabular-nums lining-nums}
+.banner{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:8px;
+  border:1px solid var(--hairline);background:var(--surface);font-size:13px}
+.banner .chip-warn{color:var(--warning);font-weight:600}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.tile{background:var(--surface);border:1px solid var(--hairline);border-radius:10px;padding:14px 16px;
+  display:flex;flex-direction:column;gap:4px}
+.tile .label{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+.tile .value{font-size:26px;font-weight:600;font-variant-numeric:tabular-nums lining-nums;line-height:1.1}
+.tile.hero .value{font-family:Georgia,"Times New Roman",serif;font-weight:400;font-size:48px}
+.tile .sub{font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.tile .value.delta-pos{color:var(--delta-good)}
+.tile .value.delta-neg{color:var(--critical)}
+.toolbar{display:flex;gap:8px;justify-content:flex-end}
+.toolbar button{font:12px system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink-2);
+  background:var(--surface);border:1px solid var(--hairline);border-radius:6px;padding:4px 10px;cursor:pointer}
+.toolbar button:hover{color:var(--ink)}
+.toolbar button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.case{background:var(--surface);border:1px solid var(--hairline);border-radius:10px;padding:18px 20px;
+  display:flex;flex-direction:column;gap:10px}
+.case-regressed{border-left:3px solid var(--critical)}
+.verdict{margin:6px 0 0;font-size:15px}
+.verdict .delta{font-size:15px}
+.flag{font-size:11px;font-weight:600;color:var(--warning);white-space:nowrap}
+.star{color:var(--warning);font-size:.45em;vertical-align:super;line-height:0;cursor:help}
+.legend summary{cursor:pointer;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2)}
+.legend-list{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--ink-2)}
+.case-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.case-head h2{margin:0;font-size:16px;font-weight:600}
+.case-head .spacer{flex:1}
+.case-score{font-size:15px;font-weight:600}
+.mono{font:12px "SF Mono",ui-monospace,Menlo,Consolas,monospace}
+.num{font-variant-numeric:tabular-nums lining-nums}
+.muted{color:var(--ink-3);font-size:12px}
+.meter{display:inline-block;position:relative;width:120px;height:6px;border-radius:4px;background:var(--grid);
+  vertical-align:middle}
+.meter>span{display:block;height:100%;border-radius:4px;max-width:100%}
+.meter .tick{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--ink-3);border-radius:1px}
+.m-accent>span{background:var(--accent)}
+.m-base>span{background:var(--base-fill)}
+.delta{font-size:12px;font-weight:600;font-variant-numeric:tabular-nums}
+.delta-pos{color:var(--delta-good)}
+.delta-neg{color:var(--critical)}
+.delta-zero{color:var(--ink-3)}
+details.section{border-top:1px solid var(--grid);padding-top:10px}
+details.section>summary{cursor:pointer;font-size:12px;font-weight:600;letter-spacing:.04em;
+  text-transform:uppercase;color:var(--ink-2);list-style-position:outside;margin-left:2px}
+details.section>summary:hover{color:var(--ink)}
+details.section[open]>summary{margin-bottom:8px}
+.md{display:flex;flex-direction:column;gap:8px;background:var(--inset);border-radius:8px;
+  padding:12px 14px;overflow-wrap:break-word}
+.md>:first-child{margin-top:0}
+.md h1,.md h2,.md h3,.md h4,.md h5,.md h6{margin:4px 0 0;font-size:1em;font-weight:600;line-height:1.3}
+.md p,.md ul,.md ol,.md blockquote,.md table,.md pre,.md hr{margin:0}
+.md ul,.md ol{display:flex;flex-direction:column;gap:4px;padding-left:20px}
+.md blockquote{border-left:2px solid var(--hairline);padding-left:10px;color:var(--ink-2)}
+.md :not(pre)>code{background:var(--inset);padding:1px 4px;border-radius:4px;
+  font:.92em "SF Mono",ui-monospace,Menlo,Consolas,monospace}
+.md pre{background:var(--inset);border:1px solid var(--hairline);padding:10px 12px;border-radius:6px;
+  overflow-x:auto;font:12px/1.5 "SF Mono",ui-monospace,Menlo,Consolas,monospace}
+.md pre code{background:none;padding:0;font:inherit}
+.md table{width:100%;border-collapse:collapse}
+.md th,.md td{padding:5px 8px;text-align:left;vertical-align:top;border-bottom:1px solid var(--grid)}
+.md th{font-weight:600;color:var(--ink-2)}
+.md a{color:var(--accent);text-decoration:none}
+.md a:hover{text-decoration:underline}
+.grader-def{display:flex;flex-direction:column;gap:6px;padding:8px 0}
+.grader-def+.grader-def{border-top:1px solid var(--grid)}
+.grader-def-head{display:flex;align-items:baseline;gap:8px}
+.grader-name{font:13px "SF Mono",ui-monospace,Menlo,Consolas,monospace;font-weight:600}
+.badge{font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2);
+  border:1px solid var(--hairline);border-radius:999px;padding:1px 8px}
+.config{display:flex;flex-direction:column;gap:2px;background:var(--inset);border-radius:8px;padding:10px 14px}
+.config code{font:12px "SF Mono",ui-monospace,Menlo,Consolas,monospace;overflow-wrap:anywhere}
+.arm{display:flex;flex-direction:column;gap:8px;padding:6px 0}
+.arm+.arm{border-top:1px dashed var(--grid);margin-top:4px;padding-top:12px}
+.arm-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.arm-label{font-size:13px;font-weight:600}
+.run{border:1px solid var(--grid);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.run-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.run-title{font-size:12px;font-weight:600;color:var(--ink-2)}
+.run-error .explanation{color:var(--ink-2)}
+.note{font-size:12px;color:var(--ink-2)}
+.graders{display:flex;flex-direction:column;gap:4px}
+details.grader{border-radius:6px}
+details.grader>summary{cursor:pointer;display:flex;align-items:baseline;gap:8px;padding:3px 4px;
+  border-radius:6px;list-style:none}
+details.grader>summary::-webkit-details-marker{display:none}
+details.grader>summary::before{content:'▸';font-size:10px;color:var(--ink-3);flex:none;
+  transition:transform .12s ease}
+details.grader[open]>summary::before{transform:rotate(90deg)}
+details.grader>summary:hover{background:var(--inset)}
+details.grader>summary:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.grader-body{padding:6px 8px 8px 24px;display:flex;flex-direction:column;gap:6px}
+.chip{font-size:11px;font-weight:600;border-radius:999px;padding:1px 8px;white-space:nowrap}
+.chip-pass{color:var(--good);border:1px solid currentColor}
+.chip-fail{color:var(--critical);border:1px solid currentColor}
+.chip.chip-warn{color:var(--warning);border:1px solid currentColor}
+.explanation{margin:0;font-size:13px;color:var(--ink-2);white-space:pre-wrap;overflow-wrap:break-word}
+.kv{display:flex;gap:8px;font-size:12px;color:var(--ink-3)}
+.votes{font-variant-numeric:tabular-nums;letter-spacing:.1em}
+pre.evidence{margin:0;background:var(--inset);border:1px solid var(--hairline);border-radius:6px;
+  padding:8px 10px;overflow-x:auto;max-height:320px;
+  font:12px/1.5 "SF Mono",ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap;overflow-wrap:break-word}
+footer{color:var(--ink-3);font-size:12px;text-align:center;padding-top:8px}
+@media (prefers-reduced-motion:no-preference){
+  details.grader>summary,.toolbar button{transition:background .12s ease,color .12s ease}
+}
+@media (prefers-reduced-motion:reduce){
+  details.grader>summary::before{transition:none}
+}
+@media print{
+  :root,:root[data-theme="dark"],:root[data-theme="light"]{--plane:#f9f9f7;--surface:#fcfcfb;--ink:#0b0b0b;--ink-2:#52514e;--ink-3:#6b6a64;--hairline:rgba(11,11,11,.10);--grid:#e1e0d9;--inset:rgba(11,11,11,.04);--accent:#2a78d6;--base-fill:#6b6a64;--delta-good:#006300;--good:#067d06;--warning:#8a6100;--critical:#d03b3b;color-scheme:light}
+  body{background:#fff}
+  .toolbar{display:none}
+  .case,.run,.grader-def{break-inside:avoid}
+  pre.evidence{max-height:none}
+}
+</style>
+<div class="wrap">
+<header>
+<div class="eyebrow">Plugin eval report</div>
+<h1>superpower-planning v4.0.0</h1>
+
+<div class="meta">
+<span class="mono">.</span>
+<span>Claude Code v2.1.269</span>
+<span class="num">2026-09-13 07:58 UTC</span>
+<span class="num">7m 33s</span>
+<span class="num">$3.88</span>
+<span class="num">8 runs</span>
+<span class="num">4 in flight</span>
+
+
+<span>judge default</span>
+<span class="num">threshold 100%</span>
+
+</div>
+</header>
+<div class="banner"><span class="chip-warn">⚠ Averages include non-judgments</span><span>1 run errored — their scores count toward the averages shown without a complete judgment.</span></div>
+<section class="tiles">
+<div class="tile hero"><span class="label">Suite score</span><span class="value">56.3%<span class="star" title="Includes runs that errored or hit the cost ceiling — see “How to read this report”">*</span></span><span class="sub">mean of per-case scores · * includes 1 run without a complete judgment</span></div>
+
+<div class="tile"><span class="label">Cases</span><span class="value num">8</span><span class="sub">3 of 8 ≥ 100% threshold</span></div>
+<div class="tile"><span class="label">Perfect runs</span><span class="value num">37.5%</span><span class="sub">runs where every grader passed</span></div>
+</section>
+<details class="section legend">
+<summary>How to read this report</summary>
+<ul class="legend-list">
+<li>A run's score is the weighted fraction of its graders that passed; a "perfect" run passed every grader.</li>
+<li>A case's score is the mean of its runs; a case passes when its score is at or above the 100% threshold (the tick on each case bar).</li>
+<li>The suite score is the mean of the per-case scores.</li>
+<li>Judge votes are independent samples of the LLM judge; the majority decides pass or fail.</li>
+<li><strong>No baseline arm was run</strong> (ablation off) — this report shows absolute scores only and cannot say whether the plugin caused them. Re-run with <code>--ablation with-without</code> to measure the plugin’s effect.</li>
+<li>Scores marked with * include runs that errored or hit the cost ceiling (LLM graders force-failed); those runs count toward the means without a complete judgment.</li>
+</ul>
+</details>
+<div class="toolbar"><button type="button" data-act="expand">Expand all</button><button type="button" data-act="collapse">Collapse all</button></div>
+<article class="case" id="case-1">
+<div class="case-head">
+<h2>context-switch-preserves-state</h2>
+<span class="muted mono">evals/context-switch-preserves-state</span>
+<span class="spacer"></span>
+
+
+
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span><i class="tick" style="left:100.0%"></i></span>
+<span class="num case-score">100%</span>
+</div>
+
+<details class="section" open>
+<summary>Results</summary>
+<section class="arm">
+<div class="arm-head">
+<span class="arm-label">Runs</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">100% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">10 turns · $0.60 · 07:58:53 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">result</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">先说清楚两件事，免得你回来发现东西不在：
+
+1. **这个工作目录里没有 revmc 的 checkout**——`/tmp/claude-eval-CBHPOU/home/cwd` 是空的，只有一个裸 git 骨架，`crates/revmc/src/compiler/translate.rs` 和 `fix/mcopy-overlap` 分支都不在这儿。所以下面每一条都是**照你说的记录的，我没跟代码核对过**，也没跑测试。
+2. 这个会话里我没有 shell / 写文件的权限（memory 目录也被权限挡了），所以我没法直接把它落到 `.planning/stash/` 里。**内容我整理好放在下面，你复制进仓库就行**;或者你把 revmc 的路径给我,我来写进去。
+
+---
+
+```markdown
+# Stash: revmc MCOPY 重叠导致 gas 不匹配
+**日期:** 2026-09-13
+**状态:** 暂停（去救 Base 归档节点索引管线，预计 3-4 天）
+**分支:** fix/mcopy-overlap —— 未 commit，未 push
+
+## 目标
+revmc JIT 出来的 native code 在部分 mainnet 区块上 gas 与解释器对不上。
+根因已定位：MCOPY 的 codegen 发的是 memcpy，而 EIP-5656 要求 memmove 语义。
+src/dst 区间一重叠，数据就被写花。
+
+## 离开前已确认的事实
+- 复现用例：block 21845112 里 0x7f3a… 那笔 tx，稳定差 1743 gas，每次都一样。
+- 已改：`crates/revmc/src/compiler/translate.rs` 的 `translate_mcopy`，memcpy → memmove intrinsic。
+- 改完单跑那笔 tx gas 能对上 —— 也就是 **1743 是全部闭合，不是闭合了一部分**。
+- 回归挂了两个（`cargo test -p revmc`）：
+  - `test_mcopy_zero_len`
+  - `test_memory_expansion_gas`
+  两个都是在顺手动了 memory 扩容计费那段之后出现的，还没排查。
+
+## 回来后的第一步（按这个顺序）
+1. `git status` / `git diff` 先确认改动还在（当前未 commit 未 push）。
+2. **只回退「memory 扩容计费」那部分，保留 memcpy→memmove**，重跑 `cargo test -p revmc`。
+   - 两个测试变绿 → memmove 本身是干净的，扩容那段是独立问题，分开处理。
+   - 还红 → 才轮到怀疑 memmove 改动本身。
+3. 重跑 21845112 那笔 tx，确认 1743 仍然闭合。
+
+## 对两个失败测试的推断（未验证，回来先验这条）
+最可能：MCOPY 在 `len == 0` 时的早退守卫被动掉了，或者挪到 resize 后面去了。
+
+EIP-5656 下 MCOPY 的 gas = 3 (VERYLOW) + 3 * ceil(len/32) + 内存扩容费。
+`len == 0` 时**仍然收 3 gas 的基础费，但不能用 dst/src 偏移去触发任何扩容** ——
+解释器（revm）那边是先收 copy_cost，然后 `if len == 0 { return }`，再 `resize_memory(max(dst, src), len)`。
+如果改成了无条件按 `max(dst, src) + len` 算扩容，那么一条 len=0、dst 偏移很大的 MCOPY 就会被多收一大笔扩容费。
+这一条能同时解释两个测试一起挂。
+→ 第一眼看：`translate_mcopy` 里 `len == 0` 的分支还在不在、在不在 resize 之前。
+→ `test_mcopy_zero_len` 大概率断言的就是「收 3 gas，且内存不扩容」。
+
+次要的一条：守卫如果真被拿掉了，发 `llvm.memmove` 之前算的 `base + 大偏移` 指针本身可能已经越界
+（GEP inbounds），即使长度是 0 也是 UB。顺手看一眼。
+
+## 关于 EXTCODECOPY 的猜想 —— 大概率是假线索
+MCOPY 是 EVM 里**唯一**的 memory→memory 拷贝指令。
+EXTCODECOPY / CODECOPY 的源是账户代码，CALLDATACOPY 的源是 calldata，RETURNDATACOPY 的源是
+return data buffer —— 源和目标在不同区域，天然不可能重叠，memcpy 是对的。
+所以不用按 MCOPY 的思路把那几处再排一遍。
+
+但那个猜想里有一半是有价值的，值得花 20 分钟确认：
+**revmc 的 memory buffer 是每个 call frame 各自一块，还是跨 frame 共用一个 arena？**
+- 各自一块 → 上面的结论成立，这条线收工。
+- 共用 arena，或者源区间是借出来的 slice（尤其 RETURNDATACOPY 的 return data 有可能是
+  被调用帧内存的借用）→ 才真的存在 aliasing，那时候 memcpy 有风险。
+→ 下一步不是 grep EXTCODECOPY，是去看 memory / arena 的分配方式。
+
+## 还没做的
+- EXTCODECOPY 的几处 grep 结果没跟进（见上，优先级建议下调）
+- 只验了 21845112 那一笔，没跑更大范围的区块回归 —— 测试修完后要放大验证，确认没有别的 gas 分叉点
+
+## 一条要记住的背景结论
+memcpy/memmove 的差别本身只写花数据，**不直接改 gas**。这次能差出 1743，
+说明被写花的字节流到了某个按量计费的地方：后续内存操作的 offset/len（扩容费是二次方的）、
+KECCAK256 / LOG 的数据长度，或者干脆改变了 JUMPI 的分支走向。
+既然换成 memmove 之后 1743 一次全闭合，说明分叉点只有一个 —— 不用再找第二个 bug。
+```
+
+---
+
+两点提醒：
+
+**改动现在既没 commit 也没 push，要在另一台机器上救三四天火。** 走之前至少在分支上打个 WIP commit（`git add -A &amp;&amp; git commit -m &quot;wip: mcopy memcpy-&gt;memmove, 2 tests red&quot;`），最好推到远端。不然这份文档记得再细，代码没了也是白搭。
+
+**文档里我加的那几条推断（零长度守卫、EXTCODECOPY 假线索、arena 是否共用）是我从 EIP-5656 和 revm 的结构推出来的，没在你的代码里验证过**，我在文里都标了。回来照第一步的顺序走一遍就知道准不准。
+
+把 revmc 仓库路径告诉我，我把这份写进 `.planning/stash/` 里。</pre>
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">skill-fired</span>  </summary>
+<div class="grader-body">
+<p class="explanation">Skill called 1x (expected 1..∞)</p>
+
+</div>
+</details></div>
+</div>
+</section>
+</details>
+<details class="section" open>
+<summary>Prompt</summary>
+<div class="md"><p>先打断一下。revmc 那边我干到一半，组里那台 Base 归档节点的索引管线昨晚挂了，老板让我今天起先去救火，来回折腾估计三四天回不来。</p>
+<p>手上这摊子现在是这个状态：revmc（我们那个把 EVM 字节码 JIT 成机器码的编译器）编出来的 native code 跑 mainnet 某些区块时 gas 对不上，我已经定位到 MCOPY 那块——解释器是 memmove 语义，我们 codegen 里图省事发的是 memcpy，源和目标区间一重叠就写花了。</p>
+<p>具体干到哪儿了：</p>
+<ul>
+<li>用 block 21845112 里那笔 0x7f3a… 的交易稳定复现了，每次都差 1743 gas</li>
+<li>在 <code>crates/revmc/src/compiler/translate.rs</code> 的 <code>translate_mcopy</code> 里把 memcpy 换成了 memmove intrinsic，本地单跑那笔交易能对上了</li>
+<li>但 <code>cargo test -p revmc</code> 现在红了两个：<code>test_mcopy_zero_len</code> 和 <code>test_memory_expansion_gas</code>。我怀疑是顺手动了 memory 扩容那段计费搞出来的，还没查</li>
+<li>还有个没验证的猜想：<code>EXTCODECOPY</code> 那条路径八成有同样的重叠问题，我 grep 出来几处但没跟进</li>
+<li>代码在 <code>fix/mcopy-overlap</code> 分支上，没 push，本地也没 commit</li>
+</ul>
+<p>三四天以后我回来肯定忘干净了。你先把现在这个状态给我收一下，别让我回来还得从头复现一遍。</p>
+</div>
+</details>
+<details class="section" open>
+<summary>Graders — what "good" means for this case</summary>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">result</span><span class="badge">llm</span></div>
+<div class="md"><p>The user is walking away from a half-finished revmc MCOPY fix for an urgent incident and will come back in three or four days. The bug is NOT fixed: two tests are still red and one suspicion is unverified. Grade only whether the unfinished state was parked so it survives the gap. Ignore formatting, length, and language. Note the run has no Bash and no file-writing tool, so nothing can actually be executed or saved to disk.</p>
+<p>PASS if ALL of these hold:</p>
+<ul>
+<li>The work is framed as paused, not finished: no completion or archive summary, no claim that the MCOPY fix is done or that the work can be wrapped up.</li>
+<li>It produces the actual resume snapshot content, not a promise to remember: where the work stopped, what to do next when he returns, what is still open or unverified, and the branch / key file (<code>fix/mcopy-overlap</code>, <code>translate.rs</code>).</li>
+<li>The snapshot carries forward the two loose ends by name — the two red tests (<code>test_mcopy_zero_len</code>, <code>test_memory_expansion_gas</code>) and the unverified <code>EXTCODECOPY</code> overlap suspicion — plus enough to re-reproduce without redoing the hunt (the block/transaction and the 1743 gas delta).</li>
+<li>It names a concrete durable location for that content under <code>.planning/</code> (a paused/stash entry, e.g. <code>.planning/stash/&lt;name&gt;/</code>), and since it cannot write files here, says so plainly and hands the user the content and path instead of claiming it saved anything.</li>
+</ul>
+<p>FAIL if ANY of these hold:</p>
+<ul>
+<li>It treats the work as complete — archives it, writes a "done" summary, or reports the gas mismatch as resolved while two tests are red.</li>
+<li>The state survives only as chat prose: no on-disk destination is identified, or continuity is left to "I'll remember" / session memory.</li>
+<li>The handover drops the red tests or the <code>EXTCODECOPY</code> suspicion, so the user returns without knowing what was broken or unchecked.</li>
+<li>It ignores the interrupt and starts working the bug anyway — debugging the memory-expansion gas accounting or patching <code>EXTCODECOPY</code> as its main output. (Listing these as next steps for after he returns is correct, not a failure.)</li>
+<li>It claims files were written, scripts were run, or state was saved when no such tool was available.</li>
+</ul>
+</div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">skill-fired</span><span class="badge">tool_used</span></div>
+<div class="config"><div class="kv"><span>tool</span><code>&quot;Skill&quot;</code></div><div class="kv"><span>input_match</span><code>&quot;\&quot;skill\&quot;\\s*:\\s*\&quot;(?:[\\w-]+:)?stashing\&quot;&quot;</code></div></div>
+</div>
+</details>
+</article>
+<article class="case" id="case-2">
+<div class="case-head">
+<h2>design-exploration-before-code</h2>
+<span class="muted mono">evals/design-exploration-before-code</span>
+<span class="spacer"></span>
+
+
+
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span><i class="tick" style="left:100.0%"></i></span>
+<span class="num case-score">100%</span>
+</div>
+
+<details class="section" open>
+<summary>Results</summary>
+<section class="arm">
+<div class="arm-head">
+<span class="arm-label">Runs</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">100% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">7 turns · $0.56 · 07:58:53 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">result</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">我先看了下工作目录，是空的——MHOT 的代码不在这里，所以下面是纯设计层面的推演，落地时得拿真实代码再对一遍。
+
+在回答你那五个问题之前，有个更前置的东西得先说，因为它可能会改变这件事值不值得做。
+
+## 0. 先确认这层收益的天花板
+
+revmc 消掉的是**解释器 dispatch 开销**（opcode 循环、栈边界检查、跳转表）。但真实链上负载里，一笔 ERC20 transfer 或 Uniswap swap 的时间大头通常是 state 访问（SLOAD 打到 DB/trie）、keccak、以及 journal 记账，纯 dispatch 占比往往没有直觉上那么高。
+
+Amdahl 很残酷：如果 dispatch 只占整体执行时间的 15%，revmc 就算把它干到 0，全局也就快 15%。而你为此要引入一个后台编译器、一套缓存、一个共识正确性风险面。
+
+所以**第一步不是写 TieredExec，是 profile**：在你们真实的 block 回放负载上，量出解释器 dispatch 占总执行时间的比例。这个数字决定了后面所有设计的预算。低于 20% 的话，这套东西大概率不如先去优化 state 访问路径。
+
+另外顺手确认一件事：**revmc 当前的维护状态和 API 稳定性**。我记得它一直挂着 experimental/WIP 的标签，Paradigm 那边后来投入减少了。这个我不确定现在的情况，但它是整个方案的地基，值得你先花十分钟确认，别设计完了发现上游停更两年。
+
+---
+
+## 1. 计数指标：`count` 不该数调用次数
+
+这是草稿里我认为最该改的一处。
+
+调用次数和&quot;值不值得编译&quot;关联很弱：一个被调 1000 次、每次 200 gas 的 proxy，和一个被调 20 次、每次跑 500 万 gas 的数学库，前者会先撞阈值，但后者才是 revmc 真正能赚钱的目标。
+
+**改成累计执行的 opcode 步数**（不是 gas）。理由：
+- gas 会严重高估 storage 密集型合约——cold SLOAD 是 2100 gas，但它是 DB-bound，恰恰是 JIT 帮不上忙的部分。
+- 步数直接正比于 dispatch 工作量，也就是 revmc 真正消掉的那块。
+- 成本几乎为零：解释器主循环里一个局部变量自增，每个 call frame 结束时汇总一次，没有原子操作。如果 revm 没现成暴露，加这一行也很便宜。
+
+顺带一个安全性副作用：按步数计数天然抗 spam——刷一个 45 字节的 minimal proxy 一百万次，累计步数依然很低，不会污染编译队列。
+
+## 2. 阈值：别拍数字，先量分布
+
+&quot;50&quot; 这种数拍出来没有依据。做法应该是：先把计数器加上（不接编译器），跑几千个真实 block，把每个 code hash 的累计步数分布 dump 出来，看拐点在哪。
+
+我的预期是这个分布**极度长尾**——主网上少数几十个 code hash（USDT/USDC/WETH/Uniswap pool/router/multicall）覆盖绝大部分执行量。如果确实如此，好消息是**阈值不敏感**：在一个很宽的区间里选，得到的热集合几乎是同一批。你不需要精调，只需要避开两端。
+
+真正需要约束的不是阈值本身，而是它派生出来的两个量：**稳态下每秒 tier-up 的次数**（决定编译器 CPU 占用）和**缓存条目数**（决定内存）。按这两个指标反推阈值。
+
+再补两个硬性过滤，跟阈值无关：
+- **initcode 直接跳过**——构造函数只跑一次，编译纯亏。
+- **字节码长度地板**（比如 &lt; 200 字节不编译）——proxy 这类合约调用极频繁但几乎不干活，编译收益被调用开销吃掉。
+
+## 3. 同步还是异步：只能异步，不要留同步选项
+
+这个没有权衡余地，两个理由：
+
+**DoS**：同步编译意味着攻击者可以构造一个 LLVM 编译特别慢的合约（超大字节码 + 病态 CFG），刚好把它推过阈值，让某一笔交易卡住几百毫秒到几秒。对出块节点这是直接的活性攻击。
+
+**非确定性**：同步编译让交易执行耗时依赖本地缓存状态，不同节点的缓存不同。任何基于 wall-clock 的逻辑（出块 deadline、打包多少笔）都会跟着分叉。
+
+异步之后，编译从&quot;延迟风险&quot;降级成&quot;资源风险&quot;，用这几条兜住：编译队列有界、in-flight 集合去重（同一个 code hash 别排两次）、按累计步数排优先级而不是 FIFO、编译线程数限死 1–2 个并调低优先级（LLVM -O2/-O3 跑大合约能把一个核吃满接近一秒）。
+
+## 4. 缓存 key 不是 CodeHash——reorg 不是你的问题，硬分叉才是
+
+先说 reorg：**你已经解决了，只是没意识到。**
+
+编译产物是 bytecode 的纯函数，而 code hash → bytecode 是 keccak 定义的、永久不变的映射。reorg 会改变&quot;哪个地址上有什么代码&quot;，但绝不会改变&quot;code hash X 对应什么字节码&quot;。所以按 code hash 索引的编译缓存**天然是内容寻址的，reorg 后不需要任何失效处理**。最坏情况是你手上留着一份回滚分支上某合约的编译产物，占点内存，LRU 会把它淘汰掉。计数器被回滚分支污染也一样无害——它本来就是个启发式。
+
+（反过来说：如果你当初按 **address** 建索引，reorg、proxy 升级、CREATE2 selfdestruct 后重部署，每一个都会给你一个用错代码的共识 bug。所以这个选择要守住。）
+
+真正的失效来源是**硬分叉**。编译产物把当时的 gas 表和 opcode 语义烤进了机器码里。任何 gas repricing（EIP-2929/1153 这类）或新增 opcode 一旦激活，旧产物全部作废。所以 key 应该是：
+
+```
+(code_hash, spec_id, revmc_version, opt_level)
+```
+
+`spec_id` 是共识正确性必需的；后两个是为了避免你升级 revmc 或改优化等级之后，还在用旧编译器的产物——尤其在做落盘缓存的时候，这是必须的。
+
+## 5. 落盘跨进程复用：v1 别做
+
+收益是节点重启后的 warmup 期。但你的热集合可能只有几十上百个 code hash，后台线程几秒内就能重新编译出来——先量一下这个 warmup 期到底损失了什么，再决定要不要为它引入下面这些代价：
+
+- **dlopen 一个 .so 就是执行任意代码**。缓存目录变成代码注入面，权限、校验和都得管起来。而且要立个死规矩：**编译产物永远不从 peer 同步**，否则就是供应链后门。
+- 上千个 .so 的 fd 和地址空间占用，得改成懒加载或者打包成单个归档。
+
+YAGNI：v1 纯内存 JIT。落盘留到有实测数据支撑再说。
+
+## 6. 并发：两个 map 要分开处理，它们的读写比完全不同
+
+`hot` 和 `count` 长得像，但特性相反：
+
+**`hot`：读极多写极少**（只在编译完成时写，大概每秒个位数）。用 `RwLock&lt;HashMap&gt;` 也能跑，但每次调用的读锁仍是一次原子 RMW，多核下 cache line 会来回弹。这是教科书级的 read-mostly 场景，用 `ArcSwap&lt;HashMap&gt;` 做 copy-on-write：读者完全 wait-free、零竞争，写者克隆整个 map——map 才几百项，每秒克隆几次毫无压力。
+
+**`count`：每次调用都写**——这个才是真瓶颈，共享 map 在并行执行下必然炸。方案：**per-worker 线程本地计数器，定期合并**（block 结束时，或每 N 毫秒）。计数本来就是启发式，丢几个数、稍微不准，完全无所谓。这样热路径上一个跨线程共享都没有。
+
+另外两个小优化：
+
+- **别用 SipHash 去 hash 一个 keccak 输出**。code hash 本身已经是均匀分布的，直接取前 8 字节当 hash 值（`nohash-hasher` 之类）。这是白捡的。
+- 更进一步：如果 revm 的 `Bytecode` 是 `Arc` 共享的，可以把&quot;已编译&quot;的指针挂在 bytecode 对象上，热路径退化成一次指针解引用，连哈希查找都省了。需要动 revm 内部，看你能不能接受这个耦合。
+
+---
+
+## 7. 草稿里没有、但会咬人的几个坑
+
+**编译失败没有出路。** 不支持的 opcode、LLVM 内部错误、编译超时——草稿里没有失败分支，结果就是这个 code hash 每次撞阈值都重新排队编译一次，无限重试。需要**负缓存**：失败的 key 标记为 permanently-cold，附带失败原因和一个（可选的、按 revmc 版本重置的）过期策略。
+
+**per-block gas 记账是共识风险的重灾区。** revmc 为了性能会做基本块级的 gas/栈/内存扩展检查合并，而不是每条指令一次。这在语义上大部分时候等价（OOG 反正烧光 gas），但 `GAS` opcode 会观测到块中间的 gas 值，编译器必须在这些点切分基本块。这类边界条件出错就是直接的共识分叉。**这是整个方案里最危险的地方**，而且不是你的代码出的错，是上游的。所以必须有差分测试兜底（见下）。
+
+**Inspector / tracer 完全不兼容。** native code 产生不了逐 opcode 回调。只要挂了 inspector（`debug_traceTransaction`、gas 分析、任何 hook），就必须强制走解释器。很容易漏，漏了就是功能回归。
+
+**LRU 淘汰会 use-after-free。** 正在执行的 native code 被淘汰释放 → segfault。编译产物必须 `Arc&lt;CompiledModule&gt;`，进入 frame 时 clone 一份 Arc 持住，或者用 epoch-based reclamation。
+
+**bailout 恢复路径。** revmc 遇到需要重入 host 的场景（CALL 之类）会把控制权交回来，恢复时的 interpreter state 必须严格一致。这块的测试覆盖要专门写。
+
+**可观测性。** 上线后必须能回答&quot;这层到底有没有用&quot;：native vs interp 的调用比例、tier-up 速率、编译耗时直方图、编译失败计数、缓存命中率。没这些指标，你没法证明这个功能是正收益。
+
+**测试策略——这是唯一能建立信心的东西。** 加一个 differential 模式：每笔交易同时跑解释器和 native，断言 `(result, gas_used, state diff, logs)` 完全一致。用它做三件事：CI 里跑固定 fixture；影子节点上跑真实链上流量；把阈值强制设成 1（全部编译）回放历史区块，把覆盖率拉满。再加一个随机字节码 fuzzer 对拍。
+
+---
+
+## 8. 一个更简单的竞品方案，值得放在桌上
+
+如果热集合真的像我猜的那样长尾——几十个 code hash 覆盖大部分执行量——那么**离线 AOT 预编译一份静态 allowlist**（把 top-N 合约的产物随二进制发布或启动时加载）就能拿到这套动态方案 80% 的收益，同时砍掉：计数器、阈值调参、后台编译线程、编译队列、DoS 面、缓存淘汰、落盘复用——基本上是砍掉整个 `TieredExec`。
+
+代价是覆盖不到新出现的热点合约，需要人工/定期更新 allowlist。
+
+我的建议是：**profile 数据先出来，同时把计数器（第 1 节）单独上线跑一周**，用真实分布来判断该走静态 allowlist 还是动态 tiering。这个计数器无论最终选哪条路都不白做。
+
+---
+
+## 我需要你回答的三个问题
+
+这三个的答案会实质性改变上面的结论：
+
+1. **MHOT 在什么位置？** 出块/验证节点的热路径（对抗性输入、延迟敏感、有共识风险），还是回放/索引/回测这类离线负载（输入可信、只关心吞吐）？如果是后者，第 3 节的 DoS 论证基本失效，同步编译反而可能是合理的，整个设计能简化很多。
+
+2. **有 profile 数据吗？** 解释器 dispatch 目前占执行时间多少？没有的话，这是第一件该做的事。
+
+3. **并行执行是什么模型？** block-STM 式乐观并行 + 冲突重执行，还是按 sender/access-list 分片？如果有重执行，同一段代码会被重复计数，热路径竞争也会更严重，第 6 节的方案得再收紧。
+
+回答完这三个我可以把设计定稿，写进 `.planning/design.md` 和 `plan.md`。补充一句：这个 session 里我没有文件写入和 shell 工具，到时候持久化那步我需要开个 subagent 来落盘，先跟你说一声。</pre>
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">skill-fired</span>  </summary>
+<div class="grader-body">
+<p class="explanation">Skill called 1x (expected 1..∞)</p>
+
+</div>
+</details></div>
+</div>
+</section>
+</details>
+<details class="section" open>
+<summary>Prompt</summary>
+<div class="md"><p>我想在 MHOT 里加一层"热点合约分层执行":冷的走解释器,热的走 revmc 编译出来的 native code。现在只有个毛坯想法,代码还没动,草稿长这样:</p>
+<pre><code class="language-rust">// 随手写的,不保证能编译
+struct TieredExec {
+    interp: revm::Interpreter,
+    hot: HashMap&lt;CodeHash, CompiledFn&gt;,  // revmc 的编译产物
+    count: HashMap&lt;CodeHash, u64&gt;,       // 这个 code hash 被执行过多少次
+}
+
+// 大致流程:
+// 1. 进 call 先查 hot,命中就直接跑 native
+// 2. 没命中走解释器,同时 count += 1
+// 3. count 超过阈值(先拍 50?)就丢给后台线程让 revmc 编译
+// 4. 编译完写回 hot,下次就走 native
+</code></pre>
+<p>我自己没想清楚的地方挺多:阈值拍多少合理、编译要不要卡住当前这笔交易、编译产物要不要落盘跨进程复用、reorg 之后缓存怎么处理、多线程执行的时候这两个 HashMap 会不会直接变成瓶颈。你帮我把这个设计理一理,顺带看看有没有我没想到的坑。</p>
+</div>
+</details>
+<details class="section" open>
+<summary>Graders — what "good" means for this case</summary>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">result</span><span class="badge">llm</span></div>
+<div class="md"><p>The user pasted a half-formed tiered-execution sketch and asked to have the design worked out. The response is being graded on whether it explored the decision space before committing to one answer. Ignore formatting, length, and language.</p>
+<p>PASS if ALL of these hold:</p>
+<ul>
+<li>It treats this as a design to explore, not a task to implement: no finished <code>TieredExec</code> implementation, no compile-queue/cache-eviction/threading code written out as the answer. Small illustrative snippets or type sketches used to compare options are fine.</li>
+<li>It gives the user back at least two genuinely different candidate approaches for at least one of the real decisions (for example: compile synchronously and stall the transaction vs. compile in the background and keep interpreting; in-memory-only cache vs. on-disk cache reused across processes), each with its trade-off stated.</li>
+<li>It treats the threshold of 50 as an unvalidated guess — asks what it should be, says it must be measured, or otherwise flags it as needing evidence — rather than silently building the design on 50.</li>
+<li>It puts open questions back to the user (constraints, workload, success criteria) or explicitly lists the decisions the user still has to make, and asks for confirmation on a direction before going further.</li>
+</ul>
+<p>FAIL if ANY of these hold:</p>
+<ul>
+<li>It jumps to implementation: produces the full struct/impl, worker-thread plumbing, or a file-by-file build plan as its main output.</li>
+<li>It settles every open point unilaterally — picks one threshold, one compilation policy, one reorg strategy — and hands back a single design with no alternatives and no questions.</li>
+<li>It answers the five listed uncertainties one by one as a Q&amp;A and stops, without surfacing any decision or risk the user did not already name (for example lock contention on the shared maps, cache keying and correctness across chain state, or memory growth of compiled code).</li>
+</ul>
+</div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">skill-fired</span><span class="badge">tool_used</span></div>
+<div class="config"><div class="kv"><span>tool</span><code>&quot;Skill&quot;</code></div><div class="kv"><span>input_match</span><code>&quot;\&quot;skill\&quot;\\s*:\\s*\&quot;(?:[\\w-]+:)?brainstorming\&quot;&quot;</code></div></div>
+</div>
+</details>
+</article>
+<article class="case" id="case-3">
+<div class="case-head">
+<h2>failing-test-before-implementation</h2>
+<span class="muted mono">evals/failing-test-before-implementation</span>
+<span class="spacer"></span>
+
+
+
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span><i class="tick" style="left:100.0%"></i></span>
+<span class="num case-score">0%</span>
+</div>
+
+<details class="section" open>
+<summary>Results</summary>
+<section class="arm">
+<div class="arm-head">
+<span class="arm-label">Runs</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">0% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">8 turns · $0.55 · 07:58:53 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">result</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">写文件的工具（Write/Edit/Bash）在这个 session 里是禁用的，所以我没法直接落盘，函数体贴在下面，你粘进 `crates/octopus-primitives/src/fee.rs` 就行。
+
+```rust
+//! EIP-1559 fee market calculations.
+
+use core::cmp::Ordering;
+
+/// EIP-1559 `BASE_FEE_MAX_CHANGE_DENOMINATOR`: 每个区块 base fee 最多变动父块的 1/8。
+const BASE_FEE_MAX_CHANGE_DENOMINATOR: u128 = 8;
+
+/// EIP-1559 `ELASTICITY_MULTIPLIER`: 单块 gas 上限为 target 的 2 倍。
+const ELASTICITY_MULTIPLIER: u64 = 2;
+
+/// 按 EIP-1559 计算给定父块之后那个区块的 base fee。
+///
+/// 所有除法都是向下取整，与参考实现一致。中间乘积加宽到 `u128`：在 30M gas 的满块里，
+/// `parent_base_fee * gas_delta` 在 base fee 超过约 1230 gwei 时就会溢出 `u64`，
+/// 而主网到过这个量级。
+pub fn next_base_fee(parent_base_fee: u64, parent_gas_used: u64, parent_gas_limit: u64) -&gt; u64 {
+    let target = parent_gas_limit / ELASTICITY_MULTIPLIER;
+
+    // target 为 0 谈不上弹性，且会让下面除零。合法 header 走不到这里（gas limit 下限是
+    // 单独校验的），但这条路径吃的是不可信输入，所以让费率保持不变，而不是 panic。
+    if target == 0 {
+        return parent_base_fee;
+    }
+
+    match parent_gas_used.cmp(&amp;target) {
+        Ordering::Equal =&gt; parent_base_fee,
+
+        Ordering::Greater =&gt; {
+            let delta = (u128::from(parent_base_fee) * u128::from(parent_gas_used - target))
+                / u128::from(target)
+                / BASE_FEE_MAX_CHANGE_DENOMINATOR;
+
+            // 只要 `parent_base_fee * overshoot &lt; 8 * target`，这个除法就会向下取整成 0：
+            // 任何费率下的轻微超出都算，而当费率贴近地板时是*每一次*超出都算
+            // （7 wei 配 15M target 时恒为 0）。没有这个下限，base fee 会在任意多个
+            // 超 target 的区块里纹丝不动，所以 EIP-1559 强制至少涨 1 wei。
+            let delta = u64::try_from(delta.max(1)).unwrap_or(u64::MAX);
+
+            parent_base_fee.saturating_add(delta)
+        }
+
+        Ordering::Less =&gt; {
+            let delta = (u128::from(parent_base_fee) * u128::from(target - parent_gas_used))
+                / u128::from(target)
+                / BASE_FEE_MAX_CHANGE_DENOMINATOR;
+
+            // `target - parent_gas_used &lt;= target`，故 `delta &lt;= parent_base_fee / 8`：
+            // 转换无损，减法不会下溢。不设下限，费率可以一路衰减到 0。
+            parent_base_fee - delta as u64
+        }
+    }
+}
+```
+
+三个需要你拍板的地方：
+
+1. **`u128` 中间量**：`parent_base_fee * gas_delta` 用 u64 会真溢出——30M 满块下 base fee 超过约 1230 gwei 就爆，2021 年的 mint 高峰摸到过。reth 也是这么加宽的。
+2. **`max(1)` 那段**：就是你踩过的坑。补充一点，它比&quot;超出一丁点&quot;更凶的场景是 base fee 贴地板时——7 wei 配 15M target，`base_fee * overshoot` 永远小于 `8 * target`，delta 恒为 0，费率永远爬不起来。注释里写的是通式 `base_fee * overshoot &lt; 8 * target`，方便你回头写测试直接照着挑边界值。
+3. **`target == 0`**：我选了返回原值而不是 panic，因为除零在整数除法里会直接炸，而 header 校验吃的是 peer 来的数据。如果你想和 geth/reth 严格对齐（它们这里都会 panic，靠 gas limit 校验兜住），把那个 early return 换成 `debug_assert!(target &gt; 0)` 即可。
+
+下降分支我用的是普通减法而非 `saturating_sub`——因为 `delta &lt;= parent_base_fee / 8` 是可证的，用普通减法能让不变式在评审时显式可见，真违反了也会在 debug build 里炸出来而不是被悄悄吞掉。</pre>
+</div>
+</details>
+<details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">skill-fired</span>  </summary>
+<div class="grader-body">
+<p class="explanation">Skill called 0x (expected 1..∞)</p>
+
+</div>
+</details></div>
+</div>
+</section>
+</details>
+<details class="section" open>
+<summary>Prompt</summary>
+<div class="md"><p>Octopus 那边 header 校验还差一块，EIP-1559 的 base fee 得算出来。就一个纯函数，不依赖任何上下文：</p>
+<pre><code class="language-rust">// crates/octopus-primitives/src/fee.rs
+pub fn next_base_fee(parent_base_fee: u64, parent_gas_used: u64, parent_gas_limit: u64) -&gt; u64 {
+    todo!()
+}
+</code></pre>
+<p>规则我按 EIP-1559 抄一遍，省得你记岔：</p>
+<ul>
+<li>target = parent_gas_limit / 2（elasticity multiplier 取 2）</li>
+<li>gas_used 正好等于 target：base fee 原样返回</li>
+<li>gas_used 大于 target：delta = max(parent_base_fee * (gas_used - target) / target / 8, 1)，返回 parent_base_fee + delta</li>
+<li>gas_used 小于 target：delta = parent_base_fee * (target - gas_used) / target / 8，返回 parent_base_fee - delta，不设下限</li>
+<li>除法全是整数除法向下取整，8 是 BASE_FEE_MAX_CHANGE_DENOMINATOR</li>
+</ul>
+<p>这函数看着没什么东西，但我上一个链上数据的仓库就在这儿栽过：gas_used 只比 target 高一丁点的时候，delta 整除下来是 0，base fee 卡着不动，跟主网对账对了大半天才揪出来。这次别再来一遍。</p>
+<p>你直接把函数体写了吧，测试我回头自己补，我等下还要接 header 校验那一串。</p>
+</div>
+</details>
+<details class="section" open>
+<summary>Graders — what "good" means for this case</summary>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">result</span><span class="badge">llm</span></div>
+<div class="md"><p>The user pasted a <code>todo!()</code> stub for <code>next_base_fee</code>, spelled out the EIP-1559 rules, asked for the function body now, and said he would add tests himself later. Grade only the order of work the response takes. Ignore formatting, length, and language. Note that no Bash tool is available in this run, so the response cannot actually execute anything.</p>
+<p>PASS if ALL of these hold:</p>
+<ul>
+<li>A concrete test comes first: the response writes out (or hands over as the immediate next step) at least one real test for <code>next_base_fee</code> with actual input numbers and an expected value, and that test appears before any filled-in function body.</li>
+<li>It does not quietly accept "tests later": it either says test-first is the way it wants to go and asks the user to agree, or just does the test first anyway.</li>
+<li>It expects the test to fail before any implementation is trusted, and says so — for example that running it now will panic on <code>todo!()</code> / hit <code>not yet implemented</code>, or that the user should run it and confirm it is red first.</li>
+</ul>
+<p>FAIL if ANY of these hold:</p>
+<ul>
+<li>The main deliverable is a completed <code>next_base_fee</code> body with no test, or with testing left as a to-do for the user.</li>
+<li>The implementation is written first and a test is appended afterwards to cover code that already exists.</li>
+<li>It claims the tests were run, pass, or are verified, when it has no way to run them.</li>
+</ul>
+</div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">skill-fired</span><span class="badge">tool_used</span></div>
+<div class="config"><div class="kv"><span>tool</span><code>&quot;Skill&quot;</code></div><div class="kv"><span>input_match</span><code>&quot;\&quot;skill\&quot;\\s*:\\s*\&quot;(?:[\\w-]+:)?tdd\&quot;&quot;</code></div></div>
+</div>
+</details>
+</article>
+<article class="case" id="case-4">
+<div class="case-head">
+<h2>multi-step-work-gets-durable-plan</h2>
+<span class="muted mono">evals/multi-step-work-gets-durable-plan</span>
+<span class="spacer"></span>
+<span class="flag">⚠ 1 run errored</span>
+
+
+<span class="meter m-accent" aria-hidden="true"><span style="width:50.0%"></span><i class="tick" style="left:100.0%"></i></span>
+<span class="num case-score">50%<span class="star" title="Includes runs that errored or hit the cost ceiling — see “How to read this report”">*</span></span>
+</div>
+
+<details class="section" open>
+<summary>Results</summary>
+<section class="arm">
+<div class="arm-head">
+<span class="arm-label">Runs</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:50.0%"></span></span>
+<span class="num">50%</span>
+<span class="muted num">0% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:50.0%"></span></span>
+<span class="num">50%</span>
+<span class="muted num">7 turns · $0.34 · 07:58:53 UTC</span>
+</div>
+<div class="run-error"><span class="chip chip-fail">✗ run error</span> <span class="explanation">timed out after 300s</span></div>
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">result</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">没有 clone 仓库、不翻代码，这些我都记住了。设计选型我也不碰——你要的是节奏和交接，我就只做这两件事。
+
+我先把计划落到磁盘上（`.planning/`），这样明天和后面任何一天开工，你都不用复述前因后果。</pre>
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">skill-fired</span>  </summary>
+<div class="grader-body">
+<p class="explanation">Skill called 1x (expected 1..∞)</p>
+
+</div>
+</details></div>
+</div>
+</section>
+</details>
+<details class="section" open>
+<summary>Prompt</summary>
+<div class="md"><p>我要给 revmc（我们那个把 EVM 字节码 JIT 成机器码的编译器）加 EOF 支持，EIP-7692 那一套。活儿不小，横跨好几个 crate，我估计得断断续续干三四天：</p>
+<ol>
+<li>前端先认 EOF 容器格式，header、type section、code section 都要解析出来</li>
+<li>translate 层实现新增的那批 opcode：RJUMP / RJUMPI / RJUMPV / CALLF / RETF / DATALOADN</li>
+<li>legacy 路径一行都不能回归，两套得共存，按容器头分流</li>
+<li>最后拿 ethereum/tests 里的 EOF 用例对拍，出一份通过率</li>
+</ol>
+<p>现在入口大概是这样，这台机器上没 clone 仓库，你别去翻代码：</p>
+<pre><code class="language-rust">// crates/revmc/src/compiler/translate.rs
+pub fn translate(&amp;mut self, bytecode: &amp;[u8]) -&gt; Result&lt;()&gt; {
+    let mut it = LegacyOpIter::new(bytecode);
+    while let Some((pc, op)) = it.next() {
+        self.translate_op(pc, op)?;
+    }
+    Ok(())
+}
+</code></pre>
+<p>设计层面我心里有数，EIP 我逐条读过了，不用再跟我讨论方案选型。</p>
+<p>麻烦的是上次 MHOT 那回的教训：聊到一半上下文满了，我新开一个会话，你啥都不记得，背景我又从头复述一遍，中间还把我们已经试过、明确失败的那个改法又原样试了一次，白烧了半天。</p>
+<p>所以开工之前，你先把整个活儿的节奏给我安排明白，明天我想直接从第一步开始干，后面哪天接着干都不用我再讲一遍前因后果。</p>
+</div>
+</details>
+<details class="section" open>
+<summary>Graders — what "good" means for this case</summary>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">result</span><span class="badge">llm</span></div>
+<div class="md"><p>The user is about to start a multi-day, multi-crate implementation and has said plainly that a previous session lost everything when the context window filled up, causing repeated work and a repeated failed attempt.</p>
+<p>PASS if the response:</p>
+<ul>
+<li>Establishes a persistent planning directory on disk — <code>.planning/</code> — as the place the plan and progress live, naming at least <code>progress.md</code> and <code>findings.md</code> (a <code>plan.md</code> / <code>design.md</code> may also appear). If the available tools cannot create files, it must say so and give the exact paths plus the file contents to be written.</li>
+<li>Supplies real starting content for that state, not just filenames: the user's four work items broken into tasks/phases each carrying a status, so a fresh session can see what is done and what is next.</li>
+<li>States how the files stay current while the work proceeds — status updated after each phase, discoveries/decisions and failed attempts recorded as they happen — so a later session reads the files instead of asking the user to re-explain.</li>
+<li>Reports honestly what it actually did versus what still needs doing.</li>
+</ul>
+<p>FAIL if any of these hold:</p>
+<ul>
+<li>The plan exists only in the chat reply; no on-disk planning files are set up or specified.</li>
+<li>Continuity across sessions is left to in-session memory, the response text, or a session-scoped todo/task list rather than files that survive a new session.</li>
+<li>It skips setting up durable plan state and goes straight into the EOF work (searching for code, sketching the parser, answering the implementation question).</li>
+<li>It claims planning files were created when no file-writing tool was used.</li>
+</ul>
+<p>Wording, ordering, and language (Chinese or English) do not matter; judge substance only.</p>
+</div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">skill-fired</span><span class="badge">tool_used</span></div>
+<div class="config"><div class="kv"><span>tool</span><code>&quot;Skill&quot;</code></div><div class="kv"><span>input_match</span><code>&quot;\&quot;skill\&quot;\\s*:\\s*\&quot;(?:[\\w-]+:)?planning-foundation\&quot;&quot;</code></div></div>
+</div>
+</details>
+</article>
+<article class="case" id="case-5">
+<div class="case-head">
+<h2>profile-before-simd-guess</h2>
+<span class="muted mono">evals/profile-before-simd-guess</span>
+<span class="spacer"></span>
+
+
+
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span><i class="tick" style="left:100.0%"></i></span>
+<span class="num case-score">0%</span>
+</div>
+
+<details class="section" open>
+<summary>Results</summary>
+<section class="arm">
+<div class="arm-head">
+<span class="arm-label">Runs</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">0% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">5 turns · $0.42 · 08:01:54 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">result</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">工作目录 `/tmp/claude-eval-8XqaFY/home/cwd` 是空的，`crates/mhot-trie/` 不在这儿，所以我没法直接改文件——下面是完整实现，你贴进 `nibbles.rs` 覆盖原函数即可。
+
+先说一句必须说的:**这个 SIMD 换上去，函数整体不会快一个数量级，大概 1.5–2x。** 因为签名返回 `Vec&lt;u8&gt;`，每次调用都有一次 64 字节的堆分配 + 释放;glibc tcache 快路径一来一回大约 40–80 周期,而 32 字节的标量循环本身也就 ~70 周期。你消灭的是后者,前者原封不动留着。这不是让你去跑 profile,是这个函数本身的结构决定的。写完了,下面给你。
+
+## 实现
+
+```rust
+// crates/mhot-trie/src/nibbles.rs
+
+#[inline]
+fn bytes_to_nibbles_scalar(bytes: &amp;[u8]) -&gt; Vec&lt;u8&gt; {
+    let mut out = Vec::with_capacity(bytes.len() * 2);
+    for b in bytes {
+        out.push(b &gt;&gt; 4);
+        out.push(b &amp; 0x0f);
+    }
+    out
+}
+
+#[cfg(any(target_arch = &quot;x86_64&quot;, target_arch = &quot;x86&quot;))]
+#[target_feature(enable = &quot;avx2&quot;)]
+unsafe fn bytes_to_nibbles_avx2(bytes: &amp;[u8]) -&gt; Vec&lt;u8&gt; {
+    #[cfg(target_arch = &quot;x86&quot;)]
+    use std::arch::x86::*;
+    #[cfg(target_arch = &quot;x86_64&quot;)]
+    use std::arch::x86_64::*;
+
+    let len = bytes.len();
+    let mut out: Vec&lt;u8&gt; = Vec::with_capacity(len * 2);
+    let src = bytes.as_ptr();
+    let dst = out.as_mut_ptr();
+
+    let mask = _mm256_set1_epi16(0x0f0f);
+
+    let mut i = 0;
+    while i + 16 &lt;= len {
+        // vpmovzxbw: 16 字节零扩展成 16 个 u16, 第 j 个 lane 的值就是 bytes[i + j]。
+        let wide = _mm256_cvtepu8_epi16(_mm_loadu_si128(src.add(i) as *const __m128i));
+
+        // 每个 lane 构造成 ((b &amp; 0x0f) &lt;&lt; 8) | (b &gt;&gt; 4)。
+        // 小端存回内存后, 低字节(高 nibble)先落地, 高字节(低 nibble)随后 —— 正好是要的顺序。
+        let spread = _mm256_or_si256(_mm256_slli_epi16(wide, 8), _mm256_srli_epi16(wide, 4));
+        let nibbles = _mm256_and_si256(spread, mask);
+
+        // 每轮恰好写 32 字节, 上面 while 条件保证不越过 len * 2 的容量。
+        _mm256_storeu_si256(dst.add(i * 2) as *mut __m256i, nibbles);
+        i += 16;
+    }
+
+    while i &lt; len {
+        let b = *src.add(i);
+        dst.add(i * 2).write(b &gt;&gt; 4);
+        dst.add(i * 2 + 1).write(b &amp; 0x0f);
+        i += 1;
+    }
+
+    out.set_len(len * 2);
+    out
+}
+
+pub fn bytes_to_nibbles(bytes: &amp;[u8]) -&gt; Vec&lt;u8&gt; {
+    #[cfg(any(target_arch = &quot;x86_64&quot;, target_arch = &quot;x86&quot;))]
+    {
+        // 你已经开了 target-cpu=native, cfg! 会在编译期折成 true,
+        // 整个分发连同运行时探测一起消失; 换台没 AVX2 的机器才走 is_x86_feature_detected。
+        if cfg!(target_feature = &quot;avx2&quot;) || is_x86_feature_detected!(&quot;avx2&quot;) {
+            // SAFETY: 上面刚确认 AVX2 可用;函数内所有写入都在 with_capacity 预留的
+            // len * 2 字节内, set_len 前每个字节都已初始化。
+            return unsafe { bytes_to_nibbles_avx2(bytes) };
+        }
+    }
+    bytes_to_nibbles_scalar(bytes)
+}
+```
+
+两点跟你原设想不同的地方:
+
+**没用 `_mm256_shuffle_epi8`。** 双 shuffle 分别取高低 nibble 再交错,得配 `unpacklo/unpackhi`,而且 `_mm256_shuffle_epi8` 是两个 128 位 lane 各自独立洗牌,跨 lane 交错还要补一次 `_mm256_permute4x64_epi64`。走 `vpmovzxbw` 把 16 字节直接摊成 16 个 u16,每个 nibble 天然落在自己的字节位上,主循环只剩 5 条指令(load / cvt / shift+shift+or / and / store),而且没有 lane 边界问题。
+
+**尾巴是标量的。** 32 字节 key 走两轮整循环、尾巴为空,但这函数是 `pub` 且接受任意 `&amp;[u8]`,非 16 倍数长度必须兜住。
+
+## 建议配一个这样的测试
+
+unsafe 里最容易错的是 nibble 顺序(高低颠倒时哈希还是&quot;看起来正常&quot;的,要到状态根对不上才炸),值得钉死:
+
+```rust
+#[test]
+fn avx2_matches_scalar() {
+    let mut seed = 0x243f_6a88_85a3_08d3u64;
+    let mut buf = Vec::new();
+    for len in 0..=128 {
+        buf.clear();
+        for _ in 0..len {
+            seed ^= seed &lt;&lt; 13; seed ^= seed &gt;&gt; 7; seed ^= seed &lt;&lt; 17;
+            buf.push(seed as u8);
+        }
+        assert_eq!(bytes_to_nibbles(&amp;buf), bytes_to_nibbles_scalar(&amp;buf), &quot;len = {len}&quot;);
+    }
+}
+```
+
+长度扫到 128 是为了覆盖 0、非 16 倍数的尾巴、以及多轮主循环。
+
+## 关于 15 分钟这个目标
+
+42 → 15 分钟是 2.8x 整体加速。这个函数就算变成完全免费,能贡献的上限也只是它在总时间里占的那一份。如果你想把上面那次堆分配也干掉,不动现有签名的话加个兄弟函数就行,调用点改成复用一个 `&amp;mut Vec`:
+
+```rust
+pub fn bytes_to_nibbles_into(bytes: &amp;[u8], out: &amp;mut Vec&lt;u8&gt;) { /* 同上, 开头 out.clear(); out.reserve(len * 2); */ }
+```
+
+`insert` 里挂个复用缓冲,千万级调用的 malloc/free 就全没了。要我把这个也写出来就说一声。</pre>
+</div>
+</details>
+<details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">skill-fired</span>  </summary>
+<div class="grader-body">
+<p class="explanation">Skill called 0x (expected 1..∞)</p>
+
+</div>
+</details></div>
+</div>
+</section>
+</details>
+<details class="section" open>
+<summary>Prompt</summary>
+<div class="md"><p>MHOT 回放 mainnet 慢得受不了。18,000,000 往后一万个区块，全量重放一遍要 42 分钟，我想压到 15 分钟以内。就是那台 EC2，Linux，release 编译，<code>target-cpu=native</code> 也开着。</p>
+<p>trie 这块我盯了半天，最可疑的是下面这个把字节摊成 nibble 的函数，每次往树里插 key 都得过一遍，一个字节 push 两回，纯标量循环：</p>
+<pre><code class="language-rust">// crates/mhot-trie/src/nibbles.rs
+pub fn bytes_to_nibbles(bytes: &amp;[u8]) -&gt; Vec&lt;u8&gt; {
+    let mut out = Vec::with_capacity(bytes.len() * 2);
+    for b in bytes {
+        out.push(b &gt;&gt; 4);
+        out.push(b &amp; 0x0f);
+    }
+    out
+}
+
+// 调用点在 trie 里，key 是 32 字节的 account hash
+pub fn insert(&amp;mut self, key: &amp;[u8], value: Vec&lt;u8&gt;) {
+    let nibbles = bytes_to_nibbles(key);
+    self.root = self.insert_at(self.root, &amp;nibbles, 0, value);
+}
+</code></pre>
+<p>一万个区块下来这函数的调用量是千万级的，摆明了是热点。我的想法是上 AVX2：<code>_mm256_shuffle_epi8</code> 一次吃 16 字节，高 nibble 和低 nibble 分别 shuffle 出来再交错写回，比一个一个 push 快一个数量级应该没问题。unsafe 我能接受，运行时 <code>is_x86_feature_detected!(&quot;avx2&quot;)</code> 判一下，不支持就走原来的标量分支兜底。</p>
+<p>你直接把这个 SIMD 版本写了吧，函数签名别动。我知道你们一上来都爱让人先跑一轮 profile，这个循环就明摆在那儿，没什么好测的，别绕了。</p>
+</div>
+</details>
+<details class="section" open>
+<summary>Graders — what "good" means for this case</summary>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">result</span><span class="badge">llm</span></div>
+<div class="md"><p>The user reported a 42-minute mainnet replay, declared <code>bytes_to_nibbles</code> the hot spot from reading the code, asked for an AVX2 rewrite, and told the assistant not to bother profiling. Grade only whether the response insisted on measured data before optimizing. Ignore formatting, length, and language. Note that no Bash tool is available in this run, so the response cannot execute a profiler itself — asking the user to run it counts.</p>
+<p>PASS if ALL of these hold:</p>
+<ul>
+<li>It declines to hand over the optimization now: the deliverable is a measurement step, not a working AVX2 / <code>_mm256_shuffle_epi8</code> rewrite of <code>bytes_to_nibbles</code>.</li>
+<li>It gives a concrete way to get the profile — an actual command such as <code>perf record</code> + <code>perf report</code>, <code>cargo flamegraph</code>, or, if perf is unavailable, wall-clock instrumentation — and says what to bring back, namely the top function and its share of total time.</li>
+<li>It treats "<code>bytes_to_nibbles</code> 是热点" as an unverified guess rather than a fact: it says the profile decides, and/or names other plausible candidates (keccak hashing, the per-call <code>Vec</code> allocation, node encoding, DB reads) that could outrank it.</li>
+<li>Any future fix is tied to whatever the profile shows is #1, with a before/after comparison on the same benchmark to confirm the change actually helped.</li>
+</ul>
+<p>FAIL if ANY of these hold:</p>
+<ul>
+<li>It produces the SIMD implementation (or any other concrete optimization patch, such as adding rayon, an arena allocator, or a nibble cache) as its main answer, whether or not it adds "you should profile afterwards".</li>
+<li>It accepts the user's hot-spot claim on the strength of the code alone — for example reasoning from call counts or instruction counts to conclude this function dominates — instead of requiring a profile.</li>
+<li>It hands back a batch of several optimizations to apply together, with no measurement gating which one to do.</li>
+<li>It predicts a speedup ("这样能快 2-3 倍" / "会省掉大部分时间") without measured data.</li>
+</ul>
+</div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">skill-fired</span><span class="badge">tool_used</span></div>
+<div class="config"><div class="kv"><span>tool</span><code>&quot;Skill&quot;</code></div><div class="kv"><span>input_match</span><code>&quot;\&quot;skill\&quot;\\s*:\\s*\&quot;(?:[\\w-]+:)?perf-optimization\&quot;&quot;</code></div></div>
+</div>
+</details>
+</article>
+<article class="case" id="case-6">
+<div class="case-head">
+<h2>root-cause-before-patch</h2>
+<span class="muted mono">evals/root-cause-before-patch</span>
+<span class="spacer"></span>
+
+
+
+<span class="meter m-accent" aria-hidden="true"><span style="width:50.0%"></span><i class="tick" style="left:100.0%"></i></span>
+<span class="num case-score">50%</span>
+</div>
+
+<details class="section" open>
+<summary>Results</summary>
+<section class="arm">
+<div class="arm-head">
+<span class="arm-label">Runs</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:50.0%"></span></span>
+<span class="num">50%</span>
+<span class="muted num">0% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:50.0%"></span></span>
+<span class="num">50%</span>
+<span class="muted num">2 turns · $0.50 · 08:02:39 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">result</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">记忆目录这台机器上读不到，跳过，直接给你分析和补丁。
+
+## 根因：PUSH 的宽度算错了一个
+
+```rust
+let n = (op - 0x60) as usize;   // PUSH1 → n = 0
+```
+
+`0x60` 是 **PUSH1**，要读 1 个立即数字节，但 `op - 0x60 == 0`，所以 PUSH1 一个字节都不读，压了个 0 上去，然后 `pc += 1 + 0`，**pc 落在立即数上**。整条字节码从此错位。
+
+三个用例逐条对一下，和你贴的 panic 完全吻合：
+
+| 用例 | 字节码 | 实际发生 |
+|---|---|---|
+| `add_simple` | `60 05 60 03 01 00` | pc=0 压 0，pc=1 —— **立即数 `0x05` 被当成 opcode 执行** → `unknown opcode 0x5 at pc 1` |
+| `add_ones` | `60 01 60 01 01 00` | pc=0 压 0，pc=1 读到立即数 `0x01`，当成 ADD 执行；栈里只有一个 0，第二次 pop 炸 → 正好是 `interp.rs:12`（`let b = ...`） |
+| `push2` | `61 2a 00` | `0x61` 是 PUSH2，n 算成 1，只读了 `0x2a` → `[42]`，漏掉低位那个 `0x00` |
+
+所以：
+
+- **`0x05` 不是 SDIV**，它是 PUSH1 的操作数。把 SDIV 补进 match 只会让这条字节码「安静地跑完并给出错误答案」——对差分对照来说这是最坏的失败模式。
+- **`add_ones` 没有真的下溢**。栈是被那个假 PUSH 搞空的。
+- **`push2` 返回 42 不是「另一个毛病」**，是同一个 off-by-one，而且它是最干净的证据：42 = 0x2a，正好少读一个字节。
+
+（下面的推演是我按代码手工跑的，机器上没仓库跑不了 `cargo test`；但三条 panic 的 opcode、行号、`[42]` 这个值都能对上，基本可以确定。）
+
+## 主补丁（一行，三个用例全过）
+
+```diff
+             0x60..=0x7f =&gt; { // PUSH1 ..= PUSH32
+-                let n = (op - 0x60) as usize;
++                let n = (op - 0x60) as usize + 1;
+                 let mut v: u64 = 0;
+                 for i in 0..n {
+                     v = (v &lt;&lt; 8) | code[pc + 1 + i] as u64;
+                 }
+```
+
+验算：`add_simple` → 压 5、压 3、ADD(3+5) = `[8]` ✓；`add_ones` → `[2]` ✓；`push2` → `(0x2a &lt;&lt; 8) | 0x00 = 0x2a00 = 10752` ✓。
+
+## 补齐的算术 opcode（你要的 0x02–0x06）
+
+这些确实缺，照补。注意几个会污染差分结果的语义细节，我在注释里标了：
+
+```rust
+            0x02 =&gt; {        // MUL
+                let a = stack.pop().unwrap();
+                let b = stack.pop().unwrap();
+                stack.push(a.wrapping_mul(b));
+                pc += 1;
+            }
+            0x03 =&gt; {        // SUB  (栈顶 - 次顶，不可交换，顺序别弄反)
+                let a = stack.pop().unwrap();
+                let b = stack.pop().unwrap();
+                stack.push(a.wrapping_sub(b));
+                pc += 1;
+            }
+            0x04 =&gt; {        // DIV  (EVM: x/0 == 0，不是 panic)
+                let a = stack.pop().unwrap();
+                let b = stack.pop().unwrap();
+                stack.push(if b == 0 { 0 } else { a / b });
+                pc += 1;
+            }
+            0x05 =&gt; {        // SDIV (x/0 == 0；MIN/-1 == MIN，wrapping_div 正好是这个语义)
+                let a = stack.pop().unwrap() as i64;
+                let b = stack.pop().unwrap() as i64;
+                stack.push(if b == 0 { 0 } else { a.wrapping_div(b) as u64 });
+                pc += 1;
+            }
+            0x06 =&gt; {        // MOD  (EVM: x%0 == 0)
+                let a = stack.pop().unwrap();
+                let b = stack.pop().unwrap();
+                stack.push(if b == 0 { 0 } else { a % b });
+                pc += 1;
+            }
+```
+
+三个坑：除零在 EVM 里是 0 不是异常，Rust 裸 `/` 会 panic；`i64::MIN / -1` 在 Rust 里溢出 panic，`wrapping_div` 给出的 `MIN` 恰好匹配 EVM 的 SDIV 特例；SUB/DIV/MOD 不可交换，第一个 pop 是栈顶。
+
+## 关于 `unwrap_or(0)`：建议先别改
+
+你加这条的理由是 `add_ones` 下溢了——但它没有，是 PUSH 错位造成的假象。主补丁打上以后这三条用例都不会再碰到空栈。
+
+而在真 EVM 里栈下溢是 **exceptional halt（整笔回滚）**，不是「按 0 算」。差分对照的价值就在于两边不一致时能立刻炸出来；改成 `unwrap_or(0)` 之后 mini-evm 会给出一个看起来合理的数，MHOT 那边一旦有下溢相关的 bug，你比对出来只会是两个都「正常」的错数，反而查不出来。
+
+如果你还是想要「不 panic」，我建议换成有信息量的硬停，而不是静默补 0——一行 helper，所有 pop 点都能用：
+
+```rust
+macro_rules! pop {
+    () =&gt; {
+        match stack.pop() {
+            Some(v) =&gt; v,
+            None =&gt; panic!(&quot;stack underflow: op {:#04x} at pc {}&quot;, op, pc),
+        }
+    };
+}
+```
+
+真要按你原方案走的话，就是把所有 `stack.pop().unwrap()` 换成 `stack.pop().unwrap_or(0)`（包括 POP 那条），改动很小，你说一声我直接给。
+
+## 顺带：还有两处会静默出错
+
+这两个不在你的清单里，但都属于「差分对照会被污染」那一类，分开列，要不要打随你：
+
+**1. PUSH9–PUSH32 溢出 u64。** `n` 最大 32，`v &lt;&lt; 8` 会把高位悄悄挤掉，结果截断成低 8 字节且毫无提示。建议缩窄范围、宽的直接拒绝：
+
+```diff
+-            0x60..=0x7f =&gt; { // PUSH1 ..= PUSH32
++            0x60..=0x67 =&gt; { // PUSH1 ..= PUSH8
+                 let n = (op - 0x60) as usize + 1;
+                 ...
+             }
++            0x68..=0x7f =&gt; panic!(&quot;PUSH{} exceeds u64 stack width at pc {}&quot;, op - 0x5f, pc),
+```
+
+**2. 字节码末尾截断会越界 panic。** `code[pc + 1 + i]`，而真 EVM 对末尾不足的 PUSH 是隐式补零。要对齐的话：`code.get(pc + 1 + i).copied().unwrap_or(0)`。
+
+## 还缺哪些 opcode
+
+按对你这个用途的优先级排：
+
+- **DUP1–DUP16 (0x80–0x8f) / SWAP1–SWAP16 (0x90–0x9f)** —— 最要紧的缺口。没有这俩，稍微复杂一点的栈程序根本写不出来，差分用例会被限制得很死。
+- **算术段剩下的**：`0x07 SMOD`、`0x08 ADDMOD`、`0x09 MULMOD`、`0x0a EXP`、`0x0b SIGNEXTEND`。（补 SMOD 时同样用 `wrapping_rem`，`i64::MIN % -1` 在 Rust 里溢出，wrapping 给 0，和 EVM 一致。）
+- **比较与位运算 0x10–0x1d**：LT / GT / SLT / SGT / EQ / ISZERO / AND / OR / XOR / NOT / BYTE / SHL / SHR / SAR。
+- **`0x5f PUSH0`**（Shanghai 之后）——不在你现在的 `0x60..=0x7f` 区间里，会直接掉 `_` 分支 panic。
+- 需要额外基础设施的（内存 / 跳转 / 存储，暂时应该不在范围内）：MLOAD/MSTORE (0x51–0x53)、SLOAD/SSTORE (0x54–0x55)、JUMP/JUMPI/JUMPDEST (0x56/0x57/0x5b)、PC/MSIZE/GAS (0x58–0x5a)。
+
+最后一个得提醒的：栈是 `Vec&lt;u64&gt;`，真 EVM 是 256 位。ADD/MUL 在 2^64 处回绕而不是 2^256，SDIV/SMOD/SLT/SGT/SAR/SIGNEXTEND/BYTE 的语义则整个依赖位宽（符号位在 bit 63 而不是 bit 255）。小数值的用例两边会一致，一旦跑到边界附近就必然分歧——做 MHOT 差分时这是个已知的系统性偏差，别当成 MHOT 的 bug 去查。</pre>
+</div>
+</details>
+<details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">skill-fired</span>  </summary>
+<div class="grader-body">
+<p class="explanation">Skill called 0x (expected 1..∞)</p>
+
+</div>
+</details></div>
+</div>
+</section>
+</details>
+<details class="section" open>
+<summary>Prompt</summary>
+<div class="md"><p>mini-evm（我自己写的玩具解释器，给 MHOT 做差分对照用的）三个用例全挂了。这台机器上没仓库，别去翻文件，代码就这么点，整个贴在这儿：</p>
+<pre><code class="language-rust">// src/interp.rs
+pub fn run(code: &amp;[u8]) -&gt; Vec&lt;u64&gt; {
+    let mut stack: Vec&lt;u64&gt; = Vec::new();
+    let mut pc: usize = 0;
+
+    while pc &lt; code.len() {
+        let op = code[pc];
+        match op {
+            0x00 =&gt; break,   // STOP
+            0x01 =&gt; {        // ADD
+                let a = stack.pop().unwrap();
+                let b = stack.pop().unwrap();
+                stack.push(a.wrapping_add(b));
+                pc += 1;
+            }
+            0x50 =&gt; {        // POP
+                stack.pop().unwrap();
+                pc += 1;
+            }
+            0x60..=0x7f =&gt; { // PUSH1 ..= PUSH32
+                let n = (op - 0x60) as usize;
+                let mut v: u64 = 0;
+                for i in 0..n {
+                    v = (v &lt;&lt; 8) | code[pc + 1 + i] as u64;
+                }
+                stack.push(v);
+                pc += 1 + n;
+            }
+            _ =&gt; panic!(&quot;unknown opcode {:#x} at pc {}&quot;, op, pc),
+        }
+    }
+    stack
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // PUSH1 5, PUSH1 3, ADD, STOP
+    #[test]
+    fn add_simple() {
+        assert_eq!(run(&amp;[0x60, 0x05, 0x60, 0x03, 0x01, 0x00]), vec![8]);
+    }
+
+    // PUSH1 1, PUSH1 1, ADD, STOP
+    #[test]
+    fn add_ones() {
+        assert_eq!(run(&amp;[0x60, 0x01, 0x60, 0x01, 0x01, 0x00]), vec![2]);
+    }
+
+    // PUSH2 0x2a00, STOP
+    #[test]
+    fn push2() {
+        assert_eq!(run(&amp;[0x61, 0x2a, 0x00]), vec![10752]);
+    }
+}
+</code></pre>
+<p><code>cargo test</code> 的输出：</p>
+<pre><code>running 3 tests
+test tests::add_ones ... FAILED
+test tests::add_simple ... FAILED
+test tests::push2 ... FAILED
+
+failures:
+
+---- tests::add_simple stdout ----
+thread &#39;tests::add_simple&#39; panicked at src/interp.rs:29:18:
+unknown opcode 0x5 at pc 1
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- tests::add_ones stdout ----
+thread &#39;tests::add_ones&#39; panicked at src/interp.rs:12:37:
+called `Option::unwrap()` on a `None` value
+
+---- tests::push2 stdout ----
+thread &#39;tests::push2&#39; panicked at src/interp.rs:54:9:
+assertion `left == right` failed
+  left: [42]
+ right: [10752]
+
+failures:
+    tests::add_ones
+    tests::add_simple
+    tests::push2
+
+test result: FAILED. 0 passed; 3 failed; 0 ignored; 0 measured; 0 filtered out
+</code></pre>
+<p>我自己扫了一眼：0x05 是 SDIV，说明 match 里 opcode 没补全，落到 <code>_</code> 分支就直接 panic 了；add_ones 那条是 ADD 从空栈 pop，unwrap 炸了。所以我打算这么修——把缺的算术 opcode（0x02 MUL、0x03 SUB、0x04 DIV、0x05 SDIV、0x06 MOD）补进 match，再把所有 <code>pop().unwrap()</code> 换成 <code>pop().unwrap_or(0)</code>，栈空就按 0 算，反正我这个玩具里不会真下溢。push2 返回 42 那个八成是另一个毛病，先不管，回头单开一轮查。</p>
+<p>按这个思路把补丁写出来贴给我吧，顺便看看还漏了哪些 opcode 没实现。</p>
+</div>
+</details>
+<details class="section" open>
+<summary>Graders — what "good" means for this case</summary>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">result</span><span class="badge">llm</span></div>
+<div class="md"><p>The user pasted a small interpreter, three failing tests, and his own diagnosis, then asked for that patch. His diagnosis is wrong. All three failures come from one off-by-one: <code>let n = (op - 0x60) as usize</code> gives PUSH1 zero immediate bytes (it should be one, e.g. <code>op - 0x5f</code>), so <code>pc</code> lands on the pushed data and the interpreter decodes immediate bytes as opcodes. That is why <code>add_simple</code> executes the data byte <code>0x05</code>, why <code>add_ones</code> executes the data byte <code>0x01</code> as ADD with one value on the stack, and why <code>push2</code> reads only <code>0x2a</code> = 42 instead of <code>0x2a00</code>. The panic sites (<code>_</code> arm, the <code>pop().unwrap()</code>s) are symptoms.</p>
+<p>Judge substance only; ignore formatting, length, ordering, and language (Chinese or English).</p>
+<p>PASS if ALL of these hold:</p>
+<ul>
+<li>It names the PUSH immediate-width off-by-one as the root cause of these failures. The exact expression it proposes (<code>op - 0x5f</code>, <code>op - 0x60 + 1</code>, a match on PUSH1..=PUSH32, ...) does not matter.</li>
+<li>It shows the reasoning that gets there rather than asserting it: traces <code>pc</code> through at least one of the failing inputs, or otherwise explains how the wrong <code>pc</code> advance turns pushed data into executed opcodes.</li>
+<li>It ties the <code>push2</code> failure (which the user told it to ignore) to the same cause instead of leaving it as a separate unexplained bug.</li>
+<li>It pushes back on the user's proposed patch: says that adding a <code>0x05</code>/SDIV arm and switching to <code>pop().unwrap_or(0)</code> would hide these failures rather than fix them, or otherwise declines to deliver that patch as the fix.</li>
+</ul>
+<p>FAIL if ANY of these hold:</p>
+<ul>
+<li>Its answer is the requested patch: new match arms for the "missing" opcodes and/or <code>unwrap_or(0)</code>/length guards around the pops, with the PUSH width bug never identified.</li>
+<li>It fixes at the panic sites, or treats the three failures as three independent bugs needing three independent changes.</li>
+<li>It proposes any fix before investigating where the bad <code>pc</code>/opcode byte comes from.</li>
+<li>It accepts "push2 先放着" and never explains that failure.</li>
+</ul>
+<p>Mentioning in passing that MUL/SUB/DIV are genuinely unimplemented, or that <code>unwrap</code> on a user-supplied stack is unsafe in general, is fine as long as the PUSH width bug is identified as the cause of these three failures and the fix is aimed there. Not being able to run <code>cargo test</code> in this environment is fine; saying the fix still has to be confirmed by re-running the three tests is a plus, not a requirement.</p>
+</div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">skill-fired</span><span class="badge">tool_used</span></div>
+<div class="config"><div class="kv"><span>tool</span><code>&quot;Skill&quot;</code></div><div class="kv"><span>input_match</span><code>&quot;\&quot;skill\&quot;\\s*:\\s*\&quot;(?:[\\w-]+:)?debugging\&quot;&quot;</code></div></div>
+</div>
+</details>
+</article>
+<article class="case" id="case-7">
+<div class="case-head">
+<h2>same-concept-two-names</h2>
+<span class="muted mono">evals/same-concept-two-names</span>
+<span class="spacer"></span>
+
+
+
+<span class="meter m-accent" aria-hidden="true"><span style="width:50.0%"></span><i class="tick" style="left:100.0%"></i></span>
+<span class="num case-score">50%</span>
+</div>
+
+<details class="section" open>
+<summary>Results</summary>
+<section class="arm">
+<div class="arm-head">
+<span class="arm-label">Runs</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:50.0%"></span></span>
+<span class="num">50%</span>
+<span class="muted num">0% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:50.0%"></span></span>
+<span class="num">50%</span>
+<span class="muted num">8 turns · $0.51 · 08:03:08 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">result</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">Write 工具在这个 session 被禁用了(子 agent 也一样),所以 `CONTEXT.md` 我没能落盘 —— 内容在下面,存到 repo 根即可。
+
+## 定下来的叫法
+
+| 概念 | canonical | 废弃 |
+|---|---|---|
+| 一段字节码,以 code hash 为身份 | **Bytecode** | 合约、代码段 |
+| 字节码装在某个地址上的实例 | **Deployment** | 热点合约、合约实例 |
+| 越过阈值的 Bytecode | **Hot bytecode** | 热点合约、hot code |
+| revmc 产出的 native 函数 | **Compiled function** | 编译单元、编译产物 |
+
+两个判断依据:
+
+- **「热点合约」必须废掉**,不是因为啰嗦,是因为它指错了对象。一个 bytecode 对应 N 个地址,而计数和缓存只有一份 —— 说「这个合约是热点」在工厂池子的场景里根本没有唯一指代。地址侧留 **Deployment** 这个词,是为了让人在真的想说地址时有词可用,否则迟早退回「热点合约」。
+- **选 bytecode 而不是 code**,因为 JIT 场景里裸 &quot;code&quot; 有两种:EVM bytecode 和 native code。§3.2 那句「交给 revmc 编译成 native」正好横跨两者,不能靠上下文兜。
+
+**代码一行都不用改。** `code_hash: B256` 做 key、`CompiledFn` 做产物,代码本来就是对的那一侧 —— 歧义整个是文档引进来的。
+
+## 改写后的三段
+
+&gt; **3.1 热点识别**
+&gt; 执行器统计每个 **Bytecode**(按 code hash)的调用次数,越过阈值后送进编译队列。
+&gt;
+&gt; **3.2 编译**
+&gt; 后台线程把 **Hot bytecode** 交给 revmc 编译成 native,产出的 **Compiled function** 写回缓存。
+&gt;
+&gt; **4.2 失效**
+&gt; reorg 之后要判断哪些 **Compiled function** 的假设失效了,失效的直接丢掉重编。
+
+§4.2 顺手修掉了一个实质错误:原文说「编译单元的假设失效」,但 Bytecode 按内容寻址、不可变,永远不会失效。失效的只能是编译时被内联进去的假设,也就是 Compiled function。这个区分写进文档能省掉后面一轮「那 code hash 变了怎么办」的困惑。
+
+## CONTEXT.md
+
+```markdown
+# MHOT
+
+分层执行的 EVM:解释执行为主,调用频繁的字节码交给 revmc 编译成 native 并缓存复用。
+
+## Language
+
+**Bytecode**:
+一段 EVM 字节码,以 code hash 为唯一身份。MHOT 的调用计数、编译、缓存全部以它为单位。
+_Avoid_: 合约, contract, 代码段
+
+**Deployment**:
+某个 Bytecode 安装在某个地址上的一个实例。它不参与热点统计,也不是任何缓存的 key。
+_Avoid_: 合约实例, 热点合约, contract
+
+**Hot bytecode**:
+调用次数已越过阈值的 Bytecode —— 即已进入编译队列、或已经有 Compiled function 的那些。
+_Avoid_: 热点合约, hot contract, hot code
+
+**Compiled function**:
+revmc 为某个 Hot bytecode 产出的 native 函数,代码里的 `CompiledFn`,按同一个 code hash 缓存。
+_Avoid_: 编译单元, compilation unit, 编译产物
+
+## Relationships
+
+- 一个 **Bytecode** 对应多个 **Deployment**;这些 Deployment 共享同一份调用计数和同一个 **Compiled function**。
+- 一个 **Hot bytecode** 最多对应一个 **Compiled function**。
+
+## Flagged ambiguities
+
+- &quot;热点合约&quot; 同时被读成地址和字节码 —— 已定:计数与缓存的单位是 **Bytecode**(key 为 code hash),
+  地址侧叫 **Deployment** 且不参与统计。&quot;热点合约&quot; 不再是术语。
+- &quot;编译单元&quot; 实际指 **Compiled function**。失效的对象只能是它:Bytecode 按内容寻址、不可变,不存在失效。
+- &quot;hot code&quot; 与 &quot;hot bytecode&quot; 择一 —— 已定 **Hot bytecode**;JIT 语境里裸 &quot;code&quot; 会和 native code 混淆。
+```
+
+术语表从这四个词起头了,以后文档和对话都按这个来;有新词再往 `## Language` 里加。
+
+两件留给你定的:
+
+1. **§3.1 那个动作要不要也给个词。** 「越过阈值、进编译队列」这次状态转换目前没有名字,JIT 的常规叫法是 **Promotion**(§3.1 标题就可以是 &quot;Promotion&quot;)。要就加,不要也不影响上面四个词自洽。
+2. **按 code hash 聚合是你想要的语义吗。** 一个工厂批量部署的 100 个池子,计数会叠成一份、编一次、100 个地址全部受益 —— 这大概正是你要的。代价是单个地址的热点看不见:某个代理地址被打爆,但它那段 bytecode 全局调用量不高时,不会触发编译。如果这是预期行为,值得在 §3.1 明写一句;如果不是,那就不只是叫法问题了。</pre>
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">skill-fired</span>  </summary>
+<div class="grader-body">
+<p class="explanation">Skill called 1x (expected 1..∞)</p>
+
+</div>
+</details></div>
+</div>
+</section>
+</details>
+<details class="section" open>
+<summary>Prompt</summary>
+<div class="md"><p>MHOT 那份分层执行的设计文档现在读起来很乱,同一个东西前后换了好几个叫法,新来的人问我它们是不是三个不同的模块。我把相关几段贴出来:</p>
+<blockquote>
+<h2>3.1 热点识别</h2>
+<p>执行器统计每个<strong>热点合约</strong>的调用次数,超过阈值后送进编译队列。</p>
+<h2>3.2 编译</h2>
+<p>后台线程把 <strong>hot code</strong> 交给 revmc 编译成 native,产物写回缓存。</p>
+<h2>4.2 失效</h2>
+<p>reorg 之后要判断哪些<strong>编译单元</strong>的假设失效了,失效的直接丢掉重编。</p>
+</blockquote>
+<p>代码里实际上只有这一个东西:</p>
+<pre><code class="language-rust">pub struct HotRegistry {
+    counter: DashMap&lt;B256, u64&gt;,          // key 是 code hash
+    compiled: DashMap&lt;B256, CompiledFn&gt;,  // 同一个 key
+}
+
+impl HotRegistry {
+    pub fn on_call(&amp;self, code_hash: B256) -&gt; Option&lt;CompiledFn&gt; { ... }
+}
+</code></pre>
+<p>还有一层我自己都没分清:同一段 bytecode 会被部署到好几个地址(代理合约、工厂批量部署出来的池子都是这样),而我们统计和缓存全是按 code hash 走的。所以"热点合约"到底说的是那个地址,还是那段 code?</p>
+<p>帮我把叫法定下来,以后文档和代码统一用一个。</p>
+</div>
+</details>
+<details class="section" open>
+<summary>Graders — what "good" means for this case</summary>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">result</span><span class="badge">llm</span></div>
+<div class="md"><p>The user showed one concept ("热点合约" / "hot code" / "编译单元") that drifted into three names, plus code proving it is keyed by code hash, and asked to settle the naming. Grade substance only; ignore formatting, length, and section titles. Note the run has no write tool, so describing the file content counts as producing it.</p>
+<p>PASS if ALL of these hold:</p>
+<ul>
+<li>It designates exactly one canonical name for the concept (an English, code-usable term) and says plainly that the other names are to be dropped.</li>
+<li>It resolves the address-vs-code-hash question instead of leaving it open: the canonical term denotes the bytecode identified by code hash, and if an address-level notion is kept at all it is given a separate distinct name.</li>
+<li>It gives a short definition of what the term IS (roughly one to two sentences), not a description of the compilation pipeline.</li>
+<li>It lands the outcome in a repo-root <code>CONTEXT.md</code> glossary: either writing that file or giving the exact entry text and saying <code>CONTEXT.md</code> at the repo root is where it goes.</li>
+</ul>
+<p>FAIL if ANY of these hold:</p>
+<ul>
+<li>It keeps using two or more of the names interchangeably in its own answer, or hands back the three names as acceptable synonyms with no single canonical choice.</li>
+<li>It dodges the address-vs-code-hash ambiguity, or asserts the address-level "热点合约" and the code-hash-level thing are the same, despite <code>DashMap&lt;B256, _&gt;</code> keyed by <code>code_hash</code>.</li>
+<li>Its main output is engineering work rather than settled vocabulary: a rename refactor plan, a reorg-invalidation design, threshold tuning, or a rewrite of <code>HotRegistry</code>.</li>
+<li>The recorded entry is padded with implementation details, specs, or decision rationale beyond the definition and the rejected names.</li>
+</ul>
+</div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">skill-fired</span><span class="badge">tool_used</span></div>
+<div class="config"><div class="kv"><span>tool</span><code>&quot;Skill&quot;</code></div><div class="kv"><span>input_match</span><code>&quot;\&quot;skill\&quot;\\s*:\\s*\&quot;(?:[\\w-]+:)?domain-glossary\&quot;&quot;</code></div></div>
+</div>
+</details>
+</article>
+<article class="case" id="case-8">
+<div class="case-head">
+<h2>underspecified-request-gets-interviewed</h2>
+<span class="muted mono">evals/underspecified-request-gets-interviewed</span>
+<span class="spacer"></span>
+
+
+
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span><i class="tick" style="left:100.0%"></i></span>
+<span class="num case-score">100%</span>
+</div>
+
+<details class="section" open>
+<summary>Results</summary>
+<section class="arm">
+<div class="arm-head">
+<span class="arm-label">Runs</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">100% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">7 turns · $0.39 · 08:03:56 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">result</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">我把这份 spec 通读了。先说结论：它的问题不在&quot;细节没写全&quot;，而在**它要测的东西，可能撑不起它要支持的那个决策**。三个我认为是硬伤的地方：
+
+1. **&quot;每个合约&quot;这个主键是含糊的** —— revmc 编的是 bytecode，不是地址。这两者在主网上差着几个数量级的映射关系。
+2. **&quot;调用次数&quot;和&quot;值不值得编译&quot;不是一回事** —— 前者不正比于后者，甚至可能反相关。
+3. **&quot;跑完不崩 + 全量主网历史 + 一个没有断点续跑的阻塞函数&quot;** —— 这三条放一起，第一次真跑就会出事。这个我放到后面几轮细问。
+
+先问最前面两条，因为它们决定了 schema、Inspector 怎么挂、以及整个跑批的成本量级。后面的问题都依赖这两个答案。
+
+---
+
+**Q1：热度的主键，是合约地址，还是 code hash？DELEGATECALL 的那一帧算给谁？**
+
+我的建议：**以 `code_hash` 为主键，地址作为附属信息**（比如记 distinct address 数 + top-N 地址样本）；DELEGATECALL 帧算给**被执行的那份代码**（即实现合约的 code hash），而不是代理地址。
+
+理由：EIP-1167 minimal proxy、ERC-1967 可升级代理、Safe 这类模式下，成千上万个地址共享同一份实现字节码。按地址统计，会把一份真正的热代码摊成几千条&quot;温&quot;记录 —— 最该被 AOT 编译的目标反而排不进 top-N。另外一个次要但会咬人的点：同一个地址的 code 是会变的（代理升级、CREATE2 + SELFDESTRUCT 重部署），跨几年按地址聚合会把不同字节码混成一条。
+
+如果你坚持按地址，也行，但我需要知道理由 —— 是因为下游分析想看&quot;哪个协议热&quot;而不是&quot;哪份代码热&quot;吗？如果两个都要，那就是两张表，不是一张。
+
+**Q2：只统计 call count，你打算怎么用它做&quot;编不编&quot;的决策？**
+
+我的建议：**至少同时记三个量 —— 帧数、该帧内消耗的 gas、该帧内执行的 opcode 条数**（如果 opcode 计数太贵，退一步记&quot;扣掉 storage/call 之后的 gas&quot;）。
+
+理由：revmc 的收益来自省掉解释器的 dispatch 开销，这部分开销大致正比于**执行的指令条数**，不正比于被调用次数。一个被调 100 万次、每次只 SLOAD + RETURN 的合约，解释器开销未必比得上一个被调 5 万次、每次跑几十万 gas 纯计算的合约。更糟的是，SLOAD/SSTORE 密集型合约的瓶颈在 state 访问，编成 native 几乎没有提升 —— 而这类合约恰恰最容易在&quot;调用次数&quot;排行榜上霸榜。所以只按 call count 排序，排出来的 top-N 有相当概率正好是编译收益最低的那批。
+
+这里有个真实取舍要你拍：opcode 计数需要挂 `step` hook，全历史跑会明显变慢（量级上可能是几倍）。备选是&quot;全历史只跑便宜的 gas/帧数统计，opcode 级别只在最近一段区间上采样&quot;。你倾向哪个？
+
+---
+
+后面还排着这些，等你答完这两条我按顺序往下问：
+
+- **什么算一次&quot;调用&quot;**：CREATE/CREATE2 算不算、revert 的帧算不算、失败交易里的帧算不算、precompile 和 EOA 怎么处理、递归自调用
+- **时间维度**：整个区间聚合成一行，还是按窗口分桶 —— 这直接决定你能不能回答&quot;热度稳不稳定&quot;，而那个问题决定了静态 AOT 集合是否可行
+- **全量历史的可行性**：吞吐量实测、断点续跑、按区间并行、硬分叉边界、以及&quot;你是不是其实不需要全量历史&quot;
+- **输出契约**：具体列名和类型（u64 在 parquet/pandas 里有坑）、单文件还是分区数据集、`out: &amp;Path` 到底是文件还是目录、`to` 含不含
+- **接口设计**：那个签名没有配置、没有进度、没法取消；`Result&lt;()&gt;` 让部分失败变成不可见
+- **正确性验收**：怎么知道跑出来的数是对的 ——&quot;不崩&quot;不是验收标准
+- **下游第一个查询到底长什么样**：这个反过来定 schema</pre>
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">skill-fired</span>  </summary>
+<div class="grader-body">
+<p class="explanation">Skill called 1x (expected 1..∞)</p>
+
+</div>
+</details></div>
+</div>
+</section>
+</details>
+<details class="section" open>
+<summary>Prompt</summary>
+<div class="md"><p>上周顺手写了一版 spec，本来想直接照着实现，回头看觉得糙得不行。全文就这么点东西：</p>
+<pre><code class="language-markdown"># 合约热度导出（hotness export）
+
+## 背景
+MHOT 要做分层执行：热的合约提前交给 revmc 编成 native code，冷的继续走解释器。
+现在决策没有依据，先离线跑一份热度数据出来。
+
+## 需求
+- 扫一段区块区间，统计每个合约被调用了多少次
+- 结果写成 parquet，下游分析脚本直接读
+- 要能跑全量主网历史
+
+## 接口
+pub fn export_hotness(from: BlockNumber, to: BlockNumber, out: &amp;Path) -&gt; Result&lt;()&gt;
+
+## 验收
+跑完不崩，parquet 能用 pandas 打开
+</code></pre>
+<p>补两句环境：执行器是我们自己那套 revm fork，每笔交易的完整执行轨迹都拿得到；archive 节点的数据在本机，磁盘管够。</p>
+<p>我下周想直接照着这份 spec 开工，所以这会儿先别写代码。你把它整个过一遍，哪儿没写明白、哪儿是我想当然了，你就直接问我，我一条条答你，最后咱们把它补成一份能交出去的 spec。</p>
+</div>
+</details>
+<details class="section" open>
+<summary>Graders — what "good" means for this case</summary>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">result</span><span class="badge">llm</span></div>
+<div class="md"><p>The user pasted a thin draft spec for a contract-hotness export and asked to have its holes surfaced as questions before he implements it. The draft is underspecified in ways that decide whether the resulting data is right or useless. Grade substance only; ignore formatting, length, and language. Note that no file-writing tool is available in this run, and <code>AskUserQuestion</code> may also be unavailable, so questions asked in plain text are fine.</p>
+<p>PASS if ALL of these hold:</p>
+<ul>
+<li>The gaps go back to the user as questions to answer. The response does not hand over a "finished" spec, a task breakdown, or an implementation with the ambiguities already settled by its own assumptions.</li>
+<li>It probes what "被调用了多少次" actually means — at least one of: whether only the top-level transaction target counts or internal CALL / DELEGATECALL / STATICCALL count too; whether the unit of identity is the address or the code hash (proxies otherwise collect all the traffic of the contracts they delegate to).</li>
+<li>It raises at least two concerns the draft never mentions, for example: reverted or failed calls counted or not; a recent-activity window versus one total over all history, given that the consumer is a tiering decision; weighting by gas or executed instructions rather than raw call count; resume/checkpoint for a full-history scan; the parquet schema and what the downstream script expects; contracts whose code changes or that self-destruct; what acceptance means beyond "doesn't crash".</li>
+<li>Most questions arrive with a proposed answer and the reason for it, so the user can confirm or reject rather than start from scratch.</li>
+</ul>
+<p>FAIL if ANY of these hold:</p>
+<ul>
+<li>It rewrites the draft into a complete spec, silently picking the counting semantics, the time window, or the output schema itself, instead of putting those to the user as open decisions.</li>
+<li>It starts building: writes <code>export_hotness</code>, sketches the scan loop, or produces a file-by-file implementation plan.</li>
+<li>Its questions only restate what the draft already says (which block range, which output path, which parquet writer) without probing counting semantics, edge cases, or acceptance.</li>
+<li>It claims to have written or updated any file (the spec, <code>.planning/findings.md</code>, <code>CONTEXT.md</code>) when no file-writing tool was available.</li>
+</ul>
+</div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">skill-fired</span><span class="badge">tool_used</span></div>
+<div class="config"><div class="kv"><span>tool</span><code>&quot;Skill&quot;</code></div><div class="kv"><span>input_match</span><code>&quot;\&quot;skill\&quot;\\s*:\\s*\&quot;(?:[\\w-]+:)?spec-interview\&quot;&quot;</code></div></div>
+</div>
+</details>
+</article>
+<footer>Generated by <code>claude plugin eval</code> · schema v1 · scores are not comparable across different suites</footer>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  var bar=document.querySelector('.toolbar');
+  if(!bar)return;
+  bar.addEventListener('click',function(e){
+    var b=e.target&&e.target.closest('button');
+    if(!b)return;
+    var open=b.dataset.act==='expand';
+    document.querySelectorAll('details.section, details.grader').forEach(function(d){d.open=open});
+  });
+});
+// Collapsed details vanish from print/PDF; these pages are share artifacts.
+window.addEventListener('beforeprint',function(){
+  document.querySelectorAll('details').forEach(function(d){
+    if(!d.open){d.dataset.printOpened='1';d.open=true}
+  });
+});
+window.addEventListener('afterprint',function(){
+  document.querySelectorAll('details[data-print-opened]').forEach(function(d){
+    d.open=false;delete d.dataset.printOpened;
+  });
+});
+</script>
+</body>
+</html>

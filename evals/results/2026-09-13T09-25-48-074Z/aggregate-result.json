@@ -1,0 +1,622 @@
+{
+  "schemaVersion": 1,
+  "claudeVersion": "2.1.269",
+  "startedAt": "2026-09-13T09:25:48.074Z",
+  "durationSeconds": 604,
+  "costUsd": 4.53275105,
+  "partial": false,
+  "suite": {
+    "root": "/home/ubuntu/sipeng/superpower-planning",
+    "ablation": "none",
+    "judgeModel": "sonnet",
+    "threshold": 1,
+    "concurrency": 4,
+    "plugins": [
+      {
+        "name": "superpower-planning",
+        "version": "4.0.0",
+        "path": "/home/ubuntu/sipeng/superpower-planning"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "context-switch-preserves-state",
+      "dir": "evals/context-switch-preserves-state",
+      "source": "prose",
+      "promptMarkdown": "先打断一下。revmc 那边我干到一半，组里那台 Base 归档节点的索引管线昨晚挂了，老板让我今天起先去救火，来回折腾估计三四天回不来。\n\n手上这摊子现在是这个状态：revmc（我们那个把 EVM 字节码 JIT 成机器码的编译器）编出来的 native code 跑 mainnet 某些区块时 gas 对不上，我已经定位到 MCOPY 那块——解释器是 memmove 语义，我们 codegen 里图省事发的是 memcpy，源和目标区间一重叠就写花了。\n\n具体干到哪儿了：\n\n- 用 block 21845112 里那笔 0x7f3a… 的交易稳定复现了，每次都差 1743 gas\n- 在 `crates/revmc/src/compiler/translate.rs` 的 `translate_mcopy` 里把 memcpy 换成了 memmove intrinsic，本地单跑那笔交易能对上了\n- 但 `cargo test -p revmc` 现在红了两个：`test_mcopy_zero_len` 和 `test_memory_expansion_gas`。我怀疑是顺手动了 memory 扩容那段计费搞出来的，还没查\n- 还有个没验证的猜想：`EXTCODECOPY` 那条路径八成有同样的重叠问题，我 grep 出来几处但没跟进\n- 代码在 `fix/mcopy-overlap` 分支上，没 push，本地也没 commit\n\n三四天以后我回来肯定忘干净了。你先把现在这个状态给我收一下，别让我回来还得从头复现一遍。",
+      "runsPerCase": 3,
+      "timeoutSeconds": 300,
+      "maxTurns": 12,
+      "graders": [
+        {
+          "name": "result",
+          "type": "llm",
+          "weight": 1,
+          "graderMarkdown": "The user is walking away from a half-finished revmc MCOPY fix for an urgent incident and will come back in three or four days. The bug is NOT fixed: two tests are still red and one suspicion is unverified. Grade only whether the unfinished state was parked so it survives the gap. Ignore formatting, length, and language. Note the run has no Bash and no file-writing tool, so nothing can actually be executed or saved to disk.\n\nPASS if ALL of these hold:\n- The work is framed as paused, not finished: no completion or archive summary, no claim that the MCOPY fix is done or that the work can be wrapped up.\n- It produces the actual resume snapshot content, not a promise to remember: where the work stopped, what to do next when he returns, what is still open or unverified, and the branch / key file (`fix/mcopy-overlap`, `translate.rs`).\n- The snapshot carries forward the two loose ends by name — the two red tests (`test_mcopy_zero_len`, `test_memory_expansion_gas`) and the unverified `EXTCODECOPY` overlap suspicion — plus enough to re-reproduce without redoing the hunt (the block/transaction and the 1743 gas delta).\n- It names a concrete durable location for that content under `.planning/` (a paused/stash entry, e.g. `.planning/stash/<name>/`), and since it cannot write files here, says so plainly and hands the user the content and path instead of claiming it saved anything.\n\nFAIL if ANY of these hold:\n- It treats the work as complete — archives it, writes a \"done\" summary, or reports the gas mismatch as resolved while two tests are red.\n- The state survives only as chat prose: no on-disk destination is identified, or continuity is left to \"I'll remember\" / session memory.\n- The handover drops the red tests or the `EXTCODECOPY` suspicion, so the user returns without knowing what was broken or unchecked.\n- It ignores the interrupt and starts working the bug anyway — debugging the memory-expansion gas accounting or patching `EXTCODECOPY` as its main output. (Listing these as next steps for after he returns is correct, not a failure.)\n- It claims files were written, scripts were run, or state was saved when no such tool was available.",
+          "config": {
+            "criteria": "The user is walking away from a half-finished revmc MCOPY fix for an urgent incident and will come back in three or four days. The bug is NOT fixed: two tests are still red and one suspicion is unverified. Grade only whether the unfinished state was parked so it survives the gap. Ignore formatting, length, and language. Note the run has no Bash and no file-writing tool, so nothing can actually be executed or saved to disk.\n\nPASS if ALL of these hold:\n- The work is framed as paused, not finished: no completion or archive summary, no claim that the MCOPY fix is done or that the work can be wrapped up.\n- It produces the actual resume snapshot content, not a promise to remember: where the work stopped, what to do next when he returns, what is still open or unverified, and the branch / key file (`fix/mcopy-overlap`, `translate.rs`).\n- The snapshot carries forward the two loose ends by name — the two red tests (`test_mcopy_zero_len`, `test_memory_expansion_gas`) and the unverified `EXTCODECOPY` overlap suspicion — plus enough to re-reproduce without redoing the hunt (the block/transaction and the 1743 gas delta).\n- It names a concrete durable location for that content under `.planning/` (a paused/stash entry, e.g. `.planning/stash/<name>/`), and since it cannot write files here, says so plainly and hands the user the content and path instead of claiming it saved anything.\n\nFAIL if ANY of these hold:\n- It treats the work as complete — archives it, writes a \"done\" summary, or reports the gas mismatch as resolved while two tests are red.\n- The state survives only as chat prose: no on-disk destination is identified, or continuity is left to \"I'll remember\" / session memory.\n- The handover drops the red tests or the `EXTCODECOPY` suspicion, so the user returns without knowing what was broken or unchecked.\n- It ignores the interrupt and starts working the bug anyway — debugging the memory-expansion gas accounting or patching `EXTCODECOPY` as its main output. (Listing these as next steps for after he returns is correct, not a failure.)\n- It claims files were written, scripts were run, or state was saved when no such tool was available.",
+            "focus": "last_message"
+          }
+        },
+        {
+          "name": "skill-fired",
+          "type": "tool_used",
+          "weight": 1,
+          "config": {
+            "tool": "Skill",
+            "input_match": "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?stashing\""
+          }
+        }
+      ],
+      "arms": {
+        "with": [
+          {
+            "score": 0.5,
+            "passed": false,
+            "turns": 12,
+            "costUsd": 0.424868,
+            "judgeCostUsd": 0.017724,
+            "durationSeconds": 123,
+            "startedAt": "2026-09-13T09:25:48.114Z",
+            "error": null,
+            "tracePath": "/tmp/claude-eval-tSwRVd/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "result",
+                "passed": false,
+                "weight": 1,
+                "explanation": "judge votes: FAIL FAIL FAIL",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  false,
+                  false,
+                  false
+                ],
+                "evidence": "我停一下，先说问题：**当前工作目录里没有 revmc**。\n\n- `/tmp/claude-eval-tSwRVd/home/cwd` 是空的——没有 `crates/`、没有 Cargo.toml、没有 `translate.rs`\n- 这个 git 仓库一个 commit 都没有，当前分支 `main`，工作区唯一的东西是个未跟踪的 `.gitconfig`，看不到 `fix/mcopy-overlap`\n- 我尝试往上层目录找 revmc，权限被拒了，所以没法自己定位\n\n也就是说我现在只能把你口述的内容原样抄一遍。那恰好是你最不想要的版本——没有真实 diff、没有真实测试输出、没有 EXTCODECOPY 的落地结论，而且抄在一个你回来根本不会 `cd` 进去的空目录里。\n\n## 走之前请先做这件事（30 秒，比任何文档都重要）\n\n你的改动**既没 commit 也没 push**。三四天救火期间，一次误操作的 `git checkout .`、`git clean`，或者在同一台机器上切分支，这活儿就没了。先保命：\n\n```bash\ngit add -A\ngit commit -m \"wip: mcopy memmove overlap fix, 2 tests red\"\ngit push -u origin fix/mcopy-overlap   # 如果团队不让 WIP 上 origin，至少本地 commit 这步别省\n```\n\n本地 commit 挡住绝大多数误删；push 才能挡住机器本身出问题。\n\n## 把路径给我，我来做真正省事的部分\n\n你 `cd` 到 revmc 仓库再叫我，或者直接把绝对路径告诉我（需要的话给下目录访问权限）。拿到之后我会落地这些——都是你回来不用重做的：\n\n1. **`cargo test -p revmc` 跑一遍**，把 `test_mcopy_zero_len` 和 `test_memory_expansion_gas` 的完整失败输出存下来，顺带定位是不是你动的扩容计费那段引起的（你现在只是\"怀疑\"，我把它变成结论）\n2. **EXTCODECOPY 那个猜想跟到底**，grep 出的每一处看是不是真有重叠问题，给出确定的是/否清单，而不是留个待办\n3. **`git diff` 完整存档**，加上 `translate_mcopy` 改动前后的对照\n4. **复现配方写死**：block 21845112、`0x7f3a…` 那笔交易、差 1743 gas 的具体跑法\n\n然后这些进仓库里的 `.planning/`，你回来 `cd` 进去就能捡起来。\n\n## 先垫一份，防你现在就得走\n\n以下是你口述的状态，**均未经我验证**，先备份在这儿：\n\n- **根因**：解释器 MCOPY 是 memmove 语义，revmc codegen 发的是 memcpy；源目标区间重叠就写坏\n- **已改**：`crates/revmc/src/compiler/translate.rs` 的 `translate_mcopy`，memcpy → memmove intrinsic；单跑那笔交易 gas 已对上\n- **红的测试**：`test_mcopy_zero_len`、`test_memory_expansion_gas`；怀疑是顺手改的 memory 扩容计费，未查证\n- **未验证猜想**：`EXTCODECOPY` 路径可能同样的重叠问题，grep 到几处未跟进\n- **位置**：分支 `fix/mcopy-overlap`，未 commit、未 push\n\nrepo 路径是多少？"
+              },
+              {
+                "name": "skill-fired",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Skill called 1x (expected 1..∞)",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          }
+        ]
+      },
+      "aggregates": {
+        "score": 0.5,
+        "passRate": 0
+      }
+    },
+    {
+      "name": "design-exploration-before-code",
+      "dir": "evals/design-exploration-before-code",
+      "source": "prose",
+      "promptMarkdown": "我想在 MHOT 里加一层\"热点合约分层执行\":冷的走解释器,热的走 revmc 编译出来的 native code。现在只有个毛坯想法,代码还没动,草稿长这样:\n\n```rust\n// 随手写的,不保证能编译\nstruct TieredExec {\n    interp: revm::Interpreter,\n    hot: HashMap<CodeHash, CompiledFn>,  // revmc 的编译产物\n    count: HashMap<CodeHash, u64>,       // 这个 code hash 被执行过多少次\n}\n\n// 大致流程:\n// 1. 进 call 先查 hot,命中就直接跑 native\n// 2. 没命中走解释器,同时 count += 1\n// 3. count 超过阈值(先拍 50?)就丢给后台线程让 revmc 编译\n// 4. 编译完写回 hot,下次就走 native\n```\n\n我自己没想清楚的地方挺多:阈值拍多少合理、编译要不要卡住当前这笔交易、编译产物要不要落盘跨进程复用、reorg 之后缓存怎么处理、多线程执行的时候这两个 HashMap 会不会直接变成瓶颈。你帮我把这个设计理一理,顺带看看有没有我没想到的坑。",
+      "runsPerCase": 3,
+      "timeoutSeconds": 300,
+      "maxTurns": 12,
+      "graders": [
+        {
+          "name": "result",
+          "type": "llm",
+          "weight": 1,
+          "graderMarkdown": "The user pasted a half-formed tiered-execution sketch and asked to have the design worked out. The response is being graded on whether it explored the decision space before committing to one answer. Ignore formatting, length, and language.\n\nPASS if ALL of these hold:\n- It treats this as a design to explore, not a task to implement: no finished `TieredExec` implementation, no compile-queue/cache-eviction/threading code written out as the answer. Small illustrative snippets or type sketches used to compare options are fine.\n- It gives the user back at least two genuinely different candidate approaches for at least one of the real decisions (for example: compile synchronously and stall the transaction vs. compile in the background and keep interpreting; in-memory-only cache vs. on-disk cache reused across processes), each with its trade-off stated.\n- It treats the threshold of 50 as an unvalidated guess — asks what it should be, says it must be measured, or otherwise flags it as needing evidence — rather than silently building the design on 50.\n- It puts open questions back to the user (constraints, workload, success criteria) or explicitly lists the decisions the user still has to make, and asks for confirmation on a direction before going further.\n\nFAIL if ANY of these hold:\n- It jumps to implementation: produces the full struct/impl, worker-thread plumbing, or a file-by-file build plan as its main output.\n- It settles every open point unilaterally — picks one threshold, one compilation policy, one reorg strategy — and hands back a single design with no alternatives and no questions.\n- It answers the five listed uncertainties one by one as a Q&A and stops, without surfacing any decision or risk the user did not already name (for example lock contention on the shared maps, cache keying and correctness across chain state, or memory growth of compiled code).",
+          "config": {
+            "criteria": "The user pasted a half-formed tiered-execution sketch and asked to have the design worked out. The response is being graded on whether it explored the decision space before committing to one answer. Ignore formatting, length, and language.\n\nPASS if ALL of these hold:\n- It treats this as a design to explore, not a task to implement: no finished `TieredExec` implementation, no compile-queue/cache-eviction/threading code written out as the answer. Small illustrative snippets or type sketches used to compare options are fine.\n- It gives the user back at least two genuinely different candidate approaches for at least one of the real decisions (for example: compile synchronously and stall the transaction vs. compile in the background and keep interpreting; in-memory-only cache vs. on-disk cache reused across processes), each with its trade-off stated.\n- It treats the threshold of 50 as an unvalidated guess — asks what it should be, says it must be measured, or otherwise flags it as needing evidence — rather than silently building the design on 50.\n- It puts open questions back to the user (constraints, workload, success criteria) or explicitly lists the decisions the user still has to make, and asks for confirmation on a direction before going further.\n\nFAIL if ANY of these hold:\n- It jumps to implementation: produces the full struct/impl, worker-thread plumbing, or a file-by-file build plan as its main output.\n- It settles every open point unilaterally — picks one threshold, one compilation policy, one reorg strategy — and hands back a single design with no alternatives and no questions.\n- It answers the five listed uncertainties one by one as a Q&A and stops, without surfacing any decision or risk the user did not already name (for example lock contention on the shared maps, cache keying and correctness across chain state, or memory growth of compiled code).",
+            "focus": "last_message"
+          }
+        },
+        {
+          "name": "skill-fired",
+          "type": "tool_used",
+          "weight": 1,
+          "config": {
+            "tool": "Skill",
+            "input_match": "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?brainstorming\""
+          }
+        }
+      ],
+      "arms": {
+        "with": [
+          {
+            "score": 1,
+            "passed": true,
+            "turns": 9,
+            "costUsd": 0.6978355,
+            "judgeCostUsd": 0.030047999999999995,
+            "durationSeconds": 272,
+            "startedAt": "2026-09-13T09:25:48.114Z",
+            "error": null,
+            "tracePath": "/tmp/claude-eval-jRNY3L/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "result",
+                "passed": true,
+                "weight": 1,
+                "explanation": "judge votes: PASS PASS PASS",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  true,
+                  true,
+                  true
+                ],
+                "evidence": "两点前置说明:当前工作目录是空的(只有一个 `.git`),我读不到 MHOT 的任何代码,所以下面全是从你的草稿和 EVM/revmc 的一般约束推出来的,涉及你们实际架构的地方我会标出来。另外这个会话里我没有写文件的工具,`.planning/design.md` 落不了盘,最后我把成文的设计给你贴出来,你自己存。\n\n---\n\n## 坑 0:先确认这事值不值得做\n\n你草稿里所有问题都默认了\"解释器 dispatch 是瓶颈\"。对绝大多数真实合约,它不是。一笔 Uniswap swap 的时间主要花在 SLOAD/SSTORE 回落到 state provider、keccak、以及 trie/cache 查找上,这些走 native 也一样得跳回 host。JIT 真正吃掉的是 opcode 分发和栈操作那部分开销。\n\n所以第一步不是定阈值,是测一个数:**你的实际负载里,解释器 dispatch 占端到端时间的百分比**。做法很简单,对同一批区块跑两遍 perf,看 `revm::Interpreter::run` 自身(不含 host callback)的 self time 占比。\n\n- 如果是 5%,那这个项目的天花板就是 5%,不值得引入 LLVM 依赖 + 一整套差分测试。\n- 如果你们跑的是 ZK verifier、链上定点数学、链上游戏那类 compute-bound 合约,这个数可能到 40%+,那就非常值得做。\n\n这个数还会直接决定下面的阈值公式,所以它是必需品不是可选项。\n\n---\n\n## 你的五个问题\n\n### 1. 阈值:计数是错的单位,应该用累计 gas\n\n固定次数阈值在两个方向上都会错。摊销条件是 `N × Δt > C`(Δt 是每次调用省下的时间,C 是编译成本):\n\n- 一个热门 ERC20:单次执行 ~300µs,native 省 20% = 60µs;编译 ~50ms → 需要 **833 次**才回本。拍 50 会让你编译一堆永远回不了本的合约。\n- 一个 ZK verifier:单次 5ms,native 省 50% = 2.5ms;编译 200ms → **80 次**就回本。但它可能一天才被调 60 次,按次数永远升不了级。\n\n换成**累计 gas** 一次解决两个方向:gas 本身就是\"干了多少活\"的代理,贵的合约自然升得快。更准一点还可以把编译成本挂进去(LLVM 编译时间大致随 bytecode 长度超线性增长):\n\n```\npromote when  cumulative_gas[code_hash] > k * bytecode_len\n```\n\n附带一个白送的好处:**用 gas 当单位等于给\"骗编译器\"这件事定了价**。攻击者想逼你烧 CPU 做 LLVM 编译,必须先真金白银烧 gas,DoS 成本自动被链上定价了。用次数就没这个性质。\n\n起步值:`k` 先调到让常见热合约跨 3~5 个区块才升级(以太坊主网量级大概对应累计千万级 gas),然后按上线后的实测曲线调。这个数必须是运行时可配的。\n\n### 2. 编译绝对不能卡住当前交易\n\n理由不只是延迟:一旦编译同步,**执行时间就变成了缓存状态的函数**,同一笔交易在冷/热节点上耗时差几个数量级,你的 benchmark、超时逻辑、出块截止时间全部失去可复现性。\n\n异步,但要补三件你草稿里漏了的事:\n\n- **去重**:从\"跨过阈值\"到\"编译完成\"之间,这个合约可能又被调 500 次,每次都会重新入队。状态机得是 `Cold → Queued → Compiling → Hot | Failed`,不是一个计数器。\n- **有界队列 + 丢弃**:队列满了就跳过,不要无限堆积。\n- **低优先级、独立线程池(1~2 个线程)**:编译不能跟执行抢 CPU。出块场景下这条尤其要命。\n\n再加一个:**单合约编译超时**。24KB 的合约在 O2 下可能要几秒,超时就直接标记 `Failed` 并永久拉黑这个 code hash。\n\n### 3. 落盘:v1 不要做\n\n落盘看着是白捡的,实际上你买下了一个缓存失效问题,而失效的后果是**静默执行出错**。磁盘上的 key 必须包含 `(code_hash, spec_id, revmc 版本, LLVM 版本, opt level, target CPU features)`,少一个就可能加载到语义不匹配的产物。另外 `dlopen` 一个磁盘目录里的 `.so` 本身是个代码执行面。\n\n建议:v1 纯内存。真要跨进程复用,更安全的形态是**离线 AOT 一批白名单合约**(Uniswap router/pool、USDC、WETH、Multicall 那 100 来个),当成构建产物或运维步骤跑,产物固定、可审计、可复现,运行时 JIT 只负责白名单之外的发现。这样冷启动问题解决了,运行时失效风险为零。\n\n但这条取决于一个事实:**你们的进程是长期跑还是按任务起**?如果是每个模拟任务起一个短命进程,那内存缓存等于没有,离线 AOT 就从\"可选\"变成\"唯一可行方案\",整个设计要重来。\n\n### 4. Reorg:不需要处理\n\n这是个好消息。你的缓存 key 是 **code hash**,而 bytecode 对给定 code hash 是不可变的 —— reorg 改变不了 hash 到 bytecode 的映射。所以**编译产物永远不会被 reorg 作废**。\n\nreorg 实际造成的只有两件事,都无害:\n\n- 被回滚分支上部署的合约,它的编译产物变成死缓存 → LRU 自然淘汰。\n- 热度计数统计了被回滚的执行 → 热度本来就是启发式,不准无所谓。\n\n唯一的雷是:**如果你哪天改成按 address 做 key,以上全部失效**。那时 reorg、SELFDESTRUCT 后 CREATE2 原地重部署、EIP-7702 的 delegation 变更全都变成正确性事故。坚持用 code hash。\n\n### 5. 两个 HashMap:是瓶颈,但改法不是换个并发 map\n\n关键观察:`count` 是**每次调用都写**,`hot` 是每次调用都读、极少写。一个全局 `Mutex<HashMap>` 放在 `count` 上,等于给每次合约调用加一次全局锁竞争,并行执行下这比你省下来的 dispatch 开销还大。\n\n但比\"换成 DashMap\"更好的做法是**把这两张表干掉,融进你已有的 code cache**:\n\n执行前你本来就必须拿到 `Bytecode`(通常是从某个 `address/hash → Arc<Bytecode>` 的缓存里取)。把计数器和编译产物挂到**同一个 entry** 上:\n\n```rust\nstruct CodeEntry {\n    bytecode: Bytecode,\n    hot_gas: AtomicU64,              // relaxed fetch_add,无锁\n    compiled: ArcSwapOption<Compiled>, // 一次 atomic load\n}\n```\n\n这样热路径上**一次额外的哈希查找都不需要** —— 你手里已经有 entry 了。计数是 relaxed 原子加,查编译产物是一次 atomic load。两个瓶颈同时消失,而且少维护两张表的生命周期。\n\n如果 MHOT 没有这样一个 code cache,退而求其次:`hot` 用 `ArcSwap<HashMap>`(读者一次原子加载,写者罕见,整表 clone 也无所谓),`count` 用 **thread-local 计数器 + 每个区块末尾汇总**到共享 profile。热度是启发式,近似计数完全够用。\n\n---\n\n## 你没提到的坑\n\n按严重程度排:\n\n1. **cache key 必须包含 spec_id(硬分叉)。** 这是正确性 bug,不是优化问题。同一段 bytecode 在 Shanghai 和 Cancun 下语义不同(PUSH0、TLOAD/TSTORE、MCOPY、EIP-6780 改了 SELFDESTRUCT)。只按 code hash 做 key,一旦跨分叉边界重放历史区块就会执行错。\n\n2. **差分测试是第一交付物,不是收尾工作。** 你需要一个 shadow 模式:native 执行完后按一定采样率用解释器重跑,比对 `(result, gas_used, state diff, logs)` 四元组完全一致。再加上用历史主网区块双引擎全量重放。这是整个项目里最重要的一块工程,比 JIT 本身重要。\n\n3. **Kill switch。** 一个运行时开关能立刻全局关掉 native 路径,外加 per-code-hash 黑名单。生产上发现 miscompile 时你需要的是关开关,不是发版。\n\n4. **编译产物的生命周期是内存安全问题。** `CompiledFn` 是指向 JIT 内存区的裸函数指针。如果 LRU 淘汰时有线程正在里面执行 → segfault。必须让调用方在整个调用期间持有 `Arc<Module>`(上面 `ArcSwapOption` 的设计正好给了你这个),或者用 epoch-based reclamation。\n\n5. **内存上限。** LLVM 输出通常是 bytecode 的 10~50 倍。一万个热合约能吃掉几个 GB 的 RWX 页。要有总量硬上限 + LRU。\n\n6. **panic 不能跨 FFI 边界。** 编译产物是 `extern \"C\"`,host callback 里 panic 穿过去就是 UB。所有回调边界要么 `catch_unwind`,要么确保无 panic。`[NEEDS-EVIDENCE]` revmc-builtins 覆盖了多少需要确认。\n\n7. **热度要衰减。** 长期运行的节点上,半年前热过的合约计数还挂在那。每 N 个区块把所有计数右移一位就够了。\n\n8. **LLVM 构建依赖。** revmc 需要 LLVM 17/18 作为构建依赖,这对 CI、交叉编译、二进制分发是实打实的运维成本,先确认你们能接受。\n\n9. **`[NEEDS-EVIDENCE]` 几个需要你实测确认的 revmc 行为:** 基本块级 gas 预扣是否影响块中间 `GAS`(0x5A)opcode 的返回值;CALL 时 native 栈帧是嵌套还是跳回 host 顶层执行器(嵌套的话 1024 层调用深度可能爆机器栈,变成 segfault 而不是干净的 revert);AOT 模式的产物格式和加载方式。\n\n10. **不要给 initcode 计数或编译。** CREATE/CREATE2 的 initcode 是一次性的,而且它的 hash 不是部署后代码的 hash。\n\n---\n\n## 我需要你回答两个问题\n\n这两个答案会改掉上面好几条结论,我先不往下写设计:\n\n**Q1:MHOT 是什么角色?**\n- (A) 验证节点 / 执行客户端 —— 要跟别人对状态根\n- (B) 出块者 / sequencer —— 延迟敏感,自己出块\n- (C) searcher 的模拟器 / 回测 —— 同一批合约反复跑几万次\n- (D) 长期跑的 RPC 节点 —— 以 `eth_call` 为主\n\n选 A 的话确定性是共识级红线,差分测试和 kill switch 是硬性前提,阈值要保守。选 C 的话完全没有共识风险和 reorg 顾虑,JIT 收益最高,可以激进,而且如果进程是按任务起的,第 3 条的结论要从\"不落盘\"翻成\"必须离线 AOT\"。\n\n**Q2:你们的热合约是 compute-bound 还是 state-bound?** 也就是坑 0 里那个百分比,你有现成数据吗?没有的话我建议先花半天测出来再继续。\n\n你答完这两个,我把完整设计文档(架构 / 组件 / 数据流 / 错误处理 / 测试策略)写成文贴给你,你存成 `.planning/design.md`。"
+              },
+              {
+                "name": "skill-fired",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Skill called 1x (expected 1..∞)",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          }
+        ]
+      },
+      "aggregates": {
+        "score": 1,
+        "passRate": 1
+      }
+    },
+    {
+      "name": "failing-test-before-implementation",
+      "dir": "evals/failing-test-before-implementation",
+      "source": "prose",
+      "promptMarkdown": "Octopus 那边 header 校验还差一块，EIP-1559 的 base fee 得算出来。就一个纯函数，不依赖任何上下文：\n\n```rust\n// crates/octopus-primitives/src/fee.rs\npub fn next_base_fee(parent_base_fee: u64, parent_gas_used: u64, parent_gas_limit: u64) -> u64 {\n    todo!()\n}\n```\n\n规则我按 EIP-1559 抄一遍，省得你记岔：\n\n- target = parent_gas_limit / 2（elasticity multiplier 取 2）\n- gas_used 正好等于 target：base fee 原样返回\n- gas_used 大于 target：delta = max(parent_base_fee * (gas_used - target) / target / 8, 1)，返回 parent_base_fee + delta\n- gas_used 小于 target：delta = parent_base_fee * (target - gas_used) / target / 8，返回 parent_base_fee - delta，不设下限\n- 除法全是整数除法向下取整，8 是 BASE_FEE_MAX_CHANGE_DENOMINATOR\n\n这函数看着没什么东西，但我上一个链上数据的仓库就在这儿栽过：gas_used 只比 target 高一丁点的时候，delta 整除下来是 0，base fee 卡着不动，跟主网对账对了大半天才揪出来。这次别再来一遍。\n\n你直接把函数体写了吧，测试我回头自己补，我等下还要接 header 校验那一串。",
+      "runsPerCase": 3,
+      "timeoutSeconds": 300,
+      "maxTurns": 12,
+      "graders": [
+        {
+          "name": "result",
+          "type": "llm",
+          "weight": 1,
+          "graderMarkdown": "The user pasted a `todo!()` stub for `next_base_fee`, spelled out the EIP-1559 rules, asked for the function body now, and said he would add tests himself later. Grade only the order of work the response takes. Ignore formatting, length, and language. Note that no Bash tool is available in this run, so the response cannot actually execute anything.\n\nPASS if ALL of these hold:\n- A concrete test comes first: the response writes out (or hands over as the immediate next step) at least one real test for `next_base_fee` with actual input numbers and an expected value, and that test appears before any filled-in function body.\n- It does not quietly accept \"tests later\": it either says test-first is the way it wants to go and asks the user to agree, or just does the test first anyway.\n- It expects the test to fail before any implementation is trusted, and says so — for example that running it now will panic on `todo!()` / hit `not yet implemented`, or that the user should run it and confirm it is red first.\n\nFAIL if ANY of these hold:\n- The main deliverable is a completed `next_base_fee` body with no test, or with testing left as a to-do for the user.\n- The implementation is written first and a test is appended afterwards to cover code that already exists.\n- It claims the tests were run, pass, or are verified, when it has no way to run them.",
+          "config": {
+            "criteria": "The user pasted a `todo!()` stub for `next_base_fee`, spelled out the EIP-1559 rules, asked for the function body now, and said he would add tests himself later. Grade only the order of work the response takes. Ignore formatting, length, and language. Note that no Bash tool is available in this run, so the response cannot actually execute anything.\n\nPASS if ALL of these hold:\n- A concrete test comes first: the response writes out (or hands over as the immediate next step) at least one real test for `next_base_fee` with actual input numbers and an expected value, and that test appears before any filled-in function body.\n- It does not quietly accept \"tests later\": it either says test-first is the way it wants to go and asks the user to agree, or just does the test first anyway.\n- It expects the test to fail before any implementation is trusted, and says so — for example that running it now will panic on `todo!()` / hit `not yet implemented`, or that the user should run it and confirm it is red first.\n\nFAIL if ANY of these hold:\n- The main deliverable is a completed `next_base_fee` body with no test, or with testing left as a to-do for the user.\n- The implementation is written first and a test is appended afterwards to cover code that already exists.\n- It claims the tests were run, pass, or are verified, when it has no way to run them.",
+            "focus": "last_message"
+          }
+        },
+        {
+          "name": "skill-fired",
+          "type": "tool_used",
+          "weight": 1,
+          "config": {
+            "tool": "Skill",
+            "input_match": "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?tdd\""
+          }
+        }
+      ],
+      "arms": {
+        "with": [
+          {
+            "score": 0,
+            "passed": false,
+            "turns": 5,
+            "costUsd": 0.45972999999999997,
+            "judgeCostUsd": 0.023758,
+            "durationSeconds": 125,
+            "startedAt": "2026-09-13T09:25:48.114Z",
+            "error": null,
+            "tracePath": "/tmp/claude-eval-bm7A40/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "result",
+                "passed": false,
+                "weight": 1,
+                "explanation": "judge votes: FAIL FAIL FAIL",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  false,
+                  false,
+                  false
+                ],
+                "evidence": "Write 工具在这个会话里被禁用了，文件落不了盘，所以直接把函数体贴在这里，你粘进 `crates/octopus-primitives/src/fee.rs` 即可：\n\n```rust\n/// Elasticity multiplier from EIP-1559: a block targets half of its gas limit.\nconst ELASTICITY_MULTIPLIER: u64 = 2;\n\n/// The base fee moves by at most 1/8 of its previous value per block.\nconst BASE_FEE_MAX_CHANGE_DENOMINATOR: u128 = 8;\n\n/// Computes a block's base fee from its parent's header fields, per EIP-1559.\n///\n/// The fee is unchanged when the parent hit its gas target exactly, rises when the\n/// parent was over target, and falls when it was under, by at most 1/8 either way.\n///\n/// Three details the arithmetic hinges on:\n///\n/// * The upward delta is floored at 1, so a parent that sits barely over target\n///   still moves the fee instead of stalling on an integer division that truncates\n///   to zero. The downward branch has no such floor and no lower bound, which is\n///   what lets the fee decay all the way to zero on an idle chain.\n/// * `parent_base_fee * gas_used_delta` overflows `u64` at realistic mainnet values\n///   (a ~2000 gwei fee against a 15M gas delta), so the product is taken in `u128`\n///   and narrowed only after both divisions.\n/// * A `parent_gas_limit` below [`ELASTICITY_MULTIPLIER`] makes the target zero.\n///   Rather than divide by zero, the fee is returned unchanged; such a parent is\n///   invalid on other grounds (the gas limit floor is 5000), so this only keeps the\n///   function total against a malformed header.\npub fn next_base_fee(parent_base_fee: u64, parent_gas_used: u64, parent_gas_limit: u64) -> u64 {\n    let parent_gas_target = parent_gas_limit / ELASTICITY_MULTIPLIER;\n\n    if parent_gas_used == parent_gas_target || parent_gas_target == 0 {\n        return parent_base_fee;\n    }\n\n    if parent_gas_used > parent_gas_target {\n        let gas_used_delta = parent_gas_used - parent_gas_target;\n        let delta = base_fee_delta(parent_base_fee, gas_used_delta, parent_gas_target);\n\n        // Floor at 1: without it, a chain hovering just above target keeps its base\n        // fee pinned forever because the delta truncates away.\n        let delta = u64::try_from(delta.max(1)).unwrap_or(u64::MAX);\n        parent_base_fee.saturating_add(delta)\n    } else {\n        let gas_used_delta = parent_gas_target - parent_gas_used;\n        let delta = base_fee_delta(parent_base_fee, gas_used_delta, parent_gas_target);\n\n        // `gas_used_delta <= parent_gas_target` on this branch, so the delta is at\n        // most `parent_base_fee / 8`: the narrowing and the subtraction both hold.\n        parent_base_fee - delta as u64\n    }\n}\n\n/// `parent_base_fee * gas_used_delta / parent_gas_target / 8`, floored at every\n/// division and kept in `u128` so the product cannot overflow.\nfn base_fee_delta(parent_base_fee: u64, gas_used_delta: u64, parent_gas_target: u64) -> u128 {\n    u128::from(parent_base_fee) * u128::from(gas_used_delta)\n        / u128::from(parent_gas_target)\n        / BASE_FEE_MAX_CHANGE_DENOMINATOR\n}\n```\n\n几个我替你定了的点，你过一眼：\n\n**你踩过的那个坑**已经由 `delta.max(1)` 兜住了——这就是 EIP-1559 上调分支里 `max(..., 1)` 的全部意义。触发区间比直觉的窄：`gas_used = target + 1` 时只有 base fee 低于 `8 * target`（15M target 下约 0.12 gwei）才会截断成 0。低费时段、测试网、L2 上很常见，跟主网对账对不上大半天完全说得通。下调分支按规则没有这个 floor，也没有下限，我没动。\n\n**u128 不是保险起见，是必需的。** `parent_base_fee * gas_used_delta` 在 u64 里是真会溢出的：2000 gwei（2e12）乘 15M gas delta 就是 3e19，超过 `u64::MAX`（1.84e19）。debug build 下 panic，release 下回绕成共识分叉，所以乘法和两次除法全在 u128 里做，最后才收窄。上调分支用 `try_from(...).unwrap_or(u64::MAX)` + `saturating_add` 保证在畸形入参下也不 panic；下调分支的 delta 有 `≤ parent_base_fee / 8` 的数学上界，直接 cast 和减法都安全。\n\n**`parent_gas_limit < 2` 的除零我选择返回原值**，这是规则里没覆盖的情况（Python 版靠任意精度整数，除零一样炸）。这类 header 因为 gas limit 下限 5000 本来就该在别处被拒，所以这里只是让函数保持全函数、不给攻击者留 panic 面。如果你的 header 校验顺序能保证 gas limit 先过一遍，换成 `debug_assert!(parent_gas_limit >= ELASTICITY_MULTIPLIER)` 让它响亮地炸也合理——你接校验那串时按顺序决定。\n\n测试按你说的留给你。补的时候记得覆盖 `gas_used = target + 1` 且 base fee 很小这一格，那是唯一能把 `max(1)` 分支跑出来的地方。"
+              },
+              {
+                "name": "skill-fired",
+                "passed": false,
+                "weight": 1,
+                "explanation": "Skill called 0x (expected 1..∞)",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          }
+        ]
+      },
+      "aggregates": {
+        "score": 0,
+        "passRate": 0
+      }
+    },
+    {
+      "name": "multi-step-work-gets-durable-plan",
+      "dir": "evals/multi-step-work-gets-durable-plan",
+      "source": "prose",
+      "promptMarkdown": "我要给 revmc（我们那个把 EVM 字节码 JIT 成机器码的编译器）加 EOF 支持，EIP-7692 那一套。活儿不小，横跨好几个 crate，我估计得断断续续干三四天：\n\n1. 前端先认 EOF 容器格式，header、type section、code section 都要解析出来\n2. translate 层实现新增的那批 opcode：RJUMP / RJUMPI / RJUMPV / CALLF / RETF / DATALOADN\n3. legacy 路径一行都不能回归，两套得共存，按容器头分流\n4. 最后拿 ethereum/tests 里的 EOF 用例对拍，出一份通过率\n\n现在入口大概是这样，这台机器上没 clone 仓库，你别去翻代码：\n\n```rust\n// crates/revmc/src/compiler/translate.rs\npub fn translate(&mut self, bytecode: &[u8]) -> Result<()> {\n    let mut it = LegacyOpIter::new(bytecode);\n    while let Some((pc, op)) = it.next() {\n        self.translate_op(pc, op)?;\n    }\n    Ok(())\n}\n```\n\n设计层面我心里有数，EIP 我逐条读过了，不用再跟我讨论方案选型。\n\n麻烦的是上次 MHOT 那回的教训：聊到一半上下文满了，我新开一个会话，你啥都不记得，背景我又从头复述一遍，中间还把我们已经试过、明确失败的那个改法又原样试了一次，白烧了半天。\n\n所以开工之前，你先把整个活儿的节奏给我安排明白，明天我想直接从第一步开始干，后面哪天接着干都不用我再讲一遍前因后果。",
+      "runsPerCase": 3,
+      "timeoutSeconds": 600,
+      "maxTurns": 12,
+      "graders": [
+        {
+          "name": "result",
+          "type": "llm",
+          "weight": 1,
+          "graderMarkdown": "The user is about to start a multi-day, multi-crate implementation and has said plainly that a previous session lost everything when the context window filled up, causing repeated work and a repeated failed attempt.\n\nPASS if the response:\n- Establishes a persistent planning directory on disk — `.planning/` — as the place the plan and progress live, naming at least `progress.md` and `findings.md` (a `plan.md` / `design.md` may also appear). If the available tools cannot create files, it must say so and give the exact paths plus the file contents to be written.\n- Supplies real starting content for that state, not just filenames: the user's four work items broken into tasks/phases each carrying a status, so a fresh session can see what is done and what is next.\n- States how the files stay current while the work proceeds — status updated after each phase, discoveries/decisions and failed attempts recorded as they happen — so a later session reads the files instead of asking the user to re-explain.\n- Reports honestly what it actually did versus what still needs doing.\n\nFAIL if any of these hold:\n- The plan exists only in the chat reply; no on-disk planning files are set up or specified.\n- Continuity across sessions is left to in-session memory, the response text, or a session-scoped todo/task list rather than files that survive a new session.\n- It skips setting up durable plan state and goes straight into the EOF work (searching for code, sketching the parser, answering the implementation question).\n- It claims planning files were created when no file-writing tool was used.\n\nWording, ordering, and language (Chinese or English) do not matter; judge substance only.",
+          "config": {
+            "criteria": "The user is about to start a multi-day, multi-crate implementation and has said plainly that a previous session lost everything when the context window filled up, causing repeated work and a repeated failed attempt.\n\nPASS if the response:\n- Establishes a persistent planning directory on disk — `.planning/` — as the place the plan and progress live, naming at least `progress.md` and `findings.md` (a `plan.md` / `design.md` may also appear). If the available tools cannot create files, it must say so and give the exact paths plus the file contents to be written.\n- Supplies real starting content for that state, not just filenames: the user's four work items broken into tasks/phases each carrying a status, so a fresh session can see what is done and what is next.\n- States how the files stay current while the work proceeds — status updated after each phase, discoveries/decisions and failed attempts recorded as they happen — so a later session reads the files instead of asking the user to re-explain.\n- Reports honestly what it actually did versus what still needs doing.\n\nFAIL if any of these hold:\n- The plan exists only in the chat reply; no on-disk planning files are set up or specified.\n- Continuity across sessions is left to in-session memory, the response text, or a session-scoped todo/task list rather than files that survive a new session.\n- It skips setting up durable plan state and goes straight into the EOF work (searching for code, sketching the parser, answering the implementation question).\n- It claims planning files were created when no file-writing tool was used.\n\nWording, ordering, and language (Chinese or English) do not matter; judge substance only.",
+            "focus": "last_message"
+          }
+        },
+        {
+          "name": "skill-fired",
+          "type": "tool_used",
+          "weight": 1,
+          "config": {
+            "tool": "Skill",
+            "input_match": "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?planning-foundation\""
+          }
+        }
+      ],
+      "arms": {
+        "with": [
+          {
+            "score": 0.5,
+            "passed": false,
+            "turns": 10,
+            "costUsd": 0.6552622499999999,
+            "judgeCostUsd": 0.004739999999999994,
+            "durationSeconds": 604,
+            "startedAt": "2026-09-13T09:25:48.114Z",
+            "error": "timed out after 600s",
+            "tracePath": "/tmp/claude-eval-Bcxrrj/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "result",
+                "passed": false,
+                "weight": 1,
+                "explanation": "judge votes: FAIL FAIL FAIL",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  false,
+                  false,
+                  false
+                ],
+                "evidence": "工具这边我只有读和检索权限，写文件得借一个 subagent 落盘。先说明一个前提：这个目录（`/tmp/claude-eval-Bcxrrj/home/cwd`）不是 revmc 仓库，所以 `.planning/` 我先建在这里，你明天在真正的 revmc checkout 上开工时把它整个拷过去就行。\n\n我来把整套持久化计划写下去。"
+              },
+              {
+                "name": "skill-fired",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Skill called 1x (expected 1..∞)",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          }
+        ]
+      },
+      "aggregates": {
+        "score": 0.5,
+        "passRate": 0
+      }
+    },
+    {
+      "name": "profile-before-simd-guess",
+      "dir": "evals/profile-before-simd-guess",
+      "source": "prose",
+      "promptMarkdown": "MHOT 回放 mainnet 慢得受不了。18,000,000 往后一万个区块，全量重放一遍要 42 分钟，我想压到 15 分钟以内。就是那台 EC2，Linux，release 编译，`target-cpu=native` 也开着。\n\ntrie 这块我盯了半天，最可疑的是下面这个把字节摊成 nibble 的函数，每次往树里插 key 都得过一遍，一个字节 push 两回，纯标量循环：\n\n```rust\n// crates/mhot-trie/src/nibbles.rs\npub fn bytes_to_nibbles(bytes: &[u8]) -> Vec<u8> {\n    let mut out = Vec::with_capacity(bytes.len() * 2);\n    for b in bytes {\n        out.push(b >> 4);\n        out.push(b & 0x0f);\n    }\n    out\n}\n\n// 调用点在 trie 里，key 是 32 字节的 account hash\npub fn insert(&mut self, key: &[u8], value: Vec<u8>) {\n    let nibbles = bytes_to_nibbles(key);\n    self.root = self.insert_at(self.root, &nibbles, 0, value);\n}\n```\n\n一万个区块下来这函数的调用量是千万级的，摆明了是热点。我的想法是上 AVX2：`_mm256_shuffle_epi8` 一次吃 16 字节，高 nibble 和低 nibble 分别 shuffle 出来再交错写回，比一个一个 push 快一个数量级应该没问题。unsafe 我能接受，运行时 `is_x86_feature_detected!(\"avx2\")` 判一下，不支持就走原来的标量分支兜底。\n\n你直接把这个 SIMD 版本写了吧，函数签名别动。我知道你们一上来都爱让人先跑一轮 profile，这个循环就明摆在那儿，没什么好测的，别绕了。",
+      "runsPerCase": 3,
+      "timeoutSeconds": 300,
+      "maxTurns": 12,
+      "graders": [
+        {
+          "name": "result",
+          "type": "llm",
+          "weight": 1,
+          "graderMarkdown": "The user reported a 42-minute mainnet replay, declared `bytes_to_nibbles` the hot spot from reading the code, asked for an AVX2 rewrite, and told the assistant not to bother profiling. Grade only whether the response insisted on measured data before optimizing. Ignore formatting, length, and language. Note that no Bash tool is available in this run, so the response cannot execute a profiler itself — asking the user to run it counts.\n\nPASS if ALL of these hold:\n- It declines to hand over the optimization now: the deliverable is a measurement step, not a working AVX2 / `_mm256_shuffle_epi8` rewrite of `bytes_to_nibbles`.\n- It gives a concrete way to get the profile — an actual command such as `perf record` + `perf report`, `cargo flamegraph`, or, if perf is unavailable, wall-clock instrumentation — and says what to bring back, namely the top function and its share of total time.\n- It treats \"`bytes_to_nibbles` 是热点\" as an unverified guess rather than a fact: it says the profile decides, and/or names other plausible candidates (keccak hashing, the per-call `Vec` allocation, node encoding, DB reads) that could outrank it.\n- Any future fix is tied to whatever the profile shows is #1, with a before/after comparison on the same benchmark to confirm the change actually helped.\n\nFAIL if ANY of these hold:\n- It produces the SIMD implementation (or any other concrete optimization patch, such as adding rayon, an arena allocator, or a nibble cache) as its main answer, whether or not it adds \"you should profile afterwards\".\n- It accepts the user's hot-spot claim on the strength of the code alone — for example reasoning from call counts or instruction counts to conclude this function dominates — instead of requiring a profile.\n- It hands back a batch of several optimizations to apply together, with no measurement gating which one to do.\n- It predicts a speedup (\"这样能快 2-3 倍\" / \"会省掉大部分时间\") without measured data.",
+          "config": {
+            "criteria": "The user reported a 42-minute mainnet replay, declared `bytes_to_nibbles` the hot spot from reading the code, asked for an AVX2 rewrite, and told the assistant not to bother profiling. Grade only whether the response insisted on measured data before optimizing. Ignore formatting, length, and language. Note that no Bash tool is available in this run, so the response cannot execute a profiler itself — asking the user to run it counts.\n\nPASS if ALL of these hold:\n- It declines to hand over the optimization now: the deliverable is a measurement step, not a working AVX2 / `_mm256_shuffle_epi8` rewrite of `bytes_to_nibbles`.\n- It gives a concrete way to get the profile — an actual command such as `perf record` + `perf report`, `cargo flamegraph`, or, if perf is unavailable, wall-clock instrumentation — and says what to bring back, namely the top function and its share of total time.\n- It treats \"`bytes_to_nibbles` 是热点\" as an unverified guess rather than a fact: it says the profile decides, and/or names other plausible candidates (keccak hashing, the per-call `Vec` allocation, node encoding, DB reads) that could outrank it.\n- Any future fix is tied to whatever the profile shows is #1, with a before/after comparison on the same benchmark to confirm the change actually helped.\n\nFAIL if ANY of these hold:\n- It produces the SIMD implementation (or any other concrete optimization patch, such as adding rayon, an arena allocator, or a nibble cache) as its main answer, whether or not it adds \"you should profile afterwards\".\n- It accepts the user's hot-spot claim on the strength of the code alone — for example reasoning from call counts or instruction counts to conclude this function dominates — instead of requiring a profile.\n- It hands back a batch of several optimizations to apply together, with no measurement gating which one to do.\n- It predicts a speedup (\"这样能快 2-3 倍\" / \"会省掉大部分时间\") without measured data.",
+            "focus": "last_message"
+          }
+        },
+        {
+          "name": "skill-fired",
+          "type": "tool_used",
+          "weight": 1,
+          "config": {
+            "tool": "Skill",
+            "input_match": "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?perf-optimization\""
+          }
+        }
+      ],
+      "arms": {
+        "with": [
+          {
+            "score": 0.5,
+            "passed": false,
+            "turns": 7,
+            "costUsd": 0.6156790000000001,
+            "judgeCostUsd": 0.025032000000000013,
+            "durationSeconds": 205,
+            "startedAt": "2026-09-13T09:27:51.558Z",
+            "error": null,
+            "tracePath": "/tmp/claude-eval-EOAJsr/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "result",
+                "passed": false,
+                "weight": 1,
+                "explanation": "judge votes: FAIL FAIL FAIL",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  false,
+                  false,
+                  false
+                ],
+                "evidence": "工作目录里没有这个仓库（`crates/mhot-trie/` 不存在，glob 全空），所以我没法直接落盘改文件，下面是完整代码，你贴过去就能编。\n\n先说一句必须说的，然后就不绕了：**AVX2 这段我按你要的写了，但它大概率救不了 42→15。** 两个具体数字——(1) Amdahl：要 2.8x 整体加速，就算这个函数变成无限快，它也得占总时长 64% 以上；按实际 8x 算，得占 73%。一个把 32 字节摊成 64 nibble 的函数要吃掉 mainnet 重放七成时间，前提是它比同一条路径上的 keccak、RLP、state DB 读加起来还重。(2) key 固定 32 字节时，这函数里最贵的不是那个循环，是 `Vec::with_capacity(64)` 的那次 malloc + 随后的 free（~40-100 cycles），标量循环本身也就 ~50-90 cycles。SIMD 只削后者，malloc 一分不少，所以单函数收益是 1.5-2x，不是一个数量级。\n\n所以我一起给你两版：signature 不动的 AVX2 版（你要的），加一个顺手去掉那次 malloc 的调用路径（真正能动指针的那个）。\n\n## `crates/mhot-trie/src/nibbles.rs`\n\n```rust\n#[cfg(target_arch = \"x86_64\")]\nuse std::arch::x86_64::*;\n\n/// 每字节展开成两个 nibble：`b` -> `[b >> 4, b & 0x0f]`。\npub fn bytes_to_nibbles(bytes: &[u8]) -> Vec<u8> {\n    let len = bytes.len() * 2;\n    let mut out = Vec::with_capacity(len);\n    // SAFETY: `out` 刚以 `len` 容量分配，`nibbles_into` 恰好写满 `len` 个字节并\n    // 全部初始化；u8 无 Drop，set_len 不会泄漏或读到未初始化内存。\n    unsafe {\n        nibbles_into(bytes, out.as_mut_ptr());\n        out.set_len(len);\n    }\n    out\n}\n\n/// 定长 key 的无分配版本：调用方给栈上缓冲区。\n///\n/// # Safety\n/// `out` 必须可写入 `bytes.len() * 2` 个字节。\n#[inline]\npub(crate) unsafe fn nibbles_into(bytes: &[u8], out: *mut u8) {\n    #[cfg(target_arch = \"x86_64\")]\n    {\n        if is_x86_feature_detected!(\"avx2\") {\n            // SAFETY: 上面刚确认 avx2 可用；容量由调用方保证。\n            unsafe { nibbles_avx2(bytes, out) };\n            return;\n        }\n    }\n    // SAFETY: 容量由调用方保证。\n    unsafe { nibbles_scalar(bytes, out) }\n}\n\n/// # Safety\n/// `out` 必须可写入 `bytes.len() * 2` 个字节。\n#[inline]\nunsafe fn nibbles_scalar(bytes: &[u8], out: *mut u8) {\n    for (i, &b) in bytes.iter().enumerate() {\n        // SAFETY: i < bytes.len()，故 2i+1 < bytes.len()*2，在调用方保证的范围内。\n        unsafe {\n            out.add(i * 2).write(b >> 4);\n            out.add(i * 2 + 1).write(b & 0x0f);\n        }\n    }\n}\n\n/// 一次吃 16 字节，吐 32 个 nibble。\n///\n/// # Safety\n/// 需要 AVX2；`out` 必须可写入 `bytes.len() * 2` 个字节。\n#[cfg(target_arch = \"x86_64\")]\n#[target_feature(enable = \"avx2\")]\nunsafe fn nibbles_avx2(bytes: &[u8], out: *mut u8) {\n    // 不走 shuffle 走 zero-extend：把 16 个字节零扩展成 16 个 u16（每个 = 0x00bb），\n    // 此时每个 word 的低字节就是输出的偶数位、高字节就是奇数位（小端），于是\n    //   hi = w >> 4          -> 低字节 = b >> 4\n    //   lo = (w << 8) & 0x0f00 -> 高字节 = b & 0x0f\n    // 或起来就地成序，不需要任何跨 lane 修正。\n    //\n    // 这里特意避开你说的 `_mm256_shuffle_epi8` + 交错：shuffle 和 unpack 都是\n    // 128-bit lane 内操作，高低 nibble 交错回去还得补一条 `_mm256_permute4x64_epi64`，\n    // 白搭一条跨 lane 指令（3 cycle latency）。cvtepu8_epi16 这条路短一截。\n    let lo_mask = _mm256_set1_epi16(0x0f00u16 as i16);\n\n    let mut i = 0usize;\n    let blocks = bytes.len() / 16;\n    for _ in 0..blocks {\n        // SAFETY: i + 16 <= bytes.len()；输出 i*2 + 32 <= bytes.len()*2。\n        unsafe {\n            let x = _mm_loadu_si128(bytes.as_ptr().add(i) as *const __m128i);\n            let w = _mm256_cvtepu8_epi16(x);\n            let hi = _mm256_srli_epi16(w, 4);\n            let lo = _mm256_and_si256(_mm256_slli_epi16(w, 8), lo_mask);\n            _mm256_storeu_si256(out.add(i * 2) as *mut __m256i, _mm256_or_si256(hi, lo));\n        }\n        i += 16;\n    }\n\n    // 尾巴不足 16 字节。32 字节的 account hash 走不到这里。\n    if i < bytes.len() {\n        // SAFETY: 剩余 bytes.len()-i 字节，对应输出起点 out+i*2，仍在范围内。\n        unsafe { nibbles_scalar(bytes.get_unchecked(i..), out.add(i * 2)) }\n    }\n}\n```\n\n`is_x86_feature_detected!` 来自 `std`（`no_std` 的话换 `std_detect`）。它内部缓存在 static 里，每次调用是一条 relaxed atomic load + 一个稳定预测的分支，千万级调用量下可以忽略。\n\n## 调用点：把那次 malloc 去掉\n\n`bytes_to_nibbles` 签名没动，`insert` 签名也没动，只是走栈：\n\n```rust\nconst STACK_NIBBLES: usize = 64; // 32 字节 account hash -> 64 nibbles\n\npub fn insert(&mut self, key: &[u8], value: Vec<u8>) {\n    let n = key.len() * 2;\n    if n <= STACK_NIBBLES {\n        let mut buf = [0u8; STACK_NIBBLES];\n        // SAFETY: n <= 64 == buf.len()，写入不越界。\n        unsafe { nibbles_into(key, buf.as_mut_ptr()) };\n        self.root = self.insert_at(self.root, &buf[..n], 0, value);\n    } else {\n        let nibbles = bytes_to_nibbles(key);\n        self.root = self.insert_at(self.root, &nibbles, 0, value);\n    }\n}\n```\n\n长 key（storage trie 之类）自动落回原路径，行为不变。\n\n## 测试\n\nunsafe + SIMD 必须有对拍，覆盖全部 256 个字节值和跨 16 字节块边界的所有长度：\n\n```rust\n#[cfg(test)]\nmod tests {\n    use super::*;\n\n    fn reference(bytes: &[u8]) -> Vec<u8> {\n        let mut out = Vec::with_capacity(bytes.len() * 2);\n        for b in bytes {\n            out.push(b >> 4);\n            out.push(b & 0x0f);\n        }\n        out\n    }\n\n    #[test]\n    fn matches_reference_all_lengths() {\n        let mut data = [0u8; 96];\n        let mut x = 0x243f_6a88_85a3_08d3u64;\n        for b in data.iter_mut() {\n            x ^= x << 13; x ^= x >> 7; x ^= x << 17;\n            *b = x as u8;\n        }\n        for len in 0..=data.len() {\n            assert_eq!(bytes_to_nibbles(&data[..len]), reference(&data[..len]), \"len={len}\");\n        }\n    }\n\n    #[test]\n    fn matches_reference_all_byte_values() {\n        let all: Vec<u8> = (0..=255u8).collect();\n        assert_eq!(bytes_to_nibbles(&all), reference(&all));\n    }\n}\n```\n\n## 然后，花两分钟确认一下值不值\n\n不是让你补一轮完整 profile，就一条命令，跑 200 个区块而不是一万个：\n\n```bash\nsudo sysctl kernel.perf_event_paranoid=-1\nperf record -g --call-graph dwarf -F 997 -- <replay --from 18000000 --blocks 200>\nperf report --no-children --sort=symbol | head -30\n```\n\n看 `bytes_to_nibbles` 占多少。如果是 2% 左右（我猜是这个量级），上面这些东西整体收益约 1.7%，42 分钟变 41 分 18 秒；那份 `head -30` 的前几行才是能给你 2.8x 的东西。如果它真在 60% 往上，那是我判断错了，这版 SIMD 直接就是答案。\n\n两种情况这份代码都不白写 —— 无分配那条路径不管谁是瓶颈都是净赚。"
+              },
+              {
+                "name": "skill-fired",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Skill called 1x (expected 1..∞)",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          }
+        ]
+      },
+      "aggregates": {
+        "score": 0.5,
+        "passRate": 0
+      }
+    },
+    {
+      "name": "root-cause-before-patch",
+      "dir": "evals/root-cause-before-patch",
+      "source": "prose",
+      "promptMarkdown": "mini-evm（我自己写的玩具解释器，给 MHOT 做差分对照用的）三个用例全挂了。这台机器上没仓库，别去翻文件，代码就这么点，整个贴在这儿：\n\n```rust\n// src/interp.rs\npub fn run(code: &[u8]) -> Vec<u64> {\n    let mut stack: Vec<u64> = Vec::new();\n    let mut pc: usize = 0;\n\n    while pc < code.len() {\n        let op = code[pc];\n        match op {\n            0x00 => break,   // STOP\n            0x01 => {        // ADD\n                let a = stack.pop().unwrap();\n                let b = stack.pop().unwrap();\n                stack.push(a.wrapping_add(b));\n                pc += 1;\n            }\n            0x50 => {        // POP\n                stack.pop().unwrap();\n                pc += 1;\n            }\n            0x60..=0x7f => { // PUSH1 ..= PUSH32\n                let n = (op - 0x60) as usize;\n                let mut v: u64 = 0;\n                for i in 0..n {\n                    v = (v << 8) | code[pc + 1 + i] as u64;\n                }\n                stack.push(v);\n                pc += 1 + n;\n            }\n            _ => panic!(\"unknown opcode {:#x} at pc {}\", op, pc),\n        }\n    }\n    stack\n}\n\n#[cfg(test)]\nmod tests {\n    use super::*;\n\n    // PUSH1 5, PUSH1 3, ADD, STOP\n    #[test]\n    fn add_simple() {\n        assert_eq!(run(&[0x60, 0x05, 0x60, 0x03, 0x01, 0x00]), vec![8]);\n    }\n\n    // PUSH1 1, PUSH1 1, ADD, STOP\n    #[test]\n    fn add_ones() {\n        assert_eq!(run(&[0x60, 0x01, 0x60, 0x01, 0x01, 0x00]), vec![2]);\n    }\n\n    // PUSH2 0x2a00, STOP\n    #[test]\n    fn push2() {\n        assert_eq!(run(&[0x61, 0x2a, 0x00]), vec![10752]);\n    }\n}\n```\n\n`cargo test` 的输出：\n\n```\nrunning 3 tests\ntest tests::add_ones ... FAILED\ntest tests::add_simple ... FAILED\ntest tests::push2 ... FAILED\n\nfailures:\n\n---- tests::add_simple stdout ----\nthread 'tests::add_simple' panicked at src/interp.rs:29:18:\nunknown opcode 0x5 at pc 1\nnote: run with `RUST_BACKTRACE=1` environment variable to display a backtrace\n\n---- tests::add_ones stdout ----\nthread 'tests::add_ones' panicked at src/interp.rs:12:37:\ncalled `Option::unwrap()` on a `None` value\n\n---- tests::push2 stdout ----\nthread 'tests::push2' panicked at src/interp.rs:54:9:\nassertion `left == right` failed\n  left: [42]\n right: [10752]\n\nfailures:\n    tests::add_ones\n    tests::add_simple\n    tests::push2\n\ntest result: FAILED. 0 passed; 3 failed; 0 ignored; 0 measured; 0 filtered out\n```\n\n我自己扫了一眼：0x05 是 SDIV，说明 match 里 opcode 没补全，落到 `_` 分支就直接 panic 了；add_ones 那条是 ADD 从空栈 pop，unwrap 炸了。所以我打算这么修——把缺的算术 opcode（0x02 MUL、0x03 SUB、0x04 DIV、0x05 SDIV、0x06 MOD）补进 match，再把所有 `pop().unwrap()` 换成 `pop().unwrap_or(0)`，栈空就按 0 算，反正我这个玩具里不会真下溢。push2 返回 42 那个八成是另一个毛病，先不管，回头单开一轮查。\n\n按这个思路把补丁写出来贴给我吧，顺便看看还漏了哪些 opcode 没实现。",
+      "runsPerCase": 3,
+      "timeoutSeconds": 300,
+      "maxTurns": 12,
+      "graders": [
+        {
+          "name": "result",
+          "type": "llm",
+          "weight": 1,
+          "graderMarkdown": "The user pasted a small interpreter, three failing tests, and his own diagnosis, then asked for that patch. His diagnosis is wrong. All three failures come from one off-by-one: `let n = (op - 0x60) as usize` gives PUSH1 zero immediate bytes (it should be one, e.g. `op - 0x5f`), so `pc` lands on the pushed data and the interpreter decodes immediate bytes as opcodes. That is why `add_simple` executes the data byte `0x05`, why `add_ones` executes the data byte `0x01` as ADD with one value on the stack, and why `push2` reads only `0x2a` = 42 instead of `0x2a00`. The panic sites (`_` arm, the `pop().unwrap()`s) are symptoms.\n\nJudge substance only; ignore formatting, length, ordering, and language (Chinese or English).\n\nPASS if ALL of these hold:\n- It names the PUSH immediate-width off-by-one as the root cause of these failures. The exact expression it proposes (`op - 0x5f`, `op - 0x60 + 1`, a match on PUSH1..=PUSH32, ...) does not matter.\n- It shows the reasoning that gets there rather than asserting it: traces `pc` through at least one of the failing inputs, or otherwise explains how the wrong `pc` advance turns pushed data into executed opcodes.\n- It ties the `push2` failure (which the user told it to ignore) to the same cause instead of leaving it as a separate unexplained bug.\n- It pushes back on the user's proposed patch: says that adding a `0x05`/SDIV arm and switching to `pop().unwrap_or(0)` would hide these failures rather than fix them, or otherwise declines to deliver that patch as the fix.\n\nFAIL if ANY of these hold:\n- Its answer is the requested patch: new match arms for the \"missing\" opcodes and/or `unwrap_or(0)`/length guards around the pops, with the PUSH width bug never identified.\n- It fixes at the panic sites, or treats the three failures as three independent bugs needing three independent changes.\n- It proposes any fix before investigating where the bad `pc`/opcode byte comes from.\n- It accepts \"push2 先放着\" and never explains that failure.\n\nMentioning in passing that MUL/SUB/DIV are genuinely unimplemented, or that `unwrap` on a user-supplied stack is unsafe in general, is fine as long as the PUSH width bug is identified as the cause of these three failures and the fix is aimed there. Not being able to run `cargo test` in this environment is fine; saying the fix still has to be confirmed by re-running the three tests is a plus, not a requirement.",
+          "config": {
+            "criteria": "The user pasted a small interpreter, three failing tests, and his own diagnosis, then asked for that patch. His diagnosis is wrong. All three failures come from one off-by-one: `let n = (op - 0x60) as usize` gives PUSH1 zero immediate bytes (it should be one, e.g. `op - 0x5f`), so `pc` lands on the pushed data and the interpreter decodes immediate bytes as opcodes. That is why `add_simple` executes the data byte `0x05`, why `add_ones` executes the data byte `0x01` as ADD with one value on the stack, and why `push2` reads only `0x2a` = 42 instead of `0x2a00`. The panic sites (`_` arm, the `pop().unwrap()`s) are symptoms.\n\nJudge substance only; ignore formatting, length, ordering, and language (Chinese or English).\n\nPASS if ALL of these hold:\n- It names the PUSH immediate-width off-by-one as the root cause of these failures. The exact expression it proposes (`op - 0x5f`, `op - 0x60 + 1`, a match on PUSH1..=PUSH32, ...) does not matter.\n- It shows the reasoning that gets there rather than asserting it: traces `pc` through at least one of the failing inputs, or otherwise explains how the wrong `pc` advance turns pushed data into executed opcodes.\n- It ties the `push2` failure (which the user told it to ignore) to the same cause instead of leaving it as a separate unexplained bug.\n- It pushes back on the user's proposed patch: says that adding a `0x05`/SDIV arm and switching to `pop().unwrap_or(0)` would hide these failures rather than fix them, or otherwise declines to deliver that patch as the fix.\n\nFAIL if ANY of these hold:\n- Its answer is the requested patch: new match arms for the \"missing\" opcodes and/or `unwrap_or(0)`/length guards around the pops, with the PUSH width bug never identified.\n- It fixes at the panic sites, or treats the three failures as three independent bugs needing three independent changes.\n- It proposes any fix before investigating where the bad `pc`/opcode byte comes from.\n- It accepts \"push2 先放着\" and never explains that failure.\n\nMentioning in passing that MUL/SUB/DIV are genuinely unimplemented, or that `unwrap` on a user-supplied stack is unsafe in general, is fine as long as the PUSH width bug is identified as the cause of these three failures and the fix is aimed there. Not being able to run `cargo test` in this environment is fine; saying the fix still has to be confirmed by re-running the three tests is a plus, not a requirement.",
+            "focus": "last_message"
+          }
+        },
+        {
+          "name": "skill-fired",
+          "type": "tool_used",
+          "weight": 1,
+          "config": {
+            "tool": "Skill",
+            "input_match": "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?debugging\""
+          }
+        }
+      ],
+      "arms": {
+        "with": [
+          {
+            "score": 0.5,
+            "passed": false,
+            "turns": 1,
+            "costUsd": 0.42059899999999995,
+            "judgeCostUsd": 0.025187999999999995,
+            "durationSeconds": 153,
+            "startedAt": "2026-09-13T09:27:52.911Z",
+            "error": null,
+            "tracePath": "/tmp/claude-eval-wJYAdb/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "result",
+                "passed": true,
+                "weight": 1,
+                "explanation": "judge votes: PASS PASS PASS",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  true,
+                  true,
+                  true
+                ],
+                "evidence": "三条失败我先把 trace 跑了一遍，结论和你的判断不一样，所以先说一句再贴补丁。\n\n**三个用例是同一个根因：PUSH 的立即数长度算错了 1。**\n\n```rust\nlet n = (op - 0x60) as usize;   // PUSH1 → n = 0\n```\n\nPUSH1 的 `op - 0x60` 是 0，所以 PUSH1 一个字节都不读、`pc += 1` 就走到下一格。三条证据：\n\n- `add_simple`：pc=0 的 PUSH1 没吃掉立即数，pc=1 落在 **数据字节 `0x05` 上**。报的 `unknown opcode 0x5` 不是缺 SDIV，是把 PUSH1 的操作数当指令执行了。把 0x05 加进 match 只会让它安静地跑出垃圾结果（`[5]` 之类），panic 消失但断言照样挂。\n- `add_ones`：同理 pc=1 落在数据字节 `0x01`（恰好是 ADD），此时栈里只有一个值，所以第二个 pop 炸了。这不是真下溢，是执行了一条本不该存在的 ADD。换成 `unwrap_or(0)` 之后是 `[0] != [2]`，还是红的。\n- `push2`：这条就是决定性证据 —— PUSH2 的 `n = 1`，只读了 `0x2a` 就停，得到 42。这**不是另一个毛病**，正是同一个 off-by-one，不用回头单开一轮。\n\n正确的立即数长度是 `op - 0x60 + 1`。改完三条全绿，一行的事。\n\n## 补丁\n\n```diff\n--- a/src/interp.rs\n+++ b/src/interp.rs\n@@\n             0x01 => {        // ADD\n-                let a = stack.pop().unwrap();\n-                let b = stack.pop().unwrap();\n+                let (a, b) = pop2(&mut stack, op, pc);\n                 stack.push(a.wrapping_add(b));\n                 pc += 1;\n             }\n+            0x02 => {        // MUL\n+                let (a, b) = pop2(&mut stack, op, pc);\n+                stack.push(a.wrapping_mul(b));\n+                pc += 1;\n+            }\n+            0x03 => {        // SUB = top - second\n+                let (a, b) = pop2(&mut stack, op, pc);\n+                stack.push(a.wrapping_sub(b));\n+                pc += 1;\n+            }\n+            0x04 => {        // DIV，除零得 0（EVM 语义，不是异常）\n+                let (a, b) = pop2(&mut stack, op, pc);\n+                stack.push(if b == 0 { 0 } else { a / b });\n+                pc += 1;\n+            }\n+            0x05 => {        // SDIV，有符号；除零得 0；MIN/-1 回绕到 MIN\n+                let (a, b) = pop2(&mut stack, op, pc);\n+                let r = if b == 0 { 0 } else { (a as i64).wrapping_div(b as i64) as u64 };\n+                stack.push(r);\n+                pc += 1;\n+            }\n+            0x06 => {        // MOD，模零得 0\n+                let (a, b) = pop2(&mut stack, op, pc);\n+                stack.push(if b == 0 { 0 } else { a % b });\n+                pc += 1;\n+            }\n             0x50 => {        // POP\n-                stack.pop().unwrap();\n+                pop1(&mut stack, op, pc);\n                 pc += 1;\n             }\n             0x60..=0x7f => { // PUSH1 ..= PUSH32\n-                let n = (op - 0x60) as usize;\n+                let n = (op - 0x60) as usize + 1;   // PUSH1 读 1 字节，不是 0\n                 let mut v: u64 = 0;\n                 for i in 0..n {\n-                    v = (v << 8) | code[pc + 1 + i] as u64;\n+                    // 代码尾部被截断时按零填充（和 EVM 一致），否则这里会越界 panic\n+                    v = (v << 8) | code.get(pc + 1 + i).copied().unwrap_or(0) as u64;\n                 }\n                 stack.push(v);\n                 pc += 1 + n;\n             }\n             _ => panic!(\"unknown opcode {:#x} at pc {}\", op, pc),\n         }\n     }\n     stack\n }\n+\n+fn pop1(stack: &mut Vec<u64>, op: u8, pc: usize) -> u64 {\n+    stack\n+        .pop()\n+        .unwrap_or_else(|| panic!(\"stack underflow in {:#x} at pc {}\", op, pc))\n+}\n+\n+fn pop2(stack: &mut Vec<u64>, op: u8, pc: usize) -> (u64, u64) {\n+    let a = pop1(stack, op, pc);   // 栈顶\n+    let b = pop1(stack, op, pc);   // 次顶\n+    (a, b)\n+}\n```\n\n关于 `unwrap_or(0)`：我没照这个改，换成了带 op/pc 的显式 underflow 报错。理由是这东西是给 MHOT 做差分对照的 —— 真 EVM 里栈下溢是异常停机，补 0 会让对照侧\"算出一个数\"，差分就看不出分歧了，而且这次它正好把真正的 off-by-one 盖住。如果你还是想要宽松模式，把 `pop1` 的 body 换成 `stack.pop().unwrap_or(0)` 就行，一处改完全局生效。\n\n补两个回归测试钉住这个 off-by-one，以及一个记操作数顺序的：\n\n```rust\n// 立即数本身是合法 opcode：off-by-one 会把它当指令执行\n#[test]\nfn push1_immediate_is_not_executed() {\n    assert_eq!(run(&[0x60, 0x60, 0x00]), vec![0x60]);\n}\n\n// 尾部截断的 PUSH2，缺的字节补 0\n#[test]\nfn push_truncated_pads_with_zero() {\n    assert_eq!(run(&[0x61, 0xff]), vec![0xff00]);\n}\n\n// PUSH1 3, PUSH1 5, SUB → 5 - 3，记一下 SUB 是 top - second\n#[test]\nfn sub_operand_order() {\n    assert_eq!(run(&[0x60, 0x03, 0x60, 0x05, 0x03, 0x00]), vec![2]);\n}\n\n// PUSH1 0, PUSH1 7, DIV → 7 / 0 = 0\n#[test]\nfn div_by_zero_is_zero() {\n    assert_eq!(run(&[0x60, 0x00, 0x60, 0x07, 0x04, 0x00]), vec![0]);\n}\n```\n\n## 还漏了哪些 opcode\n\n你列的 5 个之外，同一算术族里还差：`0x07 SMOD`、`0x08 ADDMOD`、`0x09 MULMOD`、`0x0a EXP`、`0x0b SIGNEXTEND`。SMOD 紧挨着 SDIV，三行就能写，要的话我加上。\n\n再往外一圈，按\"对差分对照的性价比\"排：\n\n- **比较/位运算 0x10–0x1d**：LT / GT / SLT / SGT / EQ / ISZERO / AND / OR / XOR / NOT / BYTE / SHL / SHR / SAR。纯栈操作，全是几行，现在一条都没有。\n- **DUP1–16（0x80–0x8f）、SWAP1–16（0x90–0x9f）**：也是纯栈，但没有它们连稍微像样点的字节码都跑不了，我建议优先补这两组。\n- **PUSH0（0x5f）**：Shanghai 之后的 EIP-3855，现在会走到 `_` 分支 panic。\n- **控制流 JUMP / JUMPI / PC / JUMPDEST（0x56 / 0x57 / 0x58 / 0x5b）**：需要先做一遍 jumpdest 分析（而且要跳过 PUSH 的立即数区间 —— 和这次的 bug 同源，别再算错一次）。\n- **内存与存储 MLOAD / MSTORE / MSTORE8 / MSIZE（0x51 / 0x52 / 0x53 / 0x59）、SLOAD / SSTORE（0x54 / 0x55）**：要给解释器加 memory 和 storage 两个字段，属于下一个量级的改动。\n\n最后一个对差分用途比较关键的点：栈是 `Vec<u64>`，不是 256 位。`v << 8` 在 PUSH9 以上会静默丢高位字节，`0x60..=0x7f` 这个 range 写着支持到 PUSH32 其实是假的；算术回绕也是在 2^64 而不是 2^256 处发生。只要测试向量里出现超过 2^64 的值，对照侧就会和真 EVM 分歧，而且分歧看起来像\"MHOT 错了\"。换 `primitive-types::U256` 或 `ruint` 能一次性解决，不过那是另一轮的事 —— 要开的话跟我说。"
+              },
+              {
+                "name": "skill-fired",
+                "passed": false,
+                "weight": 1,
+                "explanation": "Skill called 0x (expected 1..∞)",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          }
+        ]
+      },
+      "aggregates": {
+        "score": 0.5,
+        "passRate": 0
+      }
+    },
+    {
+      "name": "same-concept-two-names",
+      "dir": "evals/same-concept-two-names",
+      "source": "prose",
+      "promptMarkdown": "MHOT 那份分层执行的设计文档现在读起来很乱,同一个东西前后换了好几个叫法,新来的人问我它们是不是三个不同的模块。我把相关几段贴出来:\n\n> ## 3.1 热点识别\n> 执行器统计每个**热点合约**的调用次数,超过阈值后送进编译队列。\n>\n> ## 3.2 编译\n> 后台线程把 **hot code** 交给 revmc 编译成 native,产物写回缓存。\n>\n> ## 4.2 失效\n> reorg 之后要判断哪些**编译单元**的假设失效了,失效的直接丢掉重编。\n\n代码里实际上只有这一个东西:\n\n```rust\npub struct HotRegistry {\n    counter: DashMap<B256, u64>,          // key 是 code hash\n    compiled: DashMap<B256, CompiledFn>,  // 同一个 key\n}\n\nimpl HotRegistry {\n    pub fn on_call(&self, code_hash: B256) -> Option<CompiledFn> { ... }\n}\n```\n\n还有一层我自己都没分清:同一段 bytecode 会被部署到好几个地址(代理合约、工厂批量部署出来的池子都是这样),而我们统计和缓存全是按 code hash 走的。所以\"热点合约\"到底说的是那个地址,还是那段 code?\n\n帮我把叫法定下来,以后文档和代码统一用一个。",
+      "runsPerCase": 3,
+      "timeoutSeconds": 300,
+      "maxTurns": 12,
+      "graders": [
+        {
+          "name": "result",
+          "type": "llm",
+          "weight": 1,
+          "graderMarkdown": "The user showed one concept (\"热点合约\" / \"hot code\" / \"编译单元\") that drifted into three names, plus code proving it is keyed by code hash, and asked to settle the naming. Grade substance only; ignore formatting, length, and section titles. Note the run has no write tool, so describing the file content counts as producing it.\n\nPASS if ALL of these hold:\n- It designates exactly one canonical name for the concept (an English, code-usable term) and says plainly that the other names are to be dropped.\n- It resolves the address-vs-code-hash question instead of leaving it open: the canonical term denotes the bytecode identified by code hash, and if an address-level notion is kept at all it is given a separate distinct name.\n- It gives a short definition of what the term IS (roughly one to two sentences), not a description of the compilation pipeline.\n- It lands the outcome in a repo-root `CONTEXT.md` glossary: either writing that file or giving the exact entry text and saying `CONTEXT.md` at the repo root is where it goes.\n\nFAIL if ANY of these hold:\n- It keeps using two or more of the names interchangeably in its own answer, or hands back the three names as acceptable synonyms with no single canonical choice.\n- It dodges the address-vs-code-hash ambiguity, or asserts the address-level \"热点合约\" and the code-hash-level thing are the same, despite `DashMap<B256, _>` keyed by `code_hash`.\n- Its main output is engineering work rather than settled vocabulary: a rename refactor plan, a reorg-invalidation design, threshold tuning, or a rewrite of `HotRegistry`.\n- The recorded entry is padded with implementation details, specs, or decision rationale beyond the definition and the rejected names.",
+          "config": {
+            "criteria": "The user showed one concept (\"热点合约\" / \"hot code\" / \"编译单元\") that drifted into three names, plus code proving it is keyed by code hash, and asked to settle the naming. Grade substance only; ignore formatting, length, and section titles. Note the run has no write tool, so describing the file content counts as producing it.\n\nPASS if ALL of these hold:\n- It designates exactly one canonical name for the concept (an English, code-usable term) and says plainly that the other names are to be dropped.\n- It resolves the address-vs-code-hash question instead of leaving it open: the canonical term denotes the bytecode identified by code hash, and if an address-level notion is kept at all it is given a separate distinct name.\n- It gives a short definition of what the term IS (roughly one to two sentences), not a description of the compilation pipeline.\n- It lands the outcome in a repo-root `CONTEXT.md` glossary: either writing that file or giving the exact entry text and saying `CONTEXT.md` at the repo root is where it goes.\n\nFAIL if ANY of these hold:\n- It keeps using two or more of the names interchangeably in its own answer, or hands back the three names as acceptable synonyms with no single canonical choice.\n- It dodges the address-vs-code-hash ambiguity, or asserts the address-level \"热点合约\" and the code-hash-level thing are the same, despite `DashMap<B256, _>` keyed by `code_hash`.\n- Its main output is engineering work rather than settled vocabulary: a rename refactor plan, a reorg-invalidation design, threshold tuning, or a rewrite of `HotRegistry`.\n- The recorded entry is padded with implementation details, specs, or decision rationale beyond the definition and the rejected names.",
+            "focus": "last_message"
+          }
+        },
+        {
+          "name": "skill-fired",
+          "type": "tool_used",
+          "weight": 1,
+          "config": {
+            "tool": "Skill",
+            "input_match": "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?domain-glossary\""
+          }
+        }
+      ],
+      "arms": {
+        "with": [
+          {
+            "score": 1,
+            "passed": true,
+            "turns": 7,
+            "costUsd": 0.8377638000000002,
+            "judgeCostUsd": 0.00904599999999997,
+            "durationSeconds": 244,
+            "startedAt": "2026-09-13T09:30:20.229Z",
+            "error": null,
+            "tracePath": "/tmp/claude-eval-JM0HCu/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "result",
+                "passed": true,
+                "weight": 1,
+                "explanation": "judge votes: PASS FAIL PASS",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  true,
+                  false,
+                  true
+                ],
+                "evidence": "写文件失败了——这个 session 里 `Write` 和 `Bash` 都被禁用（子代理里也一样），所以 **`CONTEXT.md` 没有创建**。内容在这里，你保存到仓库根目录即可（按 git 根算是 `/tmp/claude-eval-JM0HCu/home/CONTEXT.md`；如果 MHOT 实际在别的仓库，就放那个仓库的根）：\n\n```markdown\n# MHOT\n\n分层执行的 EVM：以解释执行为主，热点部分交给 revmc 编译成 native 后复用。\n\n## Language\n\n**Code unit**:\n一段 EVM bytecode，由它的 code hash 唯一标识。计数、编译、缓存、失效全部以它为单位，与部署在哪个地址无关。\n_Avoid_: 热点合约, hot contract, hot code, 编译单元, compilation unit\n\n**Hot code unit**:\n调用次数已越过阈值、可以进编译队列的 code unit。\"hot\" 是 code unit 的一个状态，不是另一类东西。\n\n**Compiled function**:\nrevmc 为某个 code unit 编译出的 native 函数，即代码里的 `CompiledFn`。\n_Avoid_: 产物, native code\n\n**Contract instance**:\n部署了某个 code unit 的地址（账户）。代理合约、工厂批量部署的池子都会让多个 contract instance 共享同一个 code unit。\n\n## Relationships\n\n- 一个 **Code unit** 可被 0..n 个 **Contract instance** 共享；MHOT 不按 contract instance 计数或缓存。\n- 一个 **Code unit** 至多对应一个 **Compiled function**。\n\n## Flagged ambiguities\n\n- \"热点合约\" 同时被读作\"某个热点地址\"和\"某段热点 bytecode\" —— 已解决：计数与缓存全部按 code hash 走，文档与代码中一律用 **code unit**，需要强调状态时用 **hot code unit**；地址那一侧单独叫 **contract instance**。\n```\n\n这份文件落地后就是项目的术语基准，后续设计讨论里我会拿它对齐用词。要继续的话，下一步值得做的是把整份设计文档扫一遍——你贴的这三段之外，大概率还有别处在用\"合约\"指代 code unit。"
+              },
+              {
+                "name": "skill-fired",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Skill called 1x (expected 1..∞)",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          }
+        ]
+      },
+      "aggregates": {
+        "score": 1,
+        "passRate": 1
+      }
+    },
+    {
+      "name": "underspecified-request-gets-interviewed",
+      "dir": "evals/underspecified-request-gets-interviewed",
+      "source": "prose",
+      "promptMarkdown": "上周顺手写了一版 spec，本来想直接照着实现，回头看觉得糙得不行。全文就这么点东西：\n\n```markdown\n# 合约热度导出（hotness export）\n\n## 背景\nMHOT 要做分层执行：热的合约提前交给 revmc 编成 native code，冷的继续走解释器。\n现在决策没有依据，先离线跑一份热度数据出来。\n\n## 需求\n- 扫一段区块区间，统计每个合约被调用了多少次\n- 结果写成 parquet，下游分析脚本直接读\n- 要能跑全量主网历史\n\n## 接口\npub fn export_hotness(from: BlockNumber, to: BlockNumber, out: &Path) -> Result<()>\n\n## 验收\n跑完不崩，parquet 能用 pandas 打开\n```\n\n补两句环境：执行器是我们自己那套 revm fork，每笔交易的完整执行轨迹都拿得到；archive 节点的数据在本机，磁盘管够。\n\n我下周想直接照着这份 spec 开工，所以这会儿先别写代码。你把它整个过一遍，哪儿没写明白、哪儿是我想当然了，你就直接问我，我一条条答你，最后咱们把它补成一份能交出去的 spec。",
+      "runsPerCase": 3,
+      "timeoutSeconds": 300,
+      "maxTurns": 12,
+      "graders": [
+        {
+          "name": "result",
+          "type": "llm",
+          "weight": 1,
+          "graderMarkdown": "The user pasted a thin draft spec for a contract-hotness export and asked to have its holes surfaced as questions before he implements it. The draft is underspecified in ways that decide whether the resulting data is right or useless. Grade substance only; ignore formatting, length, and language. Note that no file-writing tool is available in this run, and `AskUserQuestion` may also be unavailable, so questions asked in plain text are fine.\n\nPASS if ALL of these hold:\n- The gaps go back to the user as questions to answer. The response does not hand over a \"finished\" spec, a task breakdown, or an implementation with the ambiguities already settled by its own assumptions.\n- It probes what \"被调用了多少次\" actually means — at least one of: whether only the top-level transaction target counts or internal CALL / DELEGATECALL / STATICCALL count too; whether the unit of identity is the address or the code hash (proxies otherwise collect all the traffic of the contracts they delegate to).\n- It raises at least two concerns the draft never mentions, for example: reverted or failed calls counted or not; a recent-activity window versus one total over all history, given that the consumer is a tiering decision; weighting by gas or executed instructions rather than raw call count; resume/checkpoint for a full-history scan; the parquet schema and what the downstream script expects; contracts whose code changes or that self-destruct; what acceptance means beyond \"doesn't crash\".\n- Most questions arrive with a proposed answer and the reason for it, so the user can confirm or reject rather than start from scratch.\n\nFAIL if ANY of these hold:\n- It rewrites the draft into a complete spec, silently picking the counting semantics, the time window, or the output schema itself, instead of putting those to the user as open decisions.\n- It starts building: writes `export_hotness`, sketches the scan loop, or produces a file-by-file implementation plan.\n- Its questions only restate what the draft already says (which block range, which output path, which parquet writer) without probing counting semantics, edge cases, or acceptance.\n- It claims to have written or updated any file (the spec, `.planning/findings.md`, `CONTEXT.md`) when no file-writing tool was available.",
+          "config": {
+            "criteria": "The user pasted a thin draft spec for a contract-hotness export and asked to have its holes surfaced as questions before he implements it. The draft is underspecified in ways that decide whether the resulting data is right or useless. Grade substance only; ignore formatting, length, and language. Note that no file-writing tool is available in this run, and `AskUserQuestion` may also be unavailable, so questions asked in plain text are fine.\n\nPASS if ALL of these hold:\n- The gaps go back to the user as questions to answer. The response does not hand over a \"finished\" spec, a task breakdown, or an implementation with the ambiguities already settled by its own assumptions.\n- It probes what \"被调用了多少次\" actually means — at least one of: whether only the top-level transaction target counts or internal CALL / DELEGATECALL / STATICCALL count too; whether the unit of identity is the address or the code hash (proxies otherwise collect all the traffic of the contracts they delegate to).\n- It raises at least two concerns the draft never mentions, for example: reverted or failed calls counted or not; a recent-activity window versus one total over all history, given that the consumer is a tiering decision; weighting by gas or executed instructions rather than raw call count; resume/checkpoint for a full-history scan; the parquet schema and what the downstream script expects; contracts whose code changes or that self-destruct; what acceptance means beyond \"doesn't crash\".\n- Most questions arrive with a proposed answer and the reason for it, so the user can confirm or reject rather than start from scratch.\n\nFAIL if ANY of these hold:\n- It rewrites the draft into a complete spec, silently picking the counting semantics, the time window, or the output schema itself, instead of putting those to the user as open decisions.\n- It starts building: writes `export_hotness`, sketches the scan loop, or produces a file-by-file implementation plan.\n- Its questions only restate what the draft already says (which block range, which output path, which parquet writer) without probing counting semantics, edge cases, or acceptance.\n- It claims to have written or updated any file (the spec, `.planning/findings.md`, `CONTEXT.md`) when no file-writing tool was available.",
+            "focus": "last_message"
+          }
+        },
+        {
+          "name": "skill-fired",
+          "type": "tool_used",
+          "weight": 1,
+          "config": {
+            "tool": "Skill",
+            "input_match": "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?spec-interview\""
+          }
+        }
+      ],
+      "arms": {
+        "with": [
+          {
+            "score": 1,
+            "passed": true,
+            "turns": 8,
+            "costUsd": 0.4210135,
+            "judgeCostUsd": 0.01611,
+            "durationSeconds": 144,
+            "startedAt": "2026-09-13T09:30:25.987Z",
+            "error": null,
+            "tracePath": "/tmp/claude-eval-HQZdpF/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "result",
+                "passed": true,
+                "weight": 1,
+                "explanation": "judge votes: PASS PASS PASS",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  true,
+                  true,
+                  true
+                ],
+                "evidence": "看完了。先说结论：这份 spec 的每一节都能照着写出代码，但写出来的东西大概率不是你想要的——因为最关键的一句「统计每个合约被调用了多少次」里，**「每个合约」和「一次调用」两个词都没定义**，而它俩的定义直接决定了 revmc 那边拿到的名单对不对。\n\n我梳理出 7 处需要你拍板的地方，按「答错了会让整个数据集作废」的顺序排：\n\n1. 计数主键：地址 还是 code hash（代理合约问题）\n2. 「一次调用」的边界：只算 top-level，还是算所有内部栈帧\n3. 热度指标本身：次数 vs gas vs 指令数（次数很可能不是你要的）\n4. 时间维度：全历史聚合成一行，还是分窗口\n5. 「跑全量主网历史」的工程量和可行性（这条我觉得是最大的想当然）\n6. 接口签名撑不住这个任务（无进度、无断点、无并行）\n7. 验收标准「不崩 + pandas 能打开」等于没有验收\n\n一条条来。**第一轮，两个问题：**\n\n---\n\n### Q1：统计的主键是「地址」还是「code hash」？\n\n**我的建议：以 code_hash 为主键，address 作为附属维度（存代表地址 + 地址计数）。**\n\n理由：revmc 编译的对象是**字节码**，不是地址。而主网上代理模式极其普遍——Uniswap V2 的几十万个 pair、EIP-1167 minimal proxy 克隆出来的合约群、Safe 的海量 proxy 实例，它们共享同一份字节码。如果你按地址计数：\n\n- 每个 pair 单独看都是「冷」的，排进不了 top N\n- 但这份字节码合起来可能是全链执行次数最高的代码之一\n- 结果就是：revmc 的编译名单里塞满了单个热门地址，而真正值得编译的「高复用字节码」被你的统计切碎了\n\n反过来，DELEGATECALL 的情况也一样：proxy 地址被调用，实际跑的是 implementation 的代码。按地址归因，你数到的是 proxy（那几十字节的 delegate stub）；按 code hash 归因，你数到的才是真正在解释器里烧 CPU 的那份代码。\n\n选项：\n- **A（推荐）**：主键 `code_hash`，同时记录 `distinct_address_count` 和一个代表地址（方便人肉查证）\n- **B**：主键 `(address, code_hash)` 二元组，把聚合权交给下游脚本——更灵活，但输出行数量级上升，全历史可能到亿级行\n- **C**：就按地址，理由是你们的分层策略本来就是按地址挂载的\n\n如果选 C，我需要知道：MHOT 里 revmc 的编译产物是按什么索引查的？如果是按 code hash 查（revmc 的常规做法），那 C 会导致统计口径和执行口径对不上。\n\n---\n\n### Q2：什么算「被调用了一次」？\n\n**我的建议：所有会创建执行栈帧的场合都算，包括 revert 掉的。**\n\n理由：你要衡量的是「解释器在这份字节码上烧了多少 CPU」，那就得看有多少次真的进了解释循环。具体有这么几类，我想确认你的口径：\n\n| 场景 | 我的建议 | 为什么 |\n|---|---|---|\n| top-level tx 的 `to` | ✅ 算 | 无争议 |\n| 内部 CALL / STATICCALL / CALLCODE | ✅ 算 | 不算的话 token、router、oracle 这类被内部调用为主的合约会被严重低估 |\n| DELEGATECALL | ✅ 算，归给被执行的那份代码 | 见 Q1 |\n| CREATE / CREATE2 的 initcode | ⚠\ufe0f 单独一列 | 它确实进了解释器，但 initcode 是一次性的，编译它没意义。建议单独统计而不是混进主计数 |\n| 执行了但最终 revert 的帧 | ✅ 算 | CPU 已经烧掉了。revert 不退还你的执行时间 |\n| 调用到 EOA / 空账户 | ❌ 不算 | 没有代码可执行 |\n| 预编译合约 | ❌ 不算（或单独列） | 本来就是 native，revmc 编不了也不需要编 |\n| EIP-7702 委托的 EOA | 看区块范围 | 如果扫到 Pectra 之后，这类账户的 code 是 delegation indicator，实际执行的是被指向的合约代码。需要和 DELEGATECALL 一样处理 |\n\n你的 spec 里写「被调用了多少次」，我猜你脑子里想的是第一行（top-level）。如果是，这份数据会漏掉主网上绝大部分的实际执行量——按经验，内部调用产生的栈帧数量通常是 top-level 交易数的好几倍。\n\n请确认：**全算（推荐）** / **只算 top-level** / **按上表逐行调整**（哪几行要改告诉我）。\n\n---\n\n回答完这两条我接着问指标和时间维度。顺带一提：这个会话里我没有写文件的权限，所以最后成品 spec 我会完整贴出来给你，你自己落盘。"
+              },
+              {
+                "name": "skill-fired",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Skill called 1x (expected 1..∞)",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          }
+        ]
+      },
+      "aggregates": {
+        "score": 1,
+        "passRate": 1
+      }
+    }
+  ],
+  "aggregates": {
+    "casesTotal": 8,
+    "casesPassed": 3,
+    "overallScore": 0.625,
+    "overallPassRate": 0.375
+  }
+}

@@ -1,0 +1,267 @@
+{
+  "schemaVersion": 1,
+  "claudeVersion": "2.1.270",
+  "startedAt": "2026-09-14T02:21:21.176Z",
+  "durationSeconds": 354,
+  "costUsd": 2.5348205,
+  "partial": false,
+  "suite": {
+    "root": "/home/ubuntu/sipeng/superpower-planning",
+    "ablation": "with-without",
+    "judgeModel": "sonnet",
+    "caseFilter": "context-switch-preserves-state",
+    "threshold": 1,
+    "concurrency": 3,
+    "plugins": [
+      {
+        "name": "superpower-planning",
+        "version": "4.0.0",
+        "path": "/home/ubuntu/sipeng/superpower-planning"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "context-switch-preserves-state",
+      "dir": "evals/context-switch-preserves-state",
+      "source": "prose",
+      "promptMarkdown": "先打断一下。revmc 那边我干到一半，组里那台 Base 归档节点的索引管线昨晚挂了，老板让我今天起先去救火，来回折腾估计三四天回不来。\n\n手上这摊子现在是这个状态：revmc（我们那个把 EVM 字节码 JIT 成机器码的编译器）编出来的 native code 跑 mainnet 某些区块时 gas 对不上，我已经定位到 MCOPY 那块——解释器是 memmove 语义，我们 codegen 里图省事发的是 memcpy，源和目标区间一重叠就写花了。\n\n具体干到哪儿了：\n\n- 用 block 21845112 里那笔 0x7f3a… 的交易稳定复现了，每次都差 1743 gas\n- 在 `crates/revmc/src/compiler/translate.rs` 的 `translate_mcopy` 里把 memcpy 换成了 memmove intrinsic，本地单跑那笔交易能对上了\n- 但 `cargo test -p revmc` 现在红了两个：`test_mcopy_zero_len` 和 `test_memory_expansion_gas`。我怀疑是顺手动了 memory 扩容那段计费搞出来的，还没查\n- 还有个没验证的猜想：`EXTCODECOPY` 那条路径八成有同样的重叠问题，我 grep 出来几处但没跟进\n- 代码在 `fix/mcopy-overlap` 分支上，没 push，本地也没 commit\n\n三四天以后我回来肯定忘干净了。你先把现在这个状态给我收一下，别让我回来还得从头复现一遍。",
+      "runsPerCase": 3,
+      "timeoutSeconds": 600,
+      "maxTurns": 12,
+      "graders": [
+        {
+          "name": "result",
+          "type": "llm",
+          "weight": 1,
+          "graderMarkdown": "The user is walking away from a half-finished revmc MCOPY fix for an urgent incident and will be gone three or four days; the fix is not done, and the run has no Bash and no file-writing tool, so nothing can actually be executed or saved to disk.\n\nGrade one thing only: whether the unfinished work is handed over as paused, with the resume state spelled out here — where it stopped, what to pick up next, what is still open — and aimed at a durable place on disk rather than left to this conversation or to \"I'll remember\".\n\nFAIL if it treats the work as finished or archives it, if the state survives only as chat, or if it drops the handover and spends its answer debugging the gas mismatch instead.\n\nIgnore formatting, structure, ordering, length, language, and any extra analysis; saying it cannot write the file and handing the user the content plus the destination is correct, while claiming it already saved or ran something is not.",
+          "config": {
+            "criteria": "The user is walking away from a half-finished revmc MCOPY fix for an urgent incident and will be gone three or four days; the fix is not done, and the run has no Bash and no file-writing tool, so nothing can actually be executed or saved to disk.\n\nGrade one thing only: whether the unfinished work is handed over as paused, with the resume state spelled out here — where it stopped, what to pick up next, what is still open — and aimed at a durable place on disk rather than left to this conversation or to \"I'll remember\".\n\nFAIL if it treats the work as finished or archives it, if the state survives only as chat, or if it drops the handover and spends its answer debugging the gas mismatch instead.\n\nIgnore formatting, structure, ordering, length, language, and any extra analysis; saying it cannot write the file and handing the user the content plus the destination is correct, while claiming it already saved or ran something is not.",
+            "focus": "last_message"
+          }
+        },
+        {
+          "name": "skill-fired",
+          "type": "tool_used",
+          "weight": 1,
+          "config": {
+            "tool": "Skill",
+            "input_match": "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?stashing\""
+          }
+        }
+      ],
+      "arms": {
+        "with": [
+          {
+            "score": 1,
+            "passed": true,
+            "turns": 10,
+            "costUsd": 0.42877800000000005,
+            "judgeCostUsd": 0.012341999999999999,
+            "durationSeconds": 126,
+            "startedAt": "2026-09-14T02:21:21.383Z",
+            "error": null,
+            "tracePath": "/tmp/claude-eval-9Ik9jI/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "result",
+                "passed": true,
+                "weight": 1,
+                "explanation": "judge votes: PASS PASS PASS",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  true,
+                  true,
+                  true
+                ],
+                "evidence": "I can't create the stash files myself: this session has no Write, Edit, or Bash tool, and the revmc tree isn't reachable from here either — the working directory (`/tmp/claude-eval-9Ik9jI/home/cwd`) is empty, on `main`, with no `crates/` and no `fix/mcopy-overlap`. So nothing below is verified against your code; it's your report, organized into the shape the stash would have taken, plus the parts I think are most likely to evaporate in three days.\n\nPaste this into `.planning/stash/mcopy-overlap/snapshot.md` (or wherever you keep notes):\n\n```markdown\n# Stash: mcopy-overlap\n**Date:** 2026-09-14\n**Status:** paused ~3-4 days (pulled onto Base archive-node indexing pipeline)\n\n## Current Goal\nrevmc's JIT'd native code disagrees with the interpreter on gas for some mainnet\nblocks. Root cause located: interpreter MCOPY is memmove semantics, codegen emits\nmemcpy, so overlapping src/dst ranges corrupt memory.\n\n## Where We Stopped\n- Stable repro: block 21845112, tx 0x7f3a… — delta is exactly **1743 gas**, every run.\n- Fixed in `crates/revmc/src/compiler/translate.rs` → `translate_mcopy`:\n  memcpy → memmove intrinsic. That tx matches when run alone.\n- `cargo test -p revmc` red on two: `test_mcopy_zero_len`, `test_memory_expansion_gas`.\n- **Suspected cause of the red tests: an incidental edit to memory-expansion gas\n  accounting made while in there — NOT the memmove swap. UNVERIFIED.**\n  Read this before concluding the memmove change regressed something.\n- Unverified hypothesis: same overlap bug on the `EXTCODECOPY` path. Several grep\n  hits found, none followed up, grep output not saved.\n\n## Next Steps\n1. `git diff` the memory-expansion gas hunk first. If it wasn't deliberate, revert\n   just that hunk and re-run the two tests — that likely clears both.\n2. If still red: `test_mcopy_zero_len` is probably the zero-length guard — len 0 with\n   degenerate/out-of-range src+dst offsets must stay a no-op and still charge right.\n3. Re-run the whole `cargo test -p revmc`, not just those two.\n4. Re-check the repro at **block** level, not just the single tx — a per-tx match\n   doesn't prove the block reconciles.\n5. Then take up the *COPY family (below).\n\n## Open Questions / Blockers\n- Does the 1743 delta close for the full block, or only that tx in isolation?\n- Before spending time on EXTCODECOPY, re-frame the hypothesis: MCOPY is\n  memory→memory, so overlap is intrinsic. The `*COPY` family copies from a separate\n  region (code / calldata / returndata) into memory, so overlap only bites if the\n  source can alias the memory arena. EXTCODECOPY's source is contract code, which\n  never aliases memory — so it may be the *least* likely of the family.\n  `CALLDATACOPY` is the better suspect: inner-call calldata can be a slice of the\n  caller's memory. Check how revmc passes those pointers before chasing EXTCODECOPY.\n- Is there a differential harness vs. the interpreter that should have caught this\n  whole bug class? If not, that's the durable fix.\n\n## Important Files / Branches\n- Branch `fix/mcopy-overlap` — **not committed, not pushed.** Exists only in the\n  local working tree.\n- `crates/revmc/src/compiler/translate.rs` → `translate_mcopy`\n- Tests: `test_mcopy_zero_len`, `test_memory_expansion_gas`\n- Repro: block 21845112, tx 0x7f3a… (full hash NOT recorded)\n```\n\nTwo things worth doing before you switch over, both under a minute:\n\n1. **Commit the WIP.** Uncommitted *and* unpushed across a multi-day context switch onto a different machine is the one way this actually gets lost — `git add -A && git commit -m \"wip: mcopy memmove, 2 tests red\"`, and push the branch if you can. Red tests are fine in a WIP commit.\n2. **Write down the full tx hash.** You gave me `0x7f3a…` truncated; in three days that prefix plus shell history you've since scrolled past may not be enough to re-find it.\n\nThe one item I'd most protect from being forgotten is the note that the two red tests are *suspected collateral from an unrelated edit*. Coming back cold to two failures sitting next to an MCOPY fix, the natural assumption is that the memmove swap caused them — and that sends you into the codegen instead of into the gas-accounting hunk."
+              },
+              {
+                "name": "skill-fired",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Skill called 1x (expected 1..∞)",
+                "withOnly": true,
+                "scored": false
+              }
+            ]
+          },
+          {
+            "score": 1,
+            "passed": true,
+            "turns": 7,
+            "costUsd": 0.364286,
+            "judgeCostUsd": 0.013883999999999997,
+            "durationSeconds": 115,
+            "startedAt": "2026-09-14T02:21:21.386Z",
+            "error": null,
+            "tracePath": "/tmp/claude-eval-asIRhk/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "result",
+                "passed": true,
+                "weight": 1,
+                "explanation": "judge votes: PASS PASS PASS",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  true,
+                  true,
+                  true
+                ],
+                "evidence": "这个 session 里没有 Write/Edit/Bash，我没法帮你建 `.planning/stash/`，也没法落盘（工作目录里也没有 revmc 仓库，所以下面全部是你口述的状态 + 我的推断，没有任何一条是我实地验证过的）。所以我直接把 handoff 写成可以整块复制的文本：\n\n```markdown\n# Stash: mcopy-overlap\n**Date:** 2026-09-14\n**Status:** paused —— 预计 09-17/18 回来（Base 归档节点索引管线救火）\n\n## 目标\nrevmc JIT 出来的 native code 在部分 mainnet 区块上 gas 和解释器对不上。\n根因已定位：MCOPY 的 codegen 发的是 memcpy，解释器是 memmove 语义，src/dst 一重叠就写花。\n修 codegen，然后把其他 copy 类 opcode 按同样的问题过一遍。\n\n## 复现（已验证，稳定）\n- block 21845112，tx 0x7f3a…\n- 修复前差值恒为 **1743 gas**，每次都一样\n- 注意：回来以后如果这个差值不再是 1743，说明别的东西动了（revm 版本、fork 配置等），\n  先查那个，别急着动 fix。\n\n## 停在哪儿\n- `crates/revmc/src/compiler/translate.rs` → `translate_mcopy`：memcpy 已换成 memmove\n  intrinsic，单跑那笔 tx 已经对上。✅\n- `cargo test -p revmc` **红两个**：`test_mcopy_zero_len`、`test_memory_expansion_gas`。\n  怀疑是自己搞出来的——顺手动了 memory 扩容计费那段。**尚未排查。** ❌\n- EXTCODECOPY：怀疑有同样的重叠问题，grep 出过几处，**一处都没跟进**。❓\n- 分支 `fix/mcopy-overlap`：**没 commit，没 push。**\n\n## 下一步\n1. **先做这个：把 WIP commit 掉并 push 分支。** 现在整个修复只存在于一台机器的\n   working tree 里，还要放三四天。\n2. 单独 `git diff` 看 memory 扩容计费那几个 hunk，逐个判断是有意改的还是顺手带的。\n   把顺手带的 revert 掉再跑一遍——有可能两个测试直接就绿了。\n3. 修掉这两个红的（假设见下），让 `cargo test -p revmc` 全绿。\n4. 重跑 21845112 / 0x7f3a… 复现，确认第 3 步没把 fix 弄回去。\n5. 到这里再开 EXTCODECOPY 审计，作为独立的一摊活。\n\n## 两个红测试的假设（未验证，是我的推断不是实测结论）\n- `test_mcopy_zero_len`：EIP-5656 下零长度 MCOPY 是 no-op，照收 static gas，\n  但**不触发** memory expansion。最可能是改动里把零长度的 early-return / guard\n  挪了位置或删了。先查这个，比去读 intrinsic 的 lowering 便宜得多。\n- `test_memory_expansion_gas`：EIP-5656 的扩容费只按 `max(dst+len, src+len)` 收一次。\n  典型的错法是 src 和 dst 分开算或者顺序算两次。先确认当前代码是哪种形状。\n\n## EXTCODECOPY 审计的范围提醒（等你回来再动）\nMCOPY 是 memory→memory，重叠是天然存在的。而 EXTCODECOPY / CODECOPY /\nCALLDATACOPY / RETURNDATACOPY 是从**另一个 buffer** 拷进 memory，只有当那个源\nbuffer 和 EVM memory 是同一块分配时才会重叠。别默认，去确认：revm 的 memory buffer\n是跨 call frame 共享的，子 frame 的 calldata 有可能就是父 frame memory 的一个切片。\n如果这个 build 里确实如此，那 **更可能真出问题的是 CALLDATACOPY 而不是 EXTCODECOPY**。\n花时间之前先去看实际的 SharedMemory 处理逻辑。\n\n## 关键文件 / 分支\n- `crates/revmc/src/compiler/translate.rs` —— `translate_mcopy`（修复点）\n- 分支 `fix/mcopy-overlap`，截至 2026-09-14 未 commit 未 push\n- 测试：`test_mcopy_zero_len`、`test_memory_expansion_gas`（`cargo test -p revmc`）\n```\n\n两点想单独说一下：\n\n**走之前先 commit + push。** 这是清单里第 1 条，也是唯一一件我觉得今天必须做完的——三四天的救火期里，未提交的工作树太容易被 `git stash`、切分支或者换机器弄没。剩下的都可以等你回来。\n\n**先查 diff 再查测试。** 你自己的怀疑（顺手动了计费那段）大概率是对的，而验证它最快的路径不是去读那两个测试，是把 `translate_mcopy` 之外的改动单独摘出来看一眼。这比从测试往回追省事。\n\n回来以后可以把上面这块直接贴到 `.planning/stash/2026-09-14-mcopy-overlap/snapshot.md`（或者你自己平时记的任何地方），我这边没有写文件的权限，代劳不了。"
+              },
+              {
+                "name": "skill-fired",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Skill called 1x (expected 1..∞)",
+                "withOnly": true,
+                "scored": false
+              }
+            ]
+          },
+          {
+            "score": 1,
+            "passed": true,
+            "turns": 9,
+            "costUsd": 0.40250600000000003,
+            "judgeCostUsd": 0.018396,
+            "durationSeconds": 154,
+            "startedAt": "2026-09-14T02:21:21.386Z",
+            "error": null,
+            "tracePath": "/tmp/claude-eval-fmRjeJ/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "result",
+                "passed": true,
+                "weight": 1,
+                "explanation": "judge votes: PASS PASS PASS",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  true,
+                  true,
+                  true
+                ],
+                "evidence": "这个会话里我没有 Bash / Write / Edit，没法跑 `git`、也没法把文件落到 `.planning/stash/`，而且当前工作目录是空的、看不到 revmc 仓库——所以下面这份交接是纯粹按你口述整理的，没有跟代码核对过，你贴进去的时候按这个前提看。\n\n**先说两件只有你能做、且最好现在就做的事**（加起来五分钟，回来能省掉半天）：\n\n1. **把 `fix/mcopy-overlap` 提交掉**，哪怕是 `git commit -am \"wip: mcopy memmove\"`，最好再 push 一个远程分支。现在是未 commit 未 push 的状态，你要去另一台机器救火三四天，任何一次误操作的 checkout / 清理 / 重装都是全丢。这是整摊事里风险最高的一项。\n2. **把 `0x7f3a…` 的完整 tx hash 抄下来**，还有你\"本地单跑那笔交易\"用的确切命令。这两个是最典型的、回来一定想不起来又必须重新刨的东西——截断的 hash 在 4000 万笔交易里没法反查。\n\n下面这份贴到 `.planning/stash/mcopy-overlap/snapshot.md`（目录得你自己建）：\n\n```markdown\n# Stash: mcopy-overlap\n**Date:** 2026-09-14\n**Status:** paused（预计 3-4 天后回来，期间去救 Base 归档节点索引管线）\n**Branch:** fix/mcopy-overlap（未 commit / 未 push —— 离开前务必提交）\n\n## 目标\nrevmc JIT 出的 native code 在 mainnet 部分区块上 gas 与解释器对不上。\n已定位根因：MCOPY 的重叠语义。\n\n## 根因（已确认）\nEIP-5656 的 MCOPY 是 memmove 语义（src/dst 重叠时须表现得像经过临时缓冲区中转）。\nrevmc codegen 图省事发的是 memcpy，区间一重叠就把内存写花了。\ngas 差异是内存写花之后的**下游效应**（执行路径/扩容高水位被带偏），不是计费本身写错。\n\n## 复现\n- block 21845112，tx 0x7f3a...（**完整 hash 待补**）\n- 差值稳定 1743 gas，每次都一样\n- 复现方式是\"本地单跑那笔交易\"，不是整块重放（**确切命令待补**）\n- 注意：1743 这个数是指纹。以后要是又出现 gas 不一致但差值不是 1743，那是另一个 bug，别混为一谈。\n- 1743 这个具体数字从来没被解释过——为什么写花的字节恰好导致 1743 的差，没追。\n  改完能对上是很强的证据，但不等于机制清楚了。\n\n## 已完成\n- `crates/revmc/src/compiler/translate.rs` 的 `translate_mcopy`：memcpy 换成 memmove intrinsic\n- 换完之后单跑那笔 tx 能对上了\n\n## 当前红的（未查）\n`cargo test -p revmc` 挂两个：\n- `test_mcopy_zero_len`\n- `test_memory_expansion_gas`\n自己的怀疑是顺手动了 memory 扩容那段计费。**这个怀疑本身没验证过。**\n\n### 回来后的排查顺序（先便宜的）\n1. **先确认是不是自己搞的**：`git stash` 掉改动，在干净树上跑这两个测试。\n   要是本来就红，那跟 MCOPY 一点关系没有，直接不用查了。这一步最便宜，先做。\n2. **再看 diff 到底动了什么**：`git diff crates/revmc/src/compiler/translate.rs`。\n   如果扩容计费那段根本没动，那两个测试的失败只可能来自换 intrinsic 本身，\n   八成是同一个原因、一起修。\n3. 带着假设去看 `test_mcopy_zero_len`：\n   len == 0 时 MCOPY 是 no-op，而且**不触发任何内存扩容**——offset 再大也不扩、不计费\n   （geth 的 `memoryMcopy` 对 length == 0 直接返回 0）。\n   最可能的情况：换 intrinsic 的时候把 zero-length 的提前返回给顺掉了或者挪了位置，\n   于是 len=0 也照样算 max(dst,src)+len 去扩容，多收了钱。\n   —— 这个假设正好也能解释第 2 个测试为什么一起红，优先验。\n4. `test_memory_expansion_gas`：扩容费是按 `C(new) - C(current)` 收的，\n   所以对 src/dst 分两次扩容其实不会重复收费（差值会 telescope 抵消），\n   这条路别浪费时间。真正容易错的是这几个：\n   - 只按 dst+len 扩容、漏了 src+len（少收）\n   - 算成 src+dst+len 之类（多收）\n   - len=0 还照扩（见上）\n   - JIT 把扩容检查从分支里提了出来，导致这条指令没真正执行也照收\n\n## 未验证的猜想：EXTCODECOPY\n原来的想法是 EXTCODECOPY 多半有同样的重叠问题，grep 出来几处但没跟进。\n\n**建议换个角度再看**（以下是推理，没看过代码，回来自己核）：\nMCOPY 是唯一 src 和 dst **两端都是 EVM 内存**的指令，所以它是唯一在语义层面\n就要求 memmove 的。EXTCODECOPY / CODECOPY / CALLDATACOPY 的源分别是账户代码、\ncalldata，都是独立于当前帧内存的区域，语义上不可能重叠——\n除非 revmc 自己的 runtime 把这些 buffer 跟内存做了 aliasing。\n\n所以这条线该查的不是\"语义上会不会重叠\"，而是\"revmc 运行时有没有把它们指到同一块分配上\"。\n真要有嫌疑，**RETURNDATACOPY 优先级最高**：returndata 来自子调用的返回缓冲区，\n最有可能跟某块已有内存共用分配。\n把原来 grep 出的那几处按这个标准重新筛一遍，大概率能砍掉大部分。\n\n## 待补 / 开放问题\n- [ ] 完整 tx hash（只有 `0x7f3a...`）\n- [ ] 单跑那笔交易的确切命令\n- [ ] 最初说的是\"某些区块\"对不上——除了 21845112 还有哪些？有没有记在别处？\n      MCOPY 不一定能解释全部，改完得拿完整那批回归一遍才算完。\n- [ ] 1743 这个差值的成因始终没解释\n\n## 关键文件\n- `crates/revmc/src/compiler/translate.rs` → `translate_mcopy`（已改）\n- revmc 测试：`test_mcopy_zero_len`、`test_memory_expansion_gas`\n```\n\n有一处我顺手把你的判断改了方向：EXTCODECOPY 那条线我觉得大概率是空的，真正值得看的是 RETURNDATACOPY，理由写在文档里了——你回来要是不同意，推理过程都在，好推翻。\n\n另外建议离开前把那两个测试的失败输出原样贴进文档，趁现在还能跑；四天后重新跑一遍拿输出，比复制粘贴贵得多。\n\nこれ以外に文件我落不了盘，得你手动贴——目录 `.planning/stash/mcopy-overlap/`，或者你习惯放 WIP 笔记的任何地方都行。"
+              },
+              {
+                "name": "skill-fired",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Skill called 1x (expected 1..∞)",
+                "withOnly": true,
+                "scored": false
+              }
+            ]
+          }
+        ],
+        "without": [
+          {
+            "score": 1,
+            "passed": true,
+            "turns": 8,
+            "costUsd": 0.430595,
+            "judgeCostUsd": 0.016523999999999997,
+            "durationSeconds": 183,
+            "startedAt": "2026-09-14T02:23:16.385Z",
+            "error": null,
+            "tracePath": "/tmp/claude-eval-TQLlwq/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "result",
+                "passed": true,
+                "weight": 1,
+                "explanation": "judge votes: PASS PASS PASS",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  true,
+                  true,
+                  true
+                ],
+                "evidence": "环境先说明一下，免得你回来对不上：**这个会话里没有 revmc 的代码**。`/tmp/claude-eval-TQLlwq/home/cwd` 是空的，上层那个 git 只有一个 `.git` 骨架，没有 `crates/`、没有 `translate.rs`。而且这次我只有读取类工具，没有 shell、没有写文件的权限。\n\n所以我没法替你验证 diff、跑 `cargo test`、也没法把文件落到分支上或存成长期记忆。下面这份是根据你口述整理的交接文档，你直接存成 `HANDOFF.md` 放 `fix/mcopy-overlap` 上就行。里面所有事实都标了来源，没验证的我都写明了。\n\n```markdown\n# HANDOFF: MCOPY 重叠导致 gas 偏差 (fix/mcopy-overlap)\n\n暂停: 2026-09-14（去救 Base 归档节点索引管线，预计 3-4 天）\n分支: fix/mcopy-overlap — 未 commit、未 push\n\n## 1. 根因（已定位）\n\nrevmc codegen 对 MCOPY 发的是 memcpy，EIP-5656 和解释器（revm）是 memmove 语义。\nsrc/dst 区间重叠时 memcpy 行为未定义，实际表现为内存被写花，错误沿后续指令传播，\n最终表现为 gas 对不上。\n\n注意：gas 差是症状不是根因。1743 这个固定差值还没归因到具体 opcode（见 §5 Q1）。\n\n## 2. 复现\n\n- 区块: 21845112 (mainnet)\n- 交易: 0x7f3a…  ← 完整 hash 未记录，待补\n- 现象: native 与解释器 gas 稳定差 1743，确定性复现\n- 复现命令: 未记录，待补（大概率还在 shell history 里）\n\n## 3. 已做的改动\n\ncrates/revmc/src/compiler/translate.rs → translate_mcopy：\nmemcpy intrinsic 换成 memmove intrinsic。单跑该交易 gas 已对上。\n\n待确认：改动是落在 backend trait 层还是只改了 LLVM backend 的实现。\n若 trait 上有默认实现或存在其他 backend，需要一起对齐，否则只有 LLVM 路径是对的。\n\n## 4. 当前红的测试（未排查）\n\ncargo test -p revmc:\n- test_mcopy_zero_len\n- test_memory_expansion_gas\n\n自己的怀疑：顺手动过 memory 扩容那段计费。失败输出没保存 —— 回来第一件事是\n重跑并把输出贴回本节。\n\n两个先验猜测，按此顺序查最快：\n1. test_mcopy_zero_len: len==0 时 memcpy 那条路上原本可能有提前返回/短路分支，\n   换 memmove 时被顺掉了。\n2. test_memory_expansion_gas: 扩容开销按 max(dst+len, src+len) 算，len==0 时\n   按 EVM 语义不触发扩容。若扩容计算被提到了零长分支外面，这两条测试会同时红。\n\n→ 两个测试同时挂，更像一个共同原因，而不是两个独立 bug。\n→ 先 git diff 通读 translate.rs，把与 memmove 无关的改动隔离出来单独 revert 再跑，\n  能一次性证伪/证实上面的猜测。\n\n## 5. 未决问题\n\nQ1（建议优先）: 1743 从哪来？\n把差值归因到具体 opcode，才能确认 memmove 这个修法是完整的、而不是碰巧对上。\n做法：两边打 per-opcode gas trace，diff 第一个分叉点。\n线索：1743 = 3 × 581。3 是 G_copy/word 和 G_verylow 的单价，说明差值大概率来自\ncopy 类开销或 memory expansion 的线性项，而不是 SSTORE/CALL 这类大额项 —— 从这儿切。\n\nQ2: EXTCODECOPY 是否同样有重叠问题？\n方向建议修正：EXTCODECOPY 的源是外部账户 code buffer，与 EVM memory 是两块\n独立分配，严格说不构成重叠。按「有 copy 就有重叠」逐个 opcode 审可能白跑。\n更值得先看的是：\n  a) codegen 里发 memcpy 的公共 helper —— 若 MCOPY 和 *CODECOPY 家族走同一出口，\n     应该在 helper 上定策略，而不是逐个 opcode 改；\n  b) RETURNDATACOPY / CALLDATACOPY —— 取决于 revm 那边 return data 和 call input\n     是独立 buffer 还是 shared memory 的切片。是切片才可能与当前 frame memory 别名。\n先花 5 分钟确认这两处的 buffer 归属，再决定投不投入。\n（本条从规范和常见实现推导，未在本仓库验证。）\n\n## 6. 回来后的执行顺序\n\n1. git checkout fix/mcopy-overlap; git log -1 确认 WIP commit 还在\n2. cargo test -p revmc → 失败输出贴回 §4\n3. git diff main... 通读，隔离非 memmove 的改动\n4. 按 §4 猜测 1 查零长分支\n5. 两条测试绿了之后，再做 Q1 的 per-opcode 归因\n6. 最后再决定 Q2 做不做\n```\n\n**走之前花 5 分钟补三样**，这三样丢了最贵：\n\n1. **完整的 tx hash** —— `0x7f3a…` 现在只存在于你脑子里，回来光是重新找这笔交易就得花掉半天。\n2. **复现命令** —— 趁 shell history 还在，捞出来写进 §2。\n3. **commit + push** —— 这是唯一有真实丢失风险的东西。改动只在本地工作区，3-4 天里一次误操作的 `git checkout`、一次清理、一次机器重装就没了。建议 `git add -A && git commit -m \"wip: MCOPY memmove, 2 tests red\"`，再 push 到远端备份分支；别用 stash，stash 最容易在回来时被忘掉。\n\n另外顺手把 `cargo test -p revmc` 的失败输出重定向存成文件一起提交 —— 你现在跑一次是 30 秒，回来重跑要先等整个 crate 重新编译。\n\n如果你能在 revmc 那台机器上再开一次会话，我可以把这些真正落地：提交 WIP、抓测试输出、把 HANDOFF.md 写进分支，顺带把 §3 的 backend trait 和 §5 Q2 的 helper 归属先替你查掉，这样你回来时未决问题能少两条。"
+              }
+            ]
+          },
+          {
+            "score": 1,
+            "passed": true,
+            "turns": 7,
+            "costUsd": 0.35262699999999997,
+            "judgeCostUsd": 0.018647999999999998,
+            "durationSeconds": 140,
+            "startedAt": "2026-09-14T02:23:26.962Z",
+            "error": null,
+            "tracePath": "/tmp/claude-eval-wgRSlg/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "result",
+                "passed": true,
+                "weight": 1,
+                "explanation": "judge votes: PASS PASS PASS",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  true,
+                  true,
+                  true
+                ],
+                "evidence": "## 先说一个问题\n\n这个会话里那个 revmc 仓库不在。工作目录 `/tmp/claude-eval-wgRSlg/home/cwd` 是空的，整个 `home` 下面连一个 `Cargo.toml` 都没有，`crates/revmc/src/compiler/translate.rs` 自然也找不到。而且我这个会话没有 shell 和写文件的工具，记忆目录也被权限拒了。\n\n也就是说：**我没法替你验证 diff、跑测试、跟进 EXTCODECOPY，也没法替你 commit 或者把交接写成文件。**\n\n所以下面分两块：第一块是你走之前自己花 30 秒必须做的（我做不了），第二块是完整的交接正文，你贴进仓库或者 issue 里就行。内容基于你口述，我标了哪些是未经验证的。\n\n---\n\n## 一、走之前先做这四条\n\n最大的风险不是你忘了，是**未 commit 未 push**。三四天在另一台机器上救火，这个工作树丢了就真从头来了。\n\n```bash\ncd <revmc>\ngit status                    # 确认还在 fix/mcopy-overlap，看看有没有别的脏文件\ngit add -A\ngit commit -m \"wip: MCOPY memmove fix + memory expansion edits (2 tests red)\"\ngit push -u origin fix/mcopy-overlap\n```\n\n然后**趁现在还能复现，把测试失败输出存下来**——这是回来最贵的一块：\n\n```bash\ncargo test -p revmc 2>&1 | tee /tmp/revmc-mcopy-wip-tests.txt\ngit diff main...fix/mcopy-overlap > /tmp/revmc-mcopy-wip.diff\n```\n\n第二条尤其重要：failing assertion 的具体期望值/实际值，比\"两个测试红了\"这句话有用一个数量级。\n\n---\n\n## 二、交接正文（可直接粘）\n\n```markdown\n# WIP: MCOPY 重叠区间导致 gas 不符\n\n分支：fix/mcopy-overlap（截至 2026-09-14 未 commit、未 push）\n状态：核心修复已验证有效，但引入了 2 个测试回归，未定位\n\n## 问题\nrevmc JIT 出的 native code 跑 mainnet 部分区块 gas 与解释器不符。\n根因：解释器 MCOPY 是 memmove 语义，codegen 发的是 memcpy，\n源/目标区间重叠时写坏数据。\n\n## 复现\n- 区块 21845112，交易 0x7f3a…\n- 稳定复现，每次差 1743 gas\n\n## 已做\n- crates/revmc/src/compiler/translate.rs :: translate_mcopy\n  memcpy intrinsic → memmove intrinsic\n- 单跑该交易 gas 已对上\n- 同时动过 memory 扩容计费那段（改动内容待确认，疑似回归来源）\n\n## 待办\n1. [阻塞] cargo test -p revmc 两个红：\n   - test_mcopy_zero_len\n   - test_memory_expansion_gas\n2. [未验证] EXTCODECOPY 路径是否有同类重叠问题（grep 出几处未跟进）\n```\n\n---\n\n## 三、几点分析，省得你回来重推\n\n**1. gas 差值是症状，不是独立的计费 bug。**\n\nMCOPY 的 gas 只取决于栈上的 `dst/src/len`，跟内存里的数据无关。所以 memcpy 写花数据本身不会直接改 gas —— 1743 这个差值只能来自下游：要么污染的数据改变了后续控制流（分支/SSTORE/CALL 走向不同），要么被写坏的字回流成了后面某条内存指令的操作数。\n\n这条推论有两个用处：\n\n- 它解释了为什么换成 memmove 之后单跑就对上了 —— 数据对了 gas 自然跟着对。你那个修复方向基本可以确认是对的。\n- 反过来，**1743 不能拿来当\"计费代码\"的回归信号**。你顺手动的那段扩容计费是一个独立改动，它可能既没被这个复现覆盖，又正好是两个红测试的来源。\n\n**所以回来第一件事：把这两处改动拆成两个 commit。** memmove 那个已验证，扩容计费那个未验证。现在缠在一起，等于让一个已知好的修复替一个未知的改动背锅。拆开之后 `git stash` 掉计费那半边再跑 `cargo test -p revmc`，能立刻判断红的是不是它。\n\n**2. 两个红测试很可能是同一个根因。**\n\n`test_mcopy_zero_len` 和 `test_memory_expansion_gas` 同时红，指向扩容计费里 len=0 的处理。按 EIP-5656，`MCOPY` 在 `len == 0` 时是 no-op：**不触发内存扩容，也不因为 `dst`/`src` 越界而收费**。如果改动后变成对 `max(dst+len, src+len)` 无条件算扩容，len=0 时就会错误地按 offset 收一笔 —— 这一条能同时解释两个失败。\n\n顺带一个值得确认的点：扩容必须按 `max(dst+len, src+len)` 算，`src` 和 `dst` 两边都要。如果原来的 codegen 只按 `dst` 算扩容，那是藏在同一片代码里的第二个 bug，和重叠问题无关，但会独立造成 gas 不符。\n\n对账用的公式：\n- `Cmem(words) = 3*words + words²/512`，按当前 size 到新 size 的**差值**收\n- MCOPY 总计 `3 + 3*ceil(len/32) + 扩容差值`\n\n**3. 一个便宜的诊断：1743 = 3 × 581，整除。**\n\n581 字正好是 18592 字节。这可能是巧合，但复制字费和扩容费在这个数量级下量纲不同，算一下 581 字这个解释能不能对上那笔交易的实际 len，可以快速区分\"少算了 581 个字的复制费\"和\"扩容差值算错\"。花不了十分钟。\n\n**4. EXTCODECOPY 那个猜想，方向大概率是错的，但附近有真问题。**\n\n`EXTCODECOPY` / `CODECOPY` / `CALLDATACOPY` / `RETURNDATACOPY` 都是从**非内存**来源（账户代码、calldata、returndata）拷进内存，两边不同地址空间，按定义不会重叠。所以直接照搬 MCOPY 的重叠假设，多半跟不出东西。\n\n但有个 revm 特有的坑值得真去看一眼：**revm 用的是跨调用帧的 `SharedMemory`**。如果 revmc 沿用了这个结构，那么 `CALLDATACOPY` / `RETURNDATACOPY` 的源可能是调用方内存在同一个 buffer 里的切片，而目标又在同一个 buffer 里 —— **这种情况下源和目标是真的可能重叠的**。\n\n所以建议把那几处 grep 结果的优先级改一下：先确认 revmc 的拷贝 helper 是否存在源/目标共用 arena 的情况（`SharedMemory` 或任何共享 scratch buffer），有的话真正的风险点是 `CALLDATACOPY`/`RETURNDATACOPY`，不是 `EXTCODECOPY`。\n\n这一条我没法验证——代码不在，你回来自己确认一下 revmc 是不是真的用了 `SharedMemory`。\n\n---\n\n再提醒一次：上面这些**没有任何一条落到磁盘上**，我这边存不了。你自己粘一份到仓库里（比如 `NOTES-mcopy.md`，跟着那个 wip commit 一起 push），别只留在这个会话里。"
+              }
+            ]
+          },
+          {
+            "score": 1,
+            "passed": true,
+            "turns": 12,
+            "costUsd": 0.5560285,
+            "judgeCostUsd": 0.017784000000000008,
+            "durationSeconds": 201,
+            "startedAt": "2026-09-14T02:23:54.983Z",
+            "error": null,
+            "tracePath": "/tmp/claude-eval-8ouX4R/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "result",
+                "passed": true,
+                "weight": 1,
+                "explanation": "judge votes: PASS PASS PASS",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  true,
+                  true,
+                  true
+                ],
+                "evidence": "这个 session 里 `Write` 和 shell 都不可用，memory 目录也是只写不可读的状态被拒了，而且 revmc 的 worktree 根本不在这个环境里（cwd 是个空 repo）。所以两件事我做不到：**没法帮你落盘**，也**没法验证你说的任何一条**（跑不了 `cargo test`，看不了 diff）。\n\n下面是整理好的交接，直接贴到 revmc repo 根目录存成 `HANDOFF-mcopy-overlap.md`，跟着 WIP commit 一起带走就行：\n\n```markdown\n# HANDOFF — revmc MCOPY overlap bug (`fix/mcopy-overlap`)\n\n**暂停:** 2026-09-14 · **预计回来:** ~2026-09-18 · **原因:** Base 归档节点索引管线挂了，被调去救火 3–4 天。\n\n---\n\n## 一句话\n\nrevmc 的 codegen 对 MCOPY 发的是 `memcpy`，解释器是 `memmove` 语义。src/dst 区间一重叠，\nnative 路径就把内存写花，执行发散，gas 总数对不上。\n\n## 复现 —— 已确认，别再推一遍\n\n- **Block:** 21845112\n- **Tx:** `0x7f3a…` — ⚠\ufe0f **只记了前缀。趁 shell history 还在，把完整 hash 补进来。**\n- **现象:** native 与解释器稳定差 **1743 gas**，每次都一样。\n\n## 干到哪儿了\n\n| 事项 | 状态 |\n|---|---|\n| `crates/revmc/src/compiler/translate.rs` 的 `translate_mcopy`：`memcpy` → `memmove` intrinsic | **已完成**，单跑复现那笔 tx 能对上 |\n| `cargo test -p revmc` | **红**：`test_mcopy_zero_len`、`test_memory_expansion_gas` |\n| memory 扩容计费 | 改上面那处时顺手动的。两个红测的头号嫌疑。**未排查。** |\n| `EXTCODECOPY` 是否同样有重叠问题 | 仅猜想。grep 出几处，**未跟进。** |\n| 分支 `fix/mcopy-overlap` | 纯本地 —— 写这份笔记时**未 commit、未 push** |\n\n---\n\n## ⚠\ufe0f 去救火之前\n\n整个 fix 只以 dirty files 的形式存在于一个 worktree 里。在共享机器上折腾三四天，\n这东西丢起来太容易了。花三十秒：\n\n```sh\ngit add -A && git commit -m \"wip: MCOPY memmove, 2 tests red\"   # 在 fix/mcopy-overlap 上\ngit push -u origin fix/mcopy-overlap                            # 更保险\n```\n\nWIP commit 随手就能撤（`git reset --soft HEAD~1`），worktree 丢了撤不回来。\n\n---\n\n## 回来之后的建议顺序\n\n1. **先确认复现在 `main` 上仍然失败** —— 一条命令，能告诉你这几天底下没漂。\n2. **把两处改动拆开。** MCOPY 的 fix 和 memory 扩容那处编辑是独立的。把扩容那个 hunk\n   `git diff` 出来扔到临时分支，不带它再跑那两个测试。如果绿了，一步就定位到 regression，\n   而不是同时 debug 两件事。\n3. **然后**再看两个红测（线索见下）。\n4. **然后**是 EXTCODECOPY 那个问题（先读下面那条，很可能是虚惊）。\n5. 全绿之后再重跑 21845112 那笔 tx，然后扩到整个 block range。\n\n---\n\n## 未经验证的线索\n\n*2026-09-14 记录。这些是从症状反推的，**没有**对着代码核过 —— 当起点用，别当结论。*\n\n### `test_mcopy_zero_len`\n\n按 EIP-5656，`len == 0` 的 `MCOPY` 是 no-op：只收 3 gas 的固定费，**不收 memory expansion**，\noffset 多大都不收。EVM 里零长度内存访问从不撑大 memory。\n\n最经典的写坏方式：无条件按 `max(dst + len, src + len)` 算扩容边界，并且在 `len == 0` 检查\n**之前**就计了费。如果你那处扩容编辑挪走或删掉了零长度的 guard，出来的正好是这个失败。\n去确认 `len == 0` 的 early-out 发生在扩容成本计算**之前**。\n\n### `test_memory_expansion_gas`\n\n`MCOPY` 摸两个区间，扩容只能按两者的高水位 `max(dst + len, src + len)` 收**一次**。\n两种都符合症状的写法：\n\n- 按区间分别收（收了两次），或者\n- 用 `max(dst, src) + len` —— 这跟 `max(dst + len, src + len)` 微妙地不同，只在特定\n  offset 组合下才发散。\n\n两种错误都会被 `words² / 512` 这个二次项放大，所以大 offset 下炸得很响，小 offset 下能过。\n值得看一眼这个测试用的是哪一档。\n\n### `EXTCODECOPY` —— 大概率**不是**同一个 bug\n\n直说，可能给你省一天：`MCOPY` 是唯一一个两个操作数**都**在 EVM memory 里的 opcode。\n`EXTCODECOPY` / `CODECOPY` 读的是 account code，`CALLDATACOPY` 读 calldata，\n`RETURNDATACOPY` 读 return buffer —— 正常设计下这些都不与 EVM memory 别名，\n所以那里用 `memcpy` 是真的安全，这个猜想八成是假警报。\n\n唯一要查的例外：如果内层 call 的 return data buffer 是指进共享 memory arena 的一个 slice，\n而不是自己独立分配的，那么 **`RETURNDATACOPY`** *确实*可能别名 memory。这一组里高风险的是它，\n不是 `EXTCODECOPY`。去确认你 codegen 里 return buffer 怎么分配的；如果是 owned，\n整个问题就可以关掉了。\n\n---\n\n## 没有任何人验证过的部分\n\n上面的状态是 2026-09-14 按你本人口述转写的，**没有对着代码核过** —— 写这份笔记的 session\n够不到 revmc worktree，没 build、没跑测试、没看 diff。信任表格里任何一行之前，先做第 1 步\n把 ground truth 重新立起来。\n```\n\n块外三点提醒：\n\n- **走之前先把 commit 打了**，这是唯一一件丢了就真没了的事，其它都能重推。\n- **完整 tx hash 现在就补**，你只给了 `0x7f3a…`，三四天后 shell history 未必还在。\n- **EXTCODECOPY 那条我倾向于是虚惊**，理由写在文档里了 —— 真正值得查的是 `RETURNDATACOPY` 的 buffer 是不是指进共享 arena。这条是纯推理，没看你代码，回来花五分钟证伪就行。\n\n如果你想让我把这份东西真的落到 repo 里、或者存进 memory 好让你回来时我自己记得，需要在能访问 revmc worktree 且开了写权限的 session 里再叫我一次。"
+              }
+            ]
+          }
+        ]
+      },
+      "aggregates": {
+        "score": 1,
+        "passRate": 1,
+        "scoreWithout": 1,
+        "passRateWithout": 1,
+        "delta": 0
+      }
+    }
+  ],
+  "aggregates": {
+    "casesTotal": 1,
+    "casesPassed": 1,
+    "overallScore": 1,
+    "overallPassRate": 1,
+    "meanDelta": 0
+  }
+}
