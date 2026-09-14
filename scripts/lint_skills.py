@@ -57,7 +57,9 @@ CHECK_EM_DASH = False
 # Accepted trigger-clause openers. "Use when" is the canonical form, but a
 # description that says "Use on any bug" or "Use after a plan is done" states the
 # same thing and should not be failed on wording alone.
-TRIGGER_CLAUSE = re.compile(r"\buse (?:when|on|after|before|for|during|if)\b", re.IGNORECASE)
+# "whenever" is the same clause with a different ending, and rejecting it pushed
+# one description into worse English to satisfy the regex. Match the stem.
+TRIGGER_CLAUSE = re.compile(r"\buse (?:when(?:ever)?|on|after|before|for|during|if)\b", re.IGNORECASE)
 
 DESC_MIN_WORDS = 40
 DESC_MAX_WORDS = 80
