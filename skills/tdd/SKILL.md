@@ -1,6 +1,6 @@
 ---
 name: tdd
-description: Drives implementation through the red-green-refactor cycle, writing a test that fails for the right reason, watching it fail, writing the minimum code that passes, then refactoring. Use before writing any feature or bugfix implementation, and whenever a change needs a regression test that proves the bug existed, including "先写测试", "加个单测", "补个测试". Applies even when the request is only for the implementation and even when the change looks too small to test.
+description: Drives implementation through the red-green-refactor cycle, writing a test that fails for the right reason, watching it fail, writing the minimum code that passes, then refactoring. Use when code is about to be written, whether the request asks for a test or only for the implementation, including "先写测试", "加个单测", "补个测试", and equally "把这个函数实现了", "函数体你直接写", "填掉这个 todo". A request that waves tests off up front is still covered, and so is a change that looks too small to test.
 ---
 
 # Test-Driven Development (TDD)
@@ -48,7 +48,7 @@ Implement fresh from tests. Period.
 
 ## When Tools Are Missing
 
-Check once, up front, for the two tools this cycle needs: Write/Edit to create the test file, and Bash to run the test command (`npm test` or the project's equivalent). One sentence naming what is missing is the entire budget for this. Do not attempt a tool, watch it fail, attempt a different one, and narrate each attempt.
+Check once, up front, for the two tools this cycle needs: Write/Edit to create the test file, and Bash to run the test command (`npm test` or the project's equivalent). One sentence naming what is missing is the entire budget for this. Do not attempt a tool, watch it fail, attempt a different one, and narrate each attempt. That budget covers every route, not just the obvious one: a subagent dispatched to do it inherits this session's permissions and hits the same wall, so do not send one, and do not report what any attempt returned.
 
 If either is unavailable, the deliverable is still the test. Put the complete failing test in the reply, in the same shape the file would have had, followed by the minimal implementation, and say in one line which paths they belong at and which command the user runs to see RED then GREEN. State that you could not write or run them yourself. Never report a verification step you did not perform, and never treat a missing runner as grounds to skip the test and hand over implementation alone.
 
