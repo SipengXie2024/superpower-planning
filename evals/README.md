@@ -139,6 +139,13 @@ would work and two of them do not:
   `arm: with-only` and keep the score on path-agnostic graders, or the no-plugin
   arm is being failed for not knowing a convention nobody told it.
 
+A `tool_used` grader meant to assert a tool was NOT called needs `min: 0`
+alongside `max: 0`. `min` defaults to 1, so `max: 0` on its own demands at least
+one call and at most zero — unsatisfiable, and it fails both when the tool was
+called and when it was not. Measured on a scratch suite: `max: 0` alone failed
+in both conditions; `min: 0, max: 0` passed on absence and failed on presence.
+Two release cases sat at 12/12 failures on that grader before this was found.
+
 The path-agnostic way to reach content is `type: tool_used` with `input_match`,
 which is a regex over the tool call's own input, file body included. It is free
 and deterministic, and it checks presence rather than quality — good for "the
