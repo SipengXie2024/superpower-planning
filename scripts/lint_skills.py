@@ -61,6 +61,27 @@ CHECK_EM_DASH = False
 # one description into worse English to satisfy the regex. Match the stem.
 TRIGGER_CLAUSE = re.compile(r"\buse (?:when(?:ever)?|on|after|before|for|during|if)\b", re.IGNORECASE)
 
+# A skill whose body lays down a hard rule is a "stance" skill: its job is to hold a
+# line the user may not want held. Eight defects in one day were the same omission —
+# the description said when to reach for the skill but not that a user waving the
+# discipline away ("别排查", "先别归档", "不用写测试", "直接给补丁") is exactly when it
+# applies. Measured cost of that omission: skills sat at 0/3 or 1/3 fired on their own
+# subject matter, and fixing the clause alone moved cases from 0.00 to +1.00.
+STANCE_HARD_RULE = re.compile(
+    r"NO [A-Z ]{3,} WITHOUT|Iron Law|iron law|non-negotiable|\*\*Never\b|^Never\b"
+    r"|MANDATORY|must not|never write|never mark|绝不|一律不",
+    re.M,
+)
+# Coverage counts in any of three shapes: naming the waved-off request, stating the
+# refusal itself ("never smooths...", "refusing to invent..."), or saying the skill
+# applies especially when the requester has already decided.
+STANCE_REFUSAL_COVERED = re.compile(
+    r"waive|waves it off|even when the user|asks you not to|still this skill"
+    r"|still covered|applies especially when|refus\w+ to|never (?:smooth|invent|report|mark|write)"
+    r"|仍应|也该用|别排查|先别|不用写测试|不要排查|别管根因|别建",
+    re.IGNORECASE,
+)
+
 DESC_MIN_WORDS = 40
 DESC_MAX_WORDS = 80
 BODY_WARN_LINES = 500
@@ -287,6 +308,31 @@ def check_description(path: str, fm: str) -> list[Finding]:
     return out
 
 
+
+def check_stance_refusal(path: str, fm: str, body: str) -> list[Finding]:
+    """A skill that lays down a hard rule must say in its description that a user
+    waving the discipline away is still a trigger.
+
+    Heuristic on purpose. It fires on the skills whose bodies assert something and
+    whose descriptions only cover the cooperative case, which is where every one of
+    this class of defect was found.
+    """
+    if not STANCE_HARD_RULE.search(body):
+        return []
+    desc = extract_description(fm) or ""
+    if STANCE_REFUSAL_COVERED.search(desc):
+        return []
+    return [
+        Finding(
+            path,
+            "description",
+            "stance-refusal",
+            "body lays down a hard rule, so the description must also cover the user "
+            "waving that discipline away, which is when it matters most",
+            "error",
+        )
+    ]
+
 def check_body(path: str, body: str) -> list[Finding]:
     out: list[Finding] = []
     n = len(body.splitlines())
@@ -438,6 +484,7 @@ def lint_skill(skill_dir: Path, repo_root: Path) -> list[Finding]:
     out: list[Finding] = []
     out += check_name(rel, skill_dir.name, fm)
     out += check_description(rel, fm)
+    out += check_stance_refusal(rel, fm, body)
     out += check_body(rel, body)
     out += check_pointers(skill_dir, rel, body)
 
