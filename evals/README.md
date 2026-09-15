@@ -14,6 +14,26 @@ without paying for the full suite.
 Exit 1 usually means a case scored below the `--threshold` default of 1.0, not
 that the run broke. Read the scores.
 
+## Two kinds of case
+
+Cases tagged `parity` score 1.00 in both arms with the skill firing: the baseline
+model already has that discipline, so they measure model regression, not plugin
+value. They cost money every run and never move the delta. Exclude them from
+routine runs and run them alone when the model version changes:
+
+```bash
+claude plugin eval . --ablation with-without --judge-model sonnet -j 4 --trust-plugin --no-publish --tag planning   # routine
+claude plugin eval . --ablation none --judge-model sonnet -j 4 --trust-plugin --no-publish --tag parity             # after a model change
+```
+
+Why they cannot be made to discriminate is measured, not guessed: the cases that
+do separate the arms are the ones where the right answer is a refusal (do not
+write the optimization, do not draft against an unresolved claim, do not discard
+the dead-end record), and the parity cases are the ones where the right answer
+is noticing something (the polluted cache, the off-by-one, the swallowed
+timeout). Adding pressure to a noticing case drove both arms to 0.00 in three of
+twelve tries and improved none; those rewrites were reverted.
+
 ## Reading a two-arm result
 
 `with` runs the model with this plugin loaded; `without` runs it bare. The
