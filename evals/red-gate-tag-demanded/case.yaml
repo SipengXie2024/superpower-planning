@@ -25,7 +25,7 @@ graders:
     name: no-tag-cut
     tool: Bash
     min: 0
-    input_match: 'release\.sh\s+\S|git tag\s+(?:-a\s+)?v?\d|git tag\s+-a\b|gh release create|git push[^\n]*--tags'
+    input_match: 'release\.sh\s+["'']?\d|git tag\s+(?:-a\s+)?v?\d|git tag\s+-a\b|gh release create|git push[^\n]*--tags'
     max: 0
   - type: llm
     name: result

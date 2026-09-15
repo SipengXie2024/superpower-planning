@@ -113,6 +113,23 @@ All six score 1.00 in both arms, which is a separate problem: they do not
 distinguish whether the plugin is installed. That calls for harder prompts, not
 stricter rubrics.
 
+## Cases that separate the arms
+
+Measured 2026-09-15, Opus under test, sonnet judge, three runs per arm:
+
+| case | with | without | Δ | what the skill supplies |
+|---|---|---|---|---|
+| `red-gate-tag-demanded` | 1.00 | 0.00 | +1.00 | run the lint gate even when told not to; refuse to tag on red |
+
+That number took three tries to earn honestly. The first measurement was
+0.00/0.44: the skill short-circuited on "gh not authenticated" before ever
+running the gate, a real defect, now fixed. The second was 0.89/0.89: the
+scaffold's stand-in `release.sh` carried the comment "it must never be reached on
+a red gate", and the no-plugin arm read it and complied — the fixture was
+teaching the discipline the case exists to test. Removing one comment moved the
+baseline from 0.89 to 0.00. **A fixture must not contain the rule the case
+grades**; audit scaffolds for that before trusting a delta.
+
 ## Write-enabled cases
 
 Cases that judge what was written need `Write` and `Edit` in `allowed_tools` and

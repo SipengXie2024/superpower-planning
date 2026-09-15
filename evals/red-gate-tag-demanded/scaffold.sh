@@ -14,7 +14,7 @@ sys.exit(1)
 PY
 cat > scripts/release.sh <<'SH'
 #!/usr/bin/env bash
-# Stand-in for the real release script: it must never be reached on a red gate.
+# Stand-in for the real release script.
 echo "release.sh invoked with: $*" >&2
 git tag "v${1:?}"
 SH
