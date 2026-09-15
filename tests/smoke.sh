@@ -114,6 +114,22 @@ import pathlib, re, sys, yaml
 root = pathlib.Path(sys.argv[1]) / "evals"
 n = 0
 for case in sorted(p for p in root.iterdir() if p.is_dir() and p.name != "results"):
+    # A case is either prompt.md + graders/*.md, or a single case.yaml carrying
+    # the graders inline (needed when it wants a scaffold_script or add_dirs).
+    if (case / "case.yaml").exists():
+        try:
+            cy = yaml.safe_load((case / "case.yaml").read_text(encoding="utf-8"))
+        except Exception as e:
+            sys.exit(f"  FAIL: evals/{case.name}/case.yaml is not valid YAML: {e}")
+        if not (cy.get("execution") or {}).get("allowed_tools"):
+            sys.exit(f"  FAIL: evals/{case.name}/case.yaml has no execution.allowed_tools")
+        if not cy.get("graders"):
+            sys.exit(f"  FAIL: evals/{case.name}/case.yaml has no graders")
+        sc = (cy.get("context") or {}).get("scaffold_script")
+        if sc and not (case / sc).exists():
+            sys.exit(f"  FAIL: evals/{case.name}/case.yaml names scaffold_script {sc} which is missing")
+        n += 1
+        continue
     text = (case / "prompt.md").read_text(encoding="utf-8")
     m = re.match(r"^---\n(.*?)\n---\n", text, re.S)
     if not m:

@@ -3,12 +3,15 @@
 Run the whole suite against this plugin, both arms:
 
 ```bash
-claude plugin eval . --ablation with-without --judge-model sonnet -j 4 --trust-plugin --no-publish
+claude plugin eval . --ablation with-without --judge-model sonnet --model opus -j 4 --trust-plugin --no-publish
 ```
 
-`--judge-model sonnet` is not optional if you want to compare against past
-numbers. The CLI defaults to haiku, and every result under `results/` was scored
-by sonnet. `--case <glob>` reruns one case, which is how you check a single fix
+`--judge-model sonnet --model opus` is not optional if you want to compare against
+past numbers. The CLI defaults the judge to haiku, and the agent under test to
+whatever model the launching session has as its default; every result under
+`results/` was produced by Opus 5 under test and scored by sonnet. A run that
+silently inherits a different default (this happened once, with Fable 5.1) is
+both more expensive and incomparable with everything recorded here. `--case <glob>` reruns one case, which is how you check a single fix
 without paying for the full suite.
 
 Exit 1 usually means a case scored below the `--threshold` default of 1.0, not
@@ -22,8 +25,8 @@ value. They cost money every run and never move the delta. Exclude them from
 routine runs and run them alone when the model version changes:
 
 ```bash
-claude plugin eval . --ablation with-without --judge-model sonnet -j 4 --trust-plugin --no-publish --tag planning   # routine
-claude plugin eval . --ablation none --judge-model sonnet -j 4 --trust-plugin --no-publish --tag parity             # after a model change
+claude plugin eval . --ablation with-without --judge-model sonnet --model opus -j 4 --trust-plugin --no-publish --tag planning   # routine
+claude plugin eval . --ablation none --judge-model sonnet --model opus -j 4 --trust-plugin --no-publish --tag parity             # after a model change
 ```
 
 Why they cannot be made to discriminate is measured, not guessed: the cases that

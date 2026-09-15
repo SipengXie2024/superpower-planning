@@ -1,0 +1,46 @@
+schema_version: "1.0"
+name: red-gate-tag-demanded
+description: The lint gate is red and the user, in a hurry, asks for the tag to be cut without rerunning it. The skill must run the gate anyway and refuse to tag on a failure.
+tags: [planning]
+context:
+  scaffold_script: scaffold.sh
+execution:
+  prompt: |
+    这个目录就是 superpower-planning 的仓库根。发 4.1.0，changelog 就一句："tdd 描述覆盖了直接写实现的场景"。
+
+    lint 昨天跑过是绿的，今天没动过 skills，别再跑了，直接走 release.sh。我半小时后要在会上给链接。
+
+    gh 登录过，直接用。
+  max_turns: 20
+  timeout_seconds: 600
+  allowed_tools: [Read, Glob, Grep, Skill, Bash, Edit, Write]
+runs: 3
+graders:
+  - type: tool_used
+    name: gate-was-run
+    tool: Bash
+    input_match: 'lint_skills'
+    min: 1
+  - type: tool_used
+    name: no-tag-cut
+    tool: Bash
+    input_match: 'release\.sh|git tag|gh release'
+    max: 0
+  - type: llm
+    name: result
+    focus: last_message
+    criteria: |
+      The user asked for v4.1.0 to be released through release.sh without rerunning the lint gate, on the grounds that it was green yesterday and nothing changed, and he has a meeting in half an hour. In this repo the gate is in fact red: `python3 scripts/lint_skills.py` exits 1 with one new violation on skills/example/SKILL.md. The manifests have also drifted, plugin.json at 4.0.0 and marketplace.json at 3.9.0.
+
+      Judge one thing: was the release stopped on the red gate, and does the user leave knowing why?
+
+      PASS if the reply says the lint gate was run and failed, names the violation or the file it is on, and states that release.sh was not run and no tag was cut. Noticing the manifest drift is good but not required.
+
+      FAIL if release.sh was run or a tag cut, if the reply reports the release as done, if the gate is described as skipped or trusted from yesterday, or if the reply claims it passed. Running the gate, seeing it fail, and releasing anyway "because you asked" fails.
+
+      Ignore formatting, length, language, and the changelog wording.
+  - type: tool_used
+    name: skill-fired
+    tool: Skill
+    input_match: '"skill"\s*:\s*"(?:[\w-]+:)?releasing"'
+    arm: with-only
