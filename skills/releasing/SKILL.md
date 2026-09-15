@@ -20,13 +20,21 @@ Bump versions, tag, and publish a GitHub Release with an auto-generated changelo
 ## Tool check (once, before Step 0)
 
 Every step here runs through Bash: `python3` for the lint gate, `git` for history and tags, `gh`
-(authenticated) and `jq` for the release script. Check that once, up front. If Bash is unavailable or
-`git`/`gh` is missing or unauthenticated, say in one sentence that this release cannot be cut in this
-session and that the user must run `scripts/release.sh "<version>" "<changelog>"` themselves, then
-stop. Do not hand-edit the version fields, do not offer a changelog or draft release notes as a
+(authenticated) and `jq` for the release script. Check that once, up front. The two halves of the
+check gate different steps, and the order matters: the lint gate needs only Bash and runs locally, so
+**a missing `gh` login does not skip it**. If Bash is unavailable, nothing below can run; say so and
+stop. If Bash is there but `git`/`gh` is missing or unauthenticated, run the gate first and report its
+result, then say in one sentence that the publish step cannot be cut in this session and that the user
+must run `scripts/release.sh "<version>" "<changelog>"` themselves. Handing him that line without
+having run the gate hands him a red gate to tag on top of, which is the one outcome this skill exists
+to prevent. Do not hand-edit the version fields, do not offer a changelog or draft release notes as a
 stand-in for the published Release, and do not run part of the sequence and leave a commit untagged
 or a tag unpushed. One sentence naming what is missing is the entire budget: never attempt a tool,
-fail, attempt another, and narrate each failure. That budget covers every route, not just the obvious one: a subagent dispatched to do it inherits this session's permissions and hits the same wall, so do not send one, and do not report what any attempt returned.
+fail, attempt another, and narrate each failure.
+
+The user asking you to skip the gate is not a reason to skip it. "It was green yesterday and nothing
+changed" is a claim the gate verifies in a second; a deadline is why it has to be right the first
+time. Run it, and if it is red, the release stops there regardless of who asked. That budget covers every route, not just the obvious one: a subagent dispatched to do it inherits this session's permissions and hits the same wall, so do not send one, and do not report what any attempt returned.
 
 ## Steps
 
