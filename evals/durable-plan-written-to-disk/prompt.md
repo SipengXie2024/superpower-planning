@@ -1,6 +1,6 @@
 ---
-description: Write-path regression guard, not a discriminator. With Write granted, checks that durable plan state actually lands on disk carrying the background, the legacy-path constraint and a home for ruled-out approaches. Both arms pass today: a strong baseline also writes state when it can, so the value here is catching a regression in the plugin's own writing, not measuring a delta.
-tags: [planning]
+description: Write-path regression guard, not a discriminator. With Write granted, checks that durable plan state actually lands on disk carrying the background, the legacy-path constraint and a home for ruled-out approaches. Both arms pass today. A strong baseline also writes state when it can, so the value here is catching a regression in the plugin's own writing, not measuring a delta.
+tags: [planning, parity]
 max_turns: 20
 timeout_seconds: 900
 allowed_tools: [Read, Glob, Grep, Skill, Write, Edit]

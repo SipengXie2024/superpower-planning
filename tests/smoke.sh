@@ -105,6 +105,37 @@ for f in sorted((root / "skills").glob("*/SKILL.md")):
     print(f"  PASS: {f.parent.name} frontmatter")
 PY
 
+echo "== eval case frontmatter parses as YAML =="
+# An unquoted ": " inside a description turns the whole block into a nested
+# mapping. The harness tolerates it, so nothing surfaced until a plain YAML
+# reader hit two cases in one day, both written that morning.
+python3 - "$PLUGIN_ROOT" <<'PY2'
+import pathlib, re, sys, yaml
+root = pathlib.Path(sys.argv[1]) / "evals"
+n = 0
+for case in sorted(p for p in root.iterdir() if p.is_dir() and p.name != "results"):
+    text = (case / "prompt.md").read_text(encoding="utf-8")
+    m = re.match(r"^---\n(.*?)\n---\n", text, re.S)
+    if not m:
+        sys.exit(f"  FAIL: evals/{case.name}/prompt.md has no frontmatter")
+    try:
+        fm = yaml.safe_load(m.group(1))
+    except Exception as e:
+        sys.exit(f"  FAIL: evals/{case.name}/prompt.md frontmatter is not valid YAML: {e}")
+    if not fm.get("allowed_tools"):
+        sys.exit(f"  FAIL: evals/{case.name}/prompt.md has no allowed_tools")
+    for g in sorted((case / "graders").glob("*.md")):
+        gm = re.match(r"^---\n(.*?)\n---", g.read_text(encoding="utf-8"), re.S)
+        if not gm:
+            sys.exit(f"  FAIL: evals/{case.name}/graders/{g.name} has no frontmatter")
+        try:
+            yaml.safe_load(gm.group(1))
+        except Exception as e:
+            sys.exit(f"  FAIL: evals/{case.name}/graders/{g.name} frontmatter is not valid YAML: {e}")
+    n += 1
+print(f"  PASS: {n} eval cases, every prompt and grader frontmatter parses")
+PY2
+
 echo "== 9. skill linter (ratchet) =="
 python3 "$PLUGIN_ROOT/scripts/lint_skills.py" && pass "lint_skills.py clean (no new violations)" \
   || fail "lint_skills.py reported new violations"

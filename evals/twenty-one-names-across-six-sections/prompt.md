@@ -1,6 +1,6 @@
 ---
 description: A six-section parallel-execution design doc where twenty-one different names have drifted onto a handful of concepts, and the user wants one final name per concept to search-and-replace the whole doc.
-tags: [planning]
+tags: [planning, parity]
 max_turns: 12
 timeout_seconds: 600
 allowed_tools: [Read, Glob, Grep, Skill]

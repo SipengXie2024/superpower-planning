@@ -1,6 +1,6 @@
 ---
 description: User drops half-finished revmc MCOPY debugging for an urgent production incident and needs the unfinished state preserved for a return several days later.
-tags: [planning]
+tags: [planning, parity]
 max_turns: 12
 # The with-plugin arm timed out here while the no-plugin arm did not, which would
 # confound the A/B comparison; raised so both arms get room to finish.
