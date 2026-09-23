@@ -56,6 +56,8 @@ You MUST complete each phase before proceeding to the next.
    - Git diff, recent commits
    - New dependencies, config changes
    - Environmental differences
+   - Run the same failing test on the baseline (the pre-change commit or main) before classifying it: fails there too = pre-existing, not caused by this change
+   - Suspect the judge before trusting its verdict: when a test, comparator, or harness reports that everything fails, it is usually broken itself (whitespace handling, NaN serialized as null) — check it against a known-good input first
 
 4. **Gather Evidence in Multi-Component Systems**
 

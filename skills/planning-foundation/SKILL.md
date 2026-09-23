@@ -109,6 +109,7 @@ After completing any phase:
 - Mark phase status: `in_progress` -> `complete`
 - Log any errors encountered
 - Note files created/modified
+- Derive any recorded count (tasks done, tests passing, TODOs left) from command output such as `grep -c` or `wc -l`, not from memory; a narrated total drifts from the files
 
 ### 5. Log ALL Errors
 Every error goes in the plan file. This builds knowledge and prevents repetition.
