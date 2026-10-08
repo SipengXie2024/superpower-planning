@@ -1,0 +1,844 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Eval report — superpower-planning v4.2.0</title>
+</head>
+<body>
+<style>
+:root{--plane:#f9f9f7;--surface:#fcfcfb;--ink:#0b0b0b;--ink-2:#52514e;--ink-3:#6b6a64;--hairline:rgba(11,11,11,.10);--grid:#e1e0d9;--inset:rgba(11,11,11,.04);--accent:#2a78d6;--base-fill:#6b6a64;--delta-good:#006300;--good:#067d06;--warning:#8a6100;--critical:#d03b3b;
+  color-scheme:light dark;
+}
+@media (prefers-color-scheme:dark){:root{--plane:#0d0d0d;--surface:#1a1a19;--ink:#ffffff;--ink-2:#c3c2b7;--ink-3:#898781;--hairline:rgba(255,255,255,.10);--grid:#2c2c2a;--inset:rgba(255,255,255,.05);--accent:#3987e5;--base-fill:#898781;--delta-good:#0ca30c;--good:#0ca30c;--warning:#fab219;--critical:#e06c6c;color-scheme:dark}}
+:root[data-theme="dark"]{--plane:#0d0d0d;--surface:#1a1a19;--ink:#ffffff;--ink-2:#c3c2b7;--ink-3:#898781;--hairline:rgba(255,255,255,.10);--grid:#2c2c2a;--inset:rgba(255,255,255,.05);--accent:#3987e5;--base-fill:#898781;--delta-good:#0ca30c;--good:#0ca30c;--warning:#fab219;--critical:#e06c6c;color-scheme:dark}
+:root[data-theme="light"]{--plane:#f9f9f7;--surface:#fcfcfb;--ink:#0b0b0b;--ink-2:#52514e;--ink-3:#6b6a64;--hairline:rgba(11,11,11,.10);--grid:#e1e0d9;--inset:rgba(11,11,11,.04);--accent:#2a78d6;--base-fill:#6b6a64;--delta-good:#006300;--good:#067d06;--warning:#8a6100;--critical:#d03b3b;color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:var(--plane);color:var(--ink);
+  font:14px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif;
+  -webkit-text-size-adjust:100%}
+.wrap{max-width:880px;margin:0 auto;padding:40px 24px 64px;display:flex;flex-direction:column;gap:20px}
+.eyebrow{font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+header h1{margin:2px 0 0;font-size:24px;font-weight:600;line-height:1.25;text-wrap:balance}
+.meta{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;color:var(--ink-2);font-size:13px}
+.meta .num{font-variant-numeric:tabular-nums lining-nums}
+.banner{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:8px;
+  border:1px solid var(--hairline);background:var(--surface);font-size:13px}
+.banner .chip-warn{color:var(--warning);font-weight:600}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.tile{background:var(--surface);border:1px solid var(--hairline);border-radius:10px;padding:14px 16px;
+  display:flex;flex-direction:column;gap:4px}
+.tile .label{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+.tile .value{font-size:26px;font-weight:600;font-variant-numeric:tabular-nums lining-nums;line-height:1.1}
+.tile.hero .value{font-family:Georgia,"Times New Roman",serif;font-weight:400;font-size:48px}
+.tile .sub{font-size:12px;color:var(--ink-2);font-variant-numeric:tabular-nums}
+.tile .value.delta-pos{color:var(--delta-good)}
+.tile .value.delta-neg{color:var(--critical)}
+.toolbar{display:flex;gap:8px;justify-content:flex-end}
+.toolbar button{font:12px system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink-2);
+  background:var(--surface);border:1px solid var(--hairline);border-radius:6px;padding:4px 10px;cursor:pointer}
+.toolbar button:hover{color:var(--ink)}
+.toolbar button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.case{background:var(--surface);border:1px solid var(--hairline);border-radius:10px;padding:18px 20px;
+  display:flex;flex-direction:column;gap:10px}
+.case-regressed{border-left:3px solid var(--critical)}
+.verdict{margin:6px 0 0;font-size:15px}
+.verdict .delta{font-size:15px}
+.flag{font-size:11px;font-weight:600;color:var(--warning);white-space:nowrap}
+.star{color:var(--warning);font-size:.45em;vertical-align:super;line-height:0;cursor:help}
+.legend summary{cursor:pointer;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2)}
+.legend-list{margin:8px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:5px;font-size:13px;color:var(--ink-2)}
+.case-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.case-head h2{margin:0;font-size:16px;font-weight:600}
+.case-head .spacer{flex:1}
+.case-score{font-size:15px;font-weight:600}
+.mono{font:12px "SF Mono",ui-monospace,Menlo,Consolas,monospace}
+.num{font-variant-numeric:tabular-nums lining-nums}
+.muted{color:var(--ink-3);font-size:12px}
+.meter{display:inline-block;position:relative;width:120px;height:6px;border-radius:4px;background:var(--grid);
+  vertical-align:middle}
+.meter>span{display:block;height:100%;border-radius:4px;max-width:100%}
+.meter .tick{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--ink-3);border-radius:1px}
+.m-accent>span{background:var(--accent)}
+.m-base>span{background:var(--base-fill)}
+.delta{font-size:12px;font-weight:600;font-variant-numeric:tabular-nums}
+.delta-pos{color:var(--delta-good)}
+.delta-neg{color:var(--critical)}
+.delta-zero{color:var(--ink-3)}
+details.section{border-top:1px solid var(--grid);padding-top:10px}
+details.section>summary{cursor:pointer;font-size:12px;font-weight:600;letter-spacing:.04em;
+  text-transform:uppercase;color:var(--ink-2);list-style-position:outside;margin-left:2px}
+details.section>summary:hover{color:var(--ink)}
+details.section[open]>summary{margin-bottom:8px}
+.md{display:flex;flex-direction:column;gap:8px;background:var(--inset);border-radius:8px;
+  padding:12px 14px;overflow-wrap:break-word}
+.md>:first-child{margin-top:0}
+.md h1,.md h2,.md h3,.md h4,.md h5,.md h6{margin:4px 0 0;font-size:1em;font-weight:600;line-height:1.3}
+.md p,.md ul,.md ol,.md blockquote,.md table,.md pre,.md hr{margin:0}
+.md ul,.md ol{display:flex;flex-direction:column;gap:4px;padding-left:20px}
+.md blockquote{border-left:2px solid var(--hairline);padding-left:10px;color:var(--ink-2)}
+.md :not(pre)>code{background:var(--inset);padding:1px 4px;border-radius:4px;
+  font:.92em "SF Mono",ui-monospace,Menlo,Consolas,monospace}
+.md pre{background:var(--inset);border:1px solid var(--hairline);padding:10px 12px;border-radius:6px;
+  overflow-x:auto;font:12px/1.5 "SF Mono",ui-monospace,Menlo,Consolas,monospace}
+.md pre code{background:none;padding:0;font:inherit}
+.md table{width:100%;border-collapse:collapse}
+.md th,.md td{padding:5px 8px;text-align:left;vertical-align:top;border-bottom:1px solid var(--grid)}
+.md th{font-weight:600;color:var(--ink-2)}
+.md a{color:var(--accent);text-decoration:none}
+.md a:hover{text-decoration:underline}
+.grader-def{display:flex;flex-direction:column;gap:6px;padding:8px 0}
+.grader-def+.grader-def{border-top:1px solid var(--grid)}
+.grader-def-head{display:flex;align-items:baseline;gap:8px}
+.grader-name{font:13px "SF Mono",ui-monospace,Menlo,Consolas,monospace;font-weight:600}
+.badge{font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2);
+  border:1px solid var(--hairline);border-radius:999px;padding:1px 8px}
+.config{display:flex;flex-direction:column;gap:2px;background:var(--inset);border-radius:8px;padding:10px 14px}
+.config code{font:12px "SF Mono",ui-monospace,Menlo,Consolas,monospace;overflow-wrap:anywhere}
+.arm{display:flex;flex-direction:column;gap:8px;padding:6px 0}
+.arm+.arm{border-top:1px dashed var(--grid);margin-top:4px;padding-top:12px}
+.arm-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.arm-label{font-size:13px;font-weight:600}
+.run{border:1px solid var(--grid);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.run-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.run-title{font-size:12px;font-weight:600;color:var(--ink-2)}
+.run-error .explanation{color:var(--ink-2)}
+.note{font-size:12px;color:var(--ink-2)}
+.graders{display:flex;flex-direction:column;gap:4px}
+details.grader{border-radius:6px}
+details.grader>summary{cursor:pointer;display:flex;align-items:baseline;gap:8px;padding:3px 4px;
+  border-radius:6px;list-style:none}
+details.grader>summary::-webkit-details-marker{display:none}
+details.grader>summary::before{content:'▸';font-size:10px;color:var(--ink-3);flex:none;
+  transition:transform .12s ease}
+details.grader[open]>summary::before{transform:rotate(90deg)}
+details.grader>summary:hover{background:var(--inset)}
+details.grader>summary:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.grader-body{padding:6px 8px 8px 24px;display:flex;flex-direction:column;gap:6px}
+.chip{font-size:11px;font-weight:600;border-radius:999px;padding:1px 8px;white-space:nowrap}
+.chip-pass{color:var(--good);border:1px solid currentColor}
+.chip-fail{color:var(--critical);border:1px solid currentColor}
+.chip.chip-warn{color:var(--warning);border:1px solid currentColor}
+.explanation{margin:0;font-size:13px;color:var(--ink-2);white-space:pre-wrap;overflow-wrap:break-word}
+.kv{display:flex;gap:8px;font-size:12px;color:var(--ink-3)}
+.votes{font-variant-numeric:tabular-nums;letter-spacing:.1em}
+pre.evidence{margin:0;background:var(--inset);border:1px solid var(--hairline);border-radius:6px;
+  padding:8px 10px;overflow-x:auto;max-height:320px;
+  font:12px/1.5 "SF Mono",ui-monospace,Menlo,Consolas,monospace;white-space:pre-wrap;overflow-wrap:break-word}
+footer{color:var(--ink-3);font-size:12px;text-align:center;padding-top:8px}
+@media (prefers-reduced-motion:no-preference){
+  details.grader>summary,.toolbar button{transition:background .12s ease,color .12s ease}
+}
+@media (prefers-reduced-motion:reduce){
+  details.grader>summary::before{transition:none}
+}
+@media print{
+  :root,:root[data-theme="dark"],:root[data-theme="light"]{--plane:#f9f9f7;--surface:#fcfcfb;--ink:#0b0b0b;--ink-2:#52514e;--ink-3:#6b6a64;--hairline:rgba(11,11,11,.10);--grid:#e1e0d9;--inset:rgba(11,11,11,.04);--accent:#2a78d6;--base-fill:#6b6a64;--delta-good:#006300;--good:#067d06;--warning:#8a6100;--critical:#d03b3b;color-scheme:light}
+  body{background:#fff}
+  .toolbar{display:none}
+  .case,.run,.grader-def{break-inside:avoid}
+  pre.evidence{max-height:none}
+}
+</style>
+<div class="wrap">
+<header>
+<div class="eyebrow">Plugin eval report</div>
+<h1>superpower-planning v4.2.0</h1>
+<p class="verdict">Plugin effect: <span class="delta delta-pos">↑ +66.7 pts</span> vs baseline — improved 1 · flat 0 · regressed 0 of 1 case.</p>
+<div class="meta">
+<span class="mono">.</span>
+<span>Claude Code v2.1.294</span>
+<span class="num">2026-10-08 16:20 UTC</span>
+<span class="num">2m 15s</span>
+<span class="num">$1.42</span>
+<span class="num">6 runs</span>
+<span class="num">4 in flight</span>
+
+<span>model opus</span>
+<span>judge sonnet</span>
+<span class="num">threshold 100%</span>
+<span>filtered: --case design-exploration-before-code</span>
+</div>
+</header>
+
+<section class="tiles">
+<div class="tile hero"><span class="label">Suite score · with plugin</span><span class="value">66.7%</span><span class="sub">mean of per-case scores</span></div>
+<div class="tile"><span class="label">Ablation Δ</span><span class="value num delta-pos">↑ +66.7</span><span class="sub">score points vs baseline, 1 of 1 case</span></div>
+<div class="tile"><span class="label">Baseline score</span><span class="value num">0%</span><span class="sub">without the plugin</span></div>
+<div class="tile"><span class="label">Cases</span><span class="value num">1</span><span class="sub">0 of 1 ≥ 100% threshold</span></div>
+<div class="tile"><span class="label">Perfect runs</span><span class="value num">66.7%</span><span class="sub">runs where every grader passed</span></div>
+</section>
+<details class="section legend">
+<summary>How to read this report</summary>
+<ul class="legend-list">
+<li>A run's score is the weighted fraction of its graders that passed; a "perfect" run passed every grader.</li>
+<li>A case's score is the mean of its runs; a case passes when its score is at or above the 100% threshold (the tick on each case bar).</li>
+<li>The suite score is the mean of the per-case scores.</li>
+<li>Judge votes are independent samples of the LLM judge; the majority decides pass or fail.</li>
+<li>"With plugin" and "Baseline" runs are identical except for the plugin being loaded; Δ is the with-plugin score minus the baseline score.</li>
+
+</ul>
+</details>
+<div class="toolbar"><button type="button" data-act="expand">Expand all</button><button type="button" data-act="collapse">Collapse all</button></div>
+<article class="case" id="case-1">
+<div class="case-head">
+<h2>design-exploration-before-code</h2>
+<span class="muted mono">evals/design-exploration-before-code</span>
+<span class="spacer"></span>
+
+<span class="delta delta-pos">↑ +66.7 pts</span>
+<span class="muted">with plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:66.7%"></span><i class="tick" style="left:100.0%"></i></span>
+<span class="num case-score">66.7%</span>
+</div>
+
+<details class="section" open>
+<summary>Results</summary>
+<section class="arm">
+<div class="arm-head">
+<span class="arm-label">With plugin</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:66.7%"></span></span>
+<span class="num">66.7%</span>
+<span class="muted num">66.7% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">5 turns · $0.25 · 16:20:07 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">result</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">我先翻了下当前工作目录。仓库是空的,没找到 MHOT 或 revm 相关的代码,所以下面的设计是按你给的草稿和 revm/revmc 的一般用法推出来的,还没对照你的实际代码。
+
+## 先说结论
+
+- **reorg 基本不用管。** 缓存的键是 code hash,也就是按字节码内容寻址,同一段字节码编译出来的东西不会因为 reorg 变错,计数器偏一点也没关系。真正要管的是下面第 1 个坑。
+- **编译不要卡住当前交易。** 解释器和 native 的执行结果一样,区别只在快慢,所以当前这笔继续走解释器,编译完了下一笔再走 native 就行。
+- **阈值别按调用次数算,要按累计消耗的 gas 算。** 一个合约被调 50 次、每次只跑几百 gas,编它不划算。可以用&quot;累计解释执行的 gas &gt; k × 字节码长度&quot;来触发,因为收益大致跟跑过的 gas 成正比,编译成本大致跟代码长度成正比。k 的取值要靠测量定 [NEEDS-EVIDENCE]。
+- **两个 HashMap 在多线程下确实会成瓶颈,但解法简单**,见第 6 条。
+
+## 你没提到的坑(按严重程度排)
+
+1. **缓存的键只用 code hash 不够。** 同一段字节码在不同硬分叉(`SpecId`)下语义不同,比如 gas 表和新增的 opcode。revmc 生成代码时会把 spec 固化进去,所以键至少要是 `(code_hash, spec_id)`。如果编译选项不止一种(比如 gas 计量开关),也要放进键里。一旦漏了,跨硬分叉之后会算出错误的状态根,这是共识问题,不只是性能问题。
+2. **草稿里会重复提交编译。** count 一过 50,在编译完成前每次调用都会再提交一次。需要给每个合约一个状态:`Cold → Queued → Compiling → Ready | Failed`,用 CAS 保证同一个合约只进队一次。编译失败的进黑名单,不再重试。
+3. **会被 DoS。** 攻击者可以部署大量各不相同的合约,把 count 表撑到无限大;也可以专门构造让 LLVM 编译特别慢的字节码。所以需要:计数表有上限(LRU 或 count-min sketch)、编译队列有上限、单次编译有超时、native 代码总量有上限并能淘汰。
+4. **按&quot;执行的代码&quot;查缓存,不要按地址。** 每个调用帧都要查一次,而不是每笔交易查一次。DELEGATECALL 跑的是目标合约的代码;EIP-7702 委托的 EOA 要先解析出它指向的代码;CREATE 的 initcode 只跑一次,永远不要编译。
+5. **挂了 Inspector 就必须走解释器。** debug_trace 这类需要逐条 opcode 回调,native 代码给不了,所以只要有 inspector,就强制走解释器。
+6. **共享缓存和每个线程的执行器要拆开。** 草稿里把 `interp` 和全局缓存放在同一个结构体里,但解释器是每次执行各自的状态,不能跨线程共享。建议拆成:
+   - 一个共享的 `Arc&lt;CodeCache&gt;`,里面的 hot 表读多写少,用 `ArcSwap&lt;HashMap&gt;` 做快照,或者用 `papaya`/`DashMap`;
+   - 计数器做成每个线程本地累加,在区块边界合并后再决定送谁去编译。计数不需要精确,这样调用路径上就完全没有锁。
+7. **落盘复用 = 加载本地的可执行代码。** 缓存文件一旦被篡改,就是任意代码执行;revmc 或 LLVM 版本、CPU 特性变了,旧产物也不能用。建议第一期只落盘**热点 code hash 列表**,启动后在后台重新编译。等真需要冷启动性能时,再做带版本和校验的 `.so` 缓存。
+8. **正确性靠差分测试。** revmc 自己有 bug 就是共识故障。需要拿 ethereum/tests 和历史区块重放,对比解释器和 native 的状态差异、gas、日志和返回数据;上线前先跑影子模式(两边都执行、只用解释器的结果);再留一个运行时开关,随时能整体切回解释器。
+9. **先测一下值不值得做 [NEEDS-EVIDENCE]。** 区块执行时间里经常是状态读取(DB/trie I/O)占大头,JIT 只能加速纯计算的部分。动手前建议先 profile:解释器指令执行到底占多少时间?如果只占 20%,天花板就很低。
+
+## 三种做法
+
+- **A. 只做 AOT 白名单。** 离线把头部合约(WETH、USDC、Uniswap 路由等)编好,运行时只查表,不做计数和后台编译。最简单,主网头部合约很集中,可能就能拿到大部分收益。
+- **B. 按你草稿做完整的运行时 JIT 分层**,加上上面的状态机、按 gas 加权的阈值和线程本地计数。覆盖面最广,复杂度和 DoS 风险也最高。
+- **C. 分阶段(推荐)。** 先做 profile 和 A,同时把差分测试框架搭起来;数据证明长尾合约的收益够大,再加 B 的运行时提升。A 用到的缓存结构、键设计和回退开关,B 都能直接复用。
+
+## 想先确认一件事
+
+**MHOT 主要用在哪个场景?**
+- (a) 同步和验证区块:看重吞吐,能接受预热时间
+- (b) 出块或搜索时做模拟:看重单次延迟,对冷启动和抖动敏感
+- (c) 对外的 RPC 或追踪服务:inspector 用得多,JIT 的收益会打折扣
+
+这个决定了阈值往哪个方向调、要不要做落盘。另外,如果方便的话,告诉我 MHOT 的代码在哪,我去看实际的执行入口和用的 revm 版本。新老版本的 revm 挂自定义执行逻辑的方式差别很大。你确认方向之后,我再把设计写进 `.planning/design.md`,并拆出实施计划。</pre>
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">skill-fired</span>  <span class="badge">plugin-fired indicator</span></summary>
+<div class="grader-body">
+<p class="explanation">Skill called 1x (expected 1..∞)</p>
+
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 2</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">5 turns · $0.30 · 16:20:07 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">result</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">先说一下：当前目录（`/tmp/claude-eval-taQ0gb/home/cwd`）是空的，没有任何 MHOT、revm 或 revmc 代码，所以下面只是针对你的草稿和 revm/revmc 本身的设计梳理，没有对照你的现有代码。你把仓库路径给我之后，我再去对一遍集成点。
+
+## 先改一个前提：缓存的 key 光用 CodeHash 不够
+
+revmc 编出来的代码跟 **SpecId（硬分叉）** 有关，因为 gas 表和可用 opcode 都是编译时固定进去的。所以 key 至少得是 `(CodeHash, SpecId)`。如果以后要落盘，还得加上 revmc/LLVM 版本、编译选项和目标 CPU 特性。跨分叉边界时如果只按 code hash 查，会直接跑出共识错误。
+
+## 你列的五个问题
+
+**1. 阈值拍多少**
+建议不要按调用次数算，改成按累计解释执行的 gas（或者耗时）算。一个合约被调 50 次、每次只走 200 gas 的分支，编译根本不划算。LLVM 编一个大合约要几十到几百毫秒 `[NEEDS-EVIDENCE]`，收益大约是&quot;解释器和 native 的单次耗时差 × 以后还会执行的次数&quot;。
+做法上：
+- 阈值设成 gas 量级，比如累计 1e7 gas，具体值等压测再定 `[NEEDS-EVIDENCE]`；
+- 像 WETH、USDT、Uniswap Router 这种公认热的合约，启动时直接预热编译，不用等计数。
+
+**2. 编译要不要卡住当前交易**
+不要卡。区块验证和出块都有时间预算，同步编译会让延迟出现几百毫秒的尖刺。
+- 每个 key 做一个状态机：`Counting → Queued → Compiling → Ready | Failed`，入队前去重，防止同一个合约被重复提交编译；
+- 编译队列要有上限，按热度排优先级；
+- 新编译好的产物只在**下一个 call frame** 开始时生效。正在跑的那一帧不要中途切换；
+- `Failed` 状态要记下来，之后不再重试。
+
+**3. 编译产物要不要落盘**
+第一期建议不落直接可执行的产物，只把&quot;热点列表&quot;持久化，也就是 key 加热度。进程启动后后台按热度重新编译。这样能拿到大部分收益，又不用处理 dlopen 的问题。
+如果直接落 `.so`：
+- 缓存 key 要包含工具链版本、编译选项和 CPU 特性；
+- 加载磁盘上的 native code 意味着磁盘被篡改就等于任意代码执行，必须做完整性校验；
+- 版本升级后缓存会大面积失效。
+
+等确认冷启动预热确实是瓶颈了，再考虑第二期做落盘。
+
+**4. reorg 之后缓存怎么办**
+基本不用管。code hash 是按内容寻址的：同样的字节码编出来的 native code 永远是对的，reorg 改的是状态，字节码没变。受影响的只有计数，计数本来就是近似值，偏一点没关系。真正要考虑的是**淘汰**：被 reorg 掉的合约、自毁的合约，编译产物会一直占内存（见下面第 3 个坑）。
+
+**5. 多线程下两个 HashMap 会不会成瓶颈**
+如果直接套 `Mutex&lt;HashMap&gt;`，每个 call 都要加锁，肯定会成瓶颈。两张表的读写模式不一样，应该拆开处理：
+- **`hot` 表**：读极多、写极少。用 RCU 风格，`ArcSwap&lt;Arc&lt;HashMap&gt;&gt;` 由编译线程整体替换；或者用 `papaya`/`dashmap`。执行线程每个块开始时取一次快照，查表时完全不加锁。
+- **`count` 表**：写很多，但不需要精确。每个执行线程自己维护 thread-local 计数，每个块或每 N 笔交易汇总一次到中心表，由中心表决定哪些合约入队编译。热路径上不碰任何共享写。
+
+## 你可能还没想到的坑
+
+1. **Inspector 和 tracing 必须强制走解释器。** native code 没有逐 opcode 的 step 回调，`debug_traceTransaction`、gas profiler 这类功能会失效或者结果不对。分层逻辑要能识别&quot;当前挂了 inspector&quot;，这时一律走解释器。
+2. **两条路径的结果必须逐位一致，否则就是共识事故。** gas 消耗、OOG 发生的位置、revert data、日志、各种边界错误都要和解释器完全相同。revmc 的 bug 就会变成你的 bug。建议：
+   - 先上线一个 **shadow 模式**：两条路径都跑，比对结果，只采用解释器的结果；
+   - 再加一个全局开关，可以一键退回纯解释器；
+   - 平时持续做差分 fuzz。
+3. **JIT 内存很难单独释放。** LLVM JIT 里的模块基本只增不减，必须给已编译合约的数量或总内存设上限。如果需要真正的淘汰，要么按周期重建整个 JIT 上下文，要么改走 AOT 编成 `.so` 再 dlopen/dlclose。
+4. **对抗性输入**（这条对公链节点很现实）：
+   - 计数表会被撑爆：攻击者部署大量不同字节码的合约，所以计数表也要有容量上限，比如 LRU 或 count-min sketch；
+   - 编译炸弹：构造一个 24KB、控制流很病态的合约并把它刷热，让 LLVM 编很久。编译线程要设超时和字节码大小上限，超时的直接标成 `Failed`；
+   - 攻击者能主动决定什么东西被编译，所以编译资源必须有预算。
+5. **不要每次 call 都重新算 code hash。** 对 24KB 的字节码做 keccak 很贵，一定要直接用账户状态里现成的 `code_hash`。
+6. **initcode（CREATE/CREATE2）不参与分层。** 它没有对应的状态 code hash，而且通常只跑一次。
+7. **EIP-7702 委托账户**：账户里存的 code 只是一个委托指针，要先解析到目标合约的 code hash 再查表。
+8. **集成点的位置。** 草稿里把 `revm::Interpreter` 当成长期持有的字段，但在 revm 里 Interpreter 是每个 frame 一个的。分层判断应该放在 frame 执行入口，也就是 handler / frame 层。具体怎么挂和 revm 的版本强相关，新旧版本的 handler API 差别很大。
+
+## 建议的推进顺序
+
+1. 只做 shadow 模式，加上差分比对和监控，不切换任何结果；
+2. 用 RCU 快照的 `hot` 表、thread-local 计数、gas 阈值、异步编译做出最小版本，先在验证或同步节点上开启；
+3. 持久化热点列表，启动时后台预热；
+4. 根据实际数据再决定要不要落盘 `.so`、要不要做淘汰。
+
+## 需要你确认的几件事
+
+1. MHOT 的主要场景是什么：区块同步和验证、出块，还是模拟（MEV / eth_call）？这决定了延迟和吞吐哪个更重要，也决定 inspector 路径有多常见。
+2. 用的是哪个版本的 revm 和 revmc？
+3. 多线程执行是哪种模型：块内并行（类似 Block-STM），还是多个块或多个请求并行？
+4. 能不能接受第一期不落盘、只持久化热点列表？
+
+你回答之后，我把定下来的设计写到 `.planning/design.md`，再拆成可以实施的计划。</pre>
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">skill-fired</span>  <span class="badge">plugin-fired indicator</span></summary>
+<div class="grader-body">
+<p class="explanation">Skill called 1x (expected 1..∞)</p>
+
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 3</span>
+<span class="meter m-accent" aria-hidden="true"><span style="width:100.0%"></span></span>
+<span class="num">100%</span>
+<span class="muted num">5 turns · $0.27 · 16:20:07 UTC</span>
+</div>
+
+<div class="graders"><details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">result</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: PASS PASS PASS</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✓ ✓ ✓</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">我先说明一下:当前工作目录是空的,仓库里也搜不到 MHOT、revm 或 revmc 相关的代码。下面的分析只基于你给的草稿和我对 revm/revmc 的了解。涉及 revmc 具体 API、需要核实的地方我标了 **[待验证]**。
+
+## 先说最大的坑:草稿里没提到的几件事
+
+**1. 两条路径的结果必须逐位一致,这是第一优先级**
+只要 native 和解释器在 gas 计算、OOG 时机、revert 数据、边界 opcode 行为上有一点不同,结果就是错的。如果 MHOT 参与共识,还会分叉。所以差分测试必须做:同一笔交易两条路径都跑一遍,比较 gas、状态 diff、logs 和返回值。可以拿历史区块做全量回放,上线后也留一个采样对比的开关。
+
+**2. 缓存 key 只用 `CodeHash` 不够,至少要用 `(CodeHash, SpecId)`**
+revmc 编译时会把硬分叉规则固定进产物,比如 PUSH0、TSTORE、MCOPY 是否可用,以及 gas 表。同一份 bytecode 跨硬分叉会得到不同的产物。
+
+**3. 先 profile,再决定值不值得做 [待验证]**
+在主网的典型区块里,执行时间大头往往是状态读取(DB/trie),不是 opcode 分发。JIT 只能加速后者。对 SLOAD 或 CALL 密集的合约,比如大部分 ERC20 transfer,收益可能很小;计算密集的合约(数学库、哈希循环、各种 AMM 曲线计算)收益才明显。建议先量一下解释器 opcode 分发在总执行时间里占多少。如果只有 10%,整套方案的上限就是 10%。
+
+**4. 有 Inspector/tracing 时必须强制走解释器**
+`debug_traceTransaction` 这类功能需要逐步回调,native 代码不提供这个。
+
+## 你列的五个问题
+
+**阈值拍多少?** 不要按调用次数算,按累计 gas(或累计执行的指令数)算。一个只做 `balanceOf` 的合约被调 50 次,不值得花几十毫秒去 LLVM 编译。盈亏平衡点大约是:
+
+```
+累计gas阈值 ≈ 编译耗时 / (解释器每gas耗时 − native每gas耗时)
+```
+
+这三个数都需要实测 [待验证]。另外,主网最热的合约基本是固定的那几百个(WETH、USDT、Uniswap router/pool 等)。可以先离线 AOT 预编译 top-N,运行时 JIT 只负责长尾。如果 profile 显示 top-N 已经覆盖了大部分收益,运行时 JIT 这层可以先不做。
+
+**编译要不要卡住当前交易?** 不要。后台编译,下一次进入 call 时再切到 native。一个已经在解释器里开始的 frame 跑到结束,中途不切换。另外几点:
+- 每个 key 维护一个状态机:`Cold → Queued → Compiling → Ready | Failed`,用来去重,避免同一合约被重复入队。
+- 编译队列要有上限,满了就丢弃,下次再说。
+- 失败和超时要记成 `Failed`,不再重试。大合约编译可能很慢,如果 EIP-7907 放宽了 code size 限制会更明显,需要设编译时间预算。
+
+**编译产物要不要落盘?** 值得做。产物只由内容决定,天然可以跨进程复用。但落盘的 key 要比内存里的完整:`code_hash + spec_id + revmc 版本 + LLVM 版本 + 目标 CPU 特性`,少一项就可能加载到不兼容的代码。还有一个安全问题:加载磁盘上的 .so 本质上是执行任意代码,缓存目录被篡改就等于 RCE。所以目录权限要收紧,最好再加完整性校验。
+
+**reorg 之后缓存怎么处理?** 基本不用处理,这是 key 用内容哈希的好处。编译产物只由 bytecode 和 spec 决定,跟链在哪个分支无关。计数器在 reorg 后会有偏差,但它本来就只是启发式指标,不影响正确性。需要注意的是 reorg 跨硬分叉边界的情况,key 里带上 `SpecId` 就覆盖了。
+
+**多线程下两个 HashMap 会不会成为瓶颈?** 加锁的话会。每个 call 都要去写 `count`,并行执行时这把锁会很热。建议:
+- **`count`**:每个线程本地计数,定期或每个区块结束时汇总到全局。计数允许不精确,这样做没问题。
+- **`hot`**:典型的读多写少,不建议单独建一张 map。更好的做法是在现有的 bytecode 缓存条目上挂一个 `OnceLock&lt;Arc&lt;CompiledFn&gt;&gt;` 槽位。取代码时顺便就拿到了编译产物,省掉一次哈希查找。如果一定要独立 map,可以用 `ArcSwap` 持有不可变快照,或者用 `papaya`/`DashMap`。hasher 不需要 SipHash,code hash 本身已经是均匀分布的 keccak,用 identity 或 fx hasher 就够了。
+
+## 其他要注意的点
+- **内存回收**:dlopen 加载的代码,只要还有 frame 在执行就不能卸载。需要 `Arc` 引用计数配合 LRU 淘汰。JIT 模式下 LLVM 能否释放编译产物的内存 **[待验证]**。
+- **调用嵌套**:要确认 revmc 遇到 CALL 时是返回 action 交给外层循环处理(和 revm 解释器一样),而不是在 native 栈上递归。如果是递归,1024 层调用深度可能把线程栈打爆 **[待验证]**。
+- **EIP-7702**:被委托 EOA 的 code 只是一个 designator。计数和缓存要以实际执行的那份 bytecode 的 hash 为准。
+- **initcode**(CREATE/CREATE2 时执行的构造代码)只跑一次,不要计数,也不要编译。
+- **接入点**:revm 各版本的 Handler/frame 执行接口变化很大。具体从哪里切入要看 MHOT 用的 revm 版本,revmc 仓库里有接入示例可以参考 **[待验证]**。
+
+## 我目前倾向的方案(待你确认)
+1. **只做离线 AOT + 落盘缓存**:最简单,没有运行时编译线程,确定性也最好验证。
+2. **AOT 打底 + 运行时 JIT 补长尾**:就是你草稿的思路,加上上面这些修正。
+3. **纯运行时 JIT**:跟你的草稿一致,但复杂度最高,前期收益也不一定最大。
+
+推荐先做 1 加上差分测试,拿到实测数据后再决定要不要加 2。
+
+---
+
+在继续细化之前,有一个问题最影响后面的取舍:**MHOT 是什么场景?**
+- A. 跟链出块的执行客户端或节点(共识敏感,大量顺序执行不同合约)
+- B. MEV、模拟、回测类(同一批合约被反复执行成千上万次,通常不参与共识)
+- C. 其他
+
+如果是 B,运行时 JIT 的价值会高很多,阈值也可以压得很低。如果是 A,确定性和 profile 数据是首要的。另外,如果你手上有 profile 数据,或者已经知道 MHOT 的并行执行模型(比如 Block-STM),也一起发给我。
+
+你确认方向后,我会把设计写进 `.planning/design.md`,再拆成具体的实现计划。</pre>
+</div>
+</details>
+<details class="grader">
+<summary><span class="chip chip-pass">✓ pass</span> <span class="grader-name">skill-fired</span>  <span class="badge">plugin-fired indicator</span></summary>
+<div class="grader-body">
+<p class="explanation">Skill called 1x (expected 1..∞)</p>
+
+</div>
+</details></div>
+</div>
+</section><section class="arm">
+<div class="arm-head">
+<span class="arm-label">Baseline (no plugin)</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">0% of runs perfect</span>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 1</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">2 turns · $0.23 · 16:20:07 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">result</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">我在当前目录没找到代码，也不了解 MHOT 内部是怎么组织的。下面按通用的 revm + revmc 集成来讲，涉及 MHOT 具体结构的地方你自己对一下。
+
+## 先说结论：动手前先测一下值不值得做
+
+最大的风险是**做完发现整体提速很小**。revmc 只加速&quot;指令分发 + 算术&quot;这部分。主网的普通区块里，大部分时间通常花在状态读取上(SLOAD、账户加载、trie/DB)，编译成 native 也不会变快。建议先在 MHOT 上 profile 一批真实区块，看 interpreter 的 `step`/指令执行占多少比例：
+- 占比低(比如 &lt; 20%)：分层执行最多带来个位数百分比的提升，复杂度不值得。
+- 占比高(计算密集的合约多，比如 DEX 数学、zk verifier、自定义 L2 负载)：值得做。
+
+## 逐个回答你的问题
+
+### 1. 阈值：不要按&quot;次数&quot;计，按&quot;累计 gas&quot;计
+
+按次数有两个问题：
+- 一个被调 50 次、每次 200 gas 的合约，编译代价远大于收益。
+- 一个只调 3 次、每次 500 万 gas 的合约反而最该编译。
+
+建议用 `累计执行 gas ≥ G` 作为触发条件。G 的取值从收支平衡来算：`编译耗时 ≈ 省下的时间/gas × G`。LLVM 编一个大合约大约要几十到几百 ms，具体在你的机器上测。另外加两条：
+- **预热(AOT)比 JIT 更重要。** 主网热点合约非常稳定(WETH、USDC、Uniswap 系列、各种 router)，启动时直接把历史 top-N 编好，基本能覆盖大部分收益。JIT 只用来补长尾。
+- 编译失败或超时的 hash 要拉黑，否则会反复入队。
+
+### 2. 编译不要卡住当前交易
+
+一律异步，编译期间继续走解释器。只在 **frame 入口** 查一次缓存，不要在 frame 中途切换。这样语义最简单，正确性也只需要在 frame 粒度上保证。
+
+### 3. 落盘：值得做，但 key 和安全要认真处理
+
+- cache key 至少包含：`code_hash + SpecId + revmc 版本 + LLVM 版本 + target triple/CPU features + 编译选项`。漏掉任何一个，跨版本或跨机器加载都可能出现静默错误。
+- **SpecId 是你草稿里漏掉的关键维度。** revmc 编译时会固定 spec(gas 表、可用 opcode)，同一份 bytecode 在不同硬分叉下的产物不同。内存里的 key 也必须是 `(CodeHash, SpecId)`。
+- 加载 `.so` 本质上是执行任意代码。缓存目录的写权限等于节点的代码执行权限，需要严格的权限控制，加载前再校验一下哈希。
+- 已加载的库不要 `dlclose`，下面会讲原因。
+
+### 4. Reorg：基本不用处理
+
+code hash 是内容寻址的，同一个 hash 对应的 bytecode 永远相同，所以编译产物和 reorg 无关。计数在 reorg 后有点偏差也没关系，它只是个启发式。前提是**任何地方都不要按 address 缓存**。address 上的代码会因为 reorg、CREATE2 重部署、EIP-7702 委托而变化。只要 key 全用 code hash，这个问题就不存在。
+
+### 5. 多线程：两个 `HashMap` 确实会成为瓶颈，而且现在根本没法共享
+
+两张表的访问模式不同，要分开处理：
+
+| | 访问模式 | 方案 |
+|---|---|---|
+| `hot` | 每个 frame 读一次，极少写 | `ArcSwap&lt;HashMap&gt;`(写时复制，读无锁)或 `papaya`/`DashMap`，再加一层线程本地的小缓存 |
+| `count` | 每个 frame 都写，可以不精确 | **线程本地累加，按批(比如每个区块或每 N 次)刷到全局**，不要每次都去碰共享结构 |
+
+另外还需要一个状态机来给编译队列去重，避免多个线程同时把同一个 hash 入队：
+`Interpreting → Queued → Compiling → Ready | Failed`
+
+编译队列用有界 channel，满了就直接丢弃。编译线程限制在 1–2 个并降低优先级，否则 LLVM 会和执行线程抢 CPU，反而拖慢出块和验块。LLVM context 不是线程安全的，每个编译线程要有自己的 compiler 和 context。
+
+## 你可能没想到的坑
+
+1. **Inspector/tracing 会失效。** native 代码没有逐指令的 `step` 回调。`debug_traceTransaction`、`eth_call` 带 tracer、任何挂了 inspector 的执行路径，都必须强制走解释器。
+2. **一致性是共识问题。** native 和解释器在 gas、返回值、错误类型(OOG、stack overflow、invalid jump)上必须完全一致，差一个 gas 就会分叉。建议先上一个 **shadow mode**：两条路径都跑，比较结果，跑几百万个历史区块无差异后再切换。再加上差分 fuzz。
+3. **生命周期和 use-after-free。** `CompiledFn` 本质是指向 JIT 内存的函数指针。如果做了驱逐，而另一个线程正在执行这段代码，进程会直接崩。要么让产物由 `Arc&lt;Module&gt;` 持有、执行期间 clone 一份引用，要么干脆不驱逐，给缓存设一个总量上限、满了就不再编译。LLVM JIT 的内存本来也不太好回收。
+4. **计数粒度要在 frame 级。** 要统计每一个 call frame，包括 DELEGATECALL。不然 EIP-1167 minimal proxy 这类代码会被算成热点，而真正干活的 implementation 合约反而计数不足。initcode(CREATE)基本只跑一次，直接排除。
+5. **集成位置。** 草稿里把 `revm::Interpreter` 放进结构体不太对。在 revm 里 Interpreter 是每个 frame 一个，分层逻辑应该挂在 frame 执行的 handler 上。revm 的 handler API 这几个大版本改动很大，revmc 又绑定特定的 revm 版本，所以**锁死两者的版本**，升级时把这部分当成单独的工作量。
+
+## 调整后的骨架
+
+```rust
+type Key = (B256 /* code_hash */, SpecId);
+
+/// 全局共享，Arc 传给所有执行线程
+struct CodeCache {
+    ready: ArcSwap&lt;HashMap&lt;Key, Arc&lt;CompiledModule&gt;&gt;&gt;, // 读无锁
+    state: DashMap&lt;Key, CompileState&gt;,                 // 去重 / 拉黑
+    queue: crossbeam::channel::Sender&lt;CompileJob&gt;,     // 有界,满了 try_send 失败就丢
+    gas_threshold: u64,
+}
+
+enum CompileState { Queued, Compiling, Failed }
+
+/// 每个执行线程一份
+struct LocalTier {
+    cache: Arc&lt;CodeCache&gt;,
+    gas_acc: HashMap&lt;Key, u64&gt;, // 本地累加,批量 flush
+}
+
+// frame 入口:
+// if inspector_active || is_initcode { interpret }
+// else if let Some(m) = cache.ready.load().get(&amp;key) { run_native(m.clone()) }
+// else { interpret; local.gas_acc[key] += gas_used; }
+// 区块结束 / 每 N 个 frame: flush gas_acc → 超阈值且 state 中不存在 → 入队
+```
+
+建议的推进顺序：**profile 确认收益 → 只做 AOT top-N + shadow mode 验证一致性 → 落盘 → 最后再加 JIT 长尾**。很可能做到 AOT 就能拿到绝大部分收益，后面的 JIT 部分可以不做。
+
+如果你说一下 MHOT 是全节点、sequencer 还是 builder，主要跑哪类负载，我可以帮你把阈值估算和线程模型定得更具体。</pre>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 2</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">2 turns · $0.17 · 16:21:11 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">result</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">当前目录里没有 MHOT 的代码，所以下面只讨论设计，没对照你们的实现。涉及 revmc / revm 具体 API 的地方，请按你们锁定的版本再核对一遍。
+
+## 先说结论
+
+1. **最大的风险是共识，不是性能。** 分层以后，同一笔交易在不同节点上可能一个走解释器、一个走 native，具体走哪条取决于这个节点的运行历史。只要 revmc 在 gas、错误类型、边界行为上和解释器有一点不一致，就会出现**只在部分节点、而且无法稳定复现**的分叉。整个设计要围绕这一点来做。
+2. **reorg 基本不用管。** 编译产物只取决于&quot;字节码 + 规则&quot;，和链状态无关，reorg 不会让它失效。
+3. **编译绝对不能阻塞交易。**
+4. **两个 HashMap 在多线程下确实会成为瓶颈**，但原因跟你想的不太一样，下面细说。
+
+---
+
+## 逐个回答你的问题
+
+### 1. 缓存 key 不能只用 `CodeHash`
+
+```rust
+struct CompileKey {
+    code_hash: B256,
+    spec_id: SpecId,        // revmc 按硬分叉规则特化编译，不同 spec 的产物不能混用
+    // 落盘时还要加：revmc 版本、LLVM 版本、target CPU features
+}
+```
+
+- 跨硬分叉时，同一份字节码要按两套规则编译。key 里带上 `spec_id` 以后，&quot;reorg 跨过分叉高度&quot;这种情况也自然解决了。
+- 你按 code hash 而不是地址做 key 是对的。这样代理合约的 DELEGATECALL 会算到 implementation 的头上，正好就是你想要的效果。
+- **initcode 不要计数也不要编译**，它只会执行一次。
+- EIP-7702 账户的 code 只是一个 delegation designator，要先解析出真正执行的那份代码，再拿它的 hash。
+
+### 2. 阈值别按&quot;次数&quot;，按&quot;累计 gas&quot;
+
+`count += 1` 的问题是：一个只有 3 条 opcode 的合约调用 50 次就被编译，完全不划算；反过来，一个很重的合约跑 10 次可能早就值得编译了。建议改成：
+
+```rust
+hotness[key] += gas_used_in_this_frame;   // 或者解释器执行的指令数
+if hotness[key] &gt; THRESHOLD { enqueue(key) }
+```
+
+阈值不要拍脑袋，可以这样估算：
+
+&gt; 盈亏平衡点 ≈ 编译耗时 / 单位 gas 节省的时间
+
+编译耗时（按字节码大小、优化级别分档）和每百万 gas 在两条路径上的耗时，都在 MHOT 上实测，然后反推出阈值。
+
+还有一个经验判断：主网的热点合约非常集中，也很稳定（WETH、USDC、各种 router 之类）。**按 gas 排名前几百的合约，可能就已经拿到了大部分收益。** 所以动手做动态 tiering 之前，最好先回放一段区块，把每个 code hash 的 gas 占比统计出来，画一条累积分布。如果头部集中度很高，第一期直接做&quot;启动时预编译一个 top-N 列表&quot;就够了，动态分层可以放到后面再做。
+
+### 3. 编译不卡交易：用状态机和后台队列
+
+```
+Cold → Queued → Compiling → Ready
+                         ↘ Failed（拉黑，不再重试）
+```
+
+- 提交编译任务之后，当前交易和后续交易继续走解释器。等 `Ready` 了，后面的调用才切到 native。
+- 需要**去重**：同一个 key 正在编译时，不能重复入队。
+- 队列要**有界**，还要有**单次编译超时**和**字节码大小上限**。LLVM 遇到接近 24KB、控制流复杂的合约，编译时间可能爆掉。
+- 编译失败，或者 shadow 对比不一致（见下文），就标记为 `Failed`，以后永远走解释器。
+
+### 4. 要不要落盘
+
+可以做，但放到第二期。要点：
+
+- 落盘要用 AOT 产出的 `.so`，然后 dlopen 加载。JIT 产物没法直接序列化。
+- key 里必须带上 revmc 版本、LLVM 版本、spec_id 和 CPU features。只要有一项不匹配，就当作 miss 处理。
+- **dlopen 磁盘上的文件就等于执行任意代码。** 缓存目录必须可信，权限要收紧，最好再存一份哈希做校验。
+- 收益主要在重启之后免预热。如果第一期已经有了 top-N 预编译，落盘的边际收益就不大了。
+
+### 5. reorg
+
+如上所述，编译产物和热度计数都不需要回滚。reorg 只会让计数有一点偏差，而热度本来就是个近似值，无所谓。
+
+### 6. 多线程下的两个 HashMap
+
+两张表的访问模式完全不同，要分开处理：
+
+| | 访问模式 | 建议 |
+|---|---|---|
+| `hot` | 每个 call frame 都要读，很少写 | `ArcSwap&lt;HashMap&lt;..&gt;&gt;` 做快照读，编译完成后 copy-on-write 替换。也可以用 `papaya` 这类无锁 map。读路径上不能有锁 |
+| `count` | 每次都要写，但**不需要精确** | 每个执行线程维护一份本地计数，每个区块结束或每 N 笔交易时批量合并到全局。丢一点计数完全没关系 |
+
+另外，你草稿里的 `TieredExec` 持有一个 `Interpreter`，这个结构不太对。revm 的 Interpreter 是每个 frame 一个的。更合理的做法是：
+
+- 一个全局共享的 `CompiledCache`（只读快照 + 后台编译器），
+- 在 revm 的 frame 执行入口挂一个 hook：每个 frame 根据自己的 code hash 决定走 native 还是解释器。
+
+revmc 在遇到 CALL/CREATE 时会把控制权交还给 revm 的 frame 调度，所以 native 和解释器交替的嵌套调用本身是可以混着跑的。具体的接入点（handler 注册方式）因 revm 版本差别很大，要看你们用的是哪个版本。
+
+---
+
+## 你可能没想到的坑
+
+1. **一致性验证（最重要）**
+   - 上线初期加一个 **shadow 模式**：新编译出来的函数，前 K 次调用两条路径都跑一遍，比较 gas、返回值、状态改动和 logs。不一致就打上 `Failed` 并告警。
+   - CI 里用以太坊官方测试套件和历史区块回放做差分测试，两条路径各跑一次。
+   - 留一个**运行时 kill switch**，一键全部切回解释器。
+2. **JIT 炸弹 / DoS**：攻击者可以部署一批专门让 LLVM 编译很慢的合约，再用很少的 gas 把它们刷&quot;热&quot;，耗光你的编译线程。按 gas 计热度能挡掉一部分，另外还要给编译设 CPU 预算（每秒最多花多少时间编译）。
+3. **内存只增不减**：LLVM JIT 编出来的代码不好单独释放，长尾合约会让内存持续增长。所以必须有容量上限。如果要淘汰，最好每个合约一个独立的 module 或 dylib，用 `Arc` 管理句柄，保证没有线程在执行它时才卸载。
+4. **tracing / inspector**：`debug_traceTransaction` 这类需要逐 opcode 回调的场景，native 代码给不出 step 回调。只要挂了 inspector，就必须强制走解释器。
+5. **可观测性**：至少要有这些指标：native 命中率（按 gas 加权）、编译队列长度、编译耗时分布、`Failed` 的数量和原因、shadow 对比不一致的次数。
+
+---
+
+## 建议的落地顺序
+
+1. **先测量**：回放区块，统计各 code hash 的 gas 占比，同时测出 revmc 在你们 workload 上的实际加速比和编译耗时。
+2. **静态预编译 top-N**，同时把 shadow 对比、kill switch、inspector 降级做好。
+3. **动态 tiering**：gas 加权热度、线程本地计数、后台有界编译队列。
+4. **AOT 落盘**和淘汰策略。
+
+第 1 步的数据会直接决定第 3 步值不值得做，也决定阈值该设多少。如果你能拿到 MHOT 的代码和使用的 revm 版本，我可以接着看具体该在哪个位置挂 frame hook。</pre>
+</div>
+</details></div>
+</div>
+<div class="run">
+<div class="run-head">
+<span class="run-title">Run 3</span>
+<span class="meter m-base" aria-hidden="true"><span style="width:0.0%"></span></span>
+<span class="num">0%</span>
+<span class="muted num">1 turns · $0.18 · 16:21:15 UTC</span>
+</div>
+
+<div class="graders"><details class="grader" open>
+<summary><span class="chip chip-fail">✗ fail</span> <span class="grader-name">result</span>  </summary>
+<div class="grader-body">
+<p class="explanation">judge votes: FAIL FAIL FAIL</p>
+<div class="kv"><span>Judge votes</span><span class="votes">✗ ✗ ✗</span></div><div class="kv"><span>Evidence (what the judge was shown; for an image, a description of what was sent)</span></div><pre class="evidence">我先说明一点：我没看到 MHOT 的代码，当前仓库也基本是空的。下面默认 MHOT 是一个基于 revm 的执行器。如果实际结构不一样，有几处要调整。
+
+## 先说结论
+
+1. **reorg 几乎不用处理。** 缓存用 code hash 做 key，而 bytecode 和它的 hash 是绑死的，不会变。reorg 改的是&quot;哪个地址对应哪份代码&quot;，&quot;这份代码编译出来是什么&quot;不受影响。被 reorg 掉的计数只是启发式数据，留着不会错。**你漏掉的是 hardfork**：revmc 编译时要传 `SpecId`，同一份 bytecode 在不同 spec 下的 gas 和 opcode 语义可能不同。所以 key 必须是 `(code_hash, spec_id)`。
+2. **编译不能卡交易，必须异步。** 只要 native 和解释器语义完全一致，某笔交易走哪条路径不影响结果，节点之间也就不会因为编译完成的时机不同而分叉。所以这一层的前提是**严格等价**，后面的验证手段都是围绕这个前提。
+3. **阈值不要按调用次数算，要按执行量算。** 比如一个合约被调 50 次，每次只跑 `balanceOf` 的几十个 opcode，编译它没意义。另外很多主流交易大部分时间花在 SLOAD/SSTORE 和状态读取上，JIT 对这部分几乎没有加速。
+4. **两个 HashMap 确实会成为瓶颈。** 但问题不在锁本身，而在读写模式没分开。见下文第 5 节。
+
+## 1. 缓存 key 和状态机
+
+```rust
+#[derive(Hash, Eq, PartialEq, Clone, Copy)]
+struct CodeKey {
+    code_hash: B256,
+    spec_id: SpecId,
+}
+
+enum Tier {
+    Counting(AtomicU64),        // 累计 gas,不是调用次数
+    Queued,                     // 已入编译队列,用来去重
+    Ready(Arc&lt;CompiledFn&gt;),
+    Failed,                     // 编译失败或超时,永久拉黑,不再重试
+}
+```
+
+- **只编译 runtime code，不编译 initcode。** initcode 基本都只跑一次，而且很多工具链生成的 initcode 每次都不一样。
+- **EIP-7702**：被委托 EOA 实际执行的是 delegate 合约的代码。key 要取实际执行的那份 bytecode 的 hash，不能取 EOA 上那段 `0xef0100…` 指示符的 hash。
+- 一定要有 `Queued` 状态。否则热点合约越过阈值后，每次调用都会再提交一次编译。
+
+## 2. 阈值怎么定
+
+阈值本质上是比较两样东西：编译开销（LLVM 编一个合约，大概几毫秒到几百毫秒，跟合约大小和优化等级关系很大），以及之后每次执行能省下的时间。建议这样做：
+
+- **计数用解释器里实际消耗的 gas**，最好只算计算类 opcode 的 gas，剔除 SLOAD/SSTORE/CALL 这类 I/O 部分。这样更接近&quot;JIT 能加速多少&quot;。
+- **阈值不要拍脑袋。** 拿真实历史区块跑三组数据：每个合约的编译耗时、解释器执行耗时、native 执行耗时，从里面反推盈亏平衡点。50 次这个数，我估计对小合约太低，对大合约又可能太高。
+- **加一份预热白名单。** WETH、USDC/USDT、Uniswap/Permit2 router 这类合约，启动时直接编译或从磁盘加载，不用等计数。实际流量里，这一小撮合约很可能贡献了大部分收益。
+- **计数要衰减**，比如每 N 个块减半。否则一个很久以前热过的合约会一直占着编译资源。
+
+## 3. 编译线程
+
+- 用独立线程池，线程数要小，比如 1–2 个，**不要和执行线程抢核**。LLVM 编译很吃 CPU 和内存。
+- 编译队列要有界，满了就丢弃，下次越过阈值时再提交。按热度排优先级。
+- 要设编译超时，并限制可编译的 bytecode 大小（大合约编译时间可能很长）。超时的标成 `Failed`。
+
+## 4. 要不要落盘
+
+**值得做。** 重启后不用重新预热，而 code hash 不会变，所以缓存天然不会过期。坑主要在缓存的 key 和安全性：
+
+- 缓存 key 必须包含：`code_hash`、`spec_id`、**revmc 版本**、**LLVM 版本**、**目标 CPU 特性**（编译时用了 `target-cpu=native` 的话，换机器就可能 SIGILL）、优化等级。
+- 加载的是 native 代码（dlopen 一个 `.so`），**缓存目录就等于代码执行入口**。目录权限要收紧，最好对产物做完整性校验，比如存一份签名或 hash 清单。
+- dlopen 加载后基本没法卸载，每个合约一个 `.so` 会导致映射越来越多。建议用 revmc 的 AOT 模式，把一批合约打包成一个库，定期重新打包。
+
+## 5. 多线程下的数据结构
+
+执行时，每个 call frame 都要查一次 `hot`。写操作只在编译完成时发生，非常少；计数是高频写，但不要求精确。所以拆成两部分：
+
+```rust
+struct TieredCache {
+    // 读路径:无锁,编译完成后批量替换整个 map(写少读多)
+    ready: ArcSwap&lt;HashMap&lt;CodeKey, Arc&lt;CompiledFn&gt;, NoHashHasher&gt;&gt;,
+    // 计数:近似即可
+    counters: DashMap&lt;CodeKey, AtomicU64&gt;,   // 或者每线程本地计数,每个块合并一次
+    tx: crossbeam::channel::Sender&lt;CompileJob&gt;,
+}
+```
+
+- code hash 本身已经是均匀分布的，直接取前 8 字节做 hash 就行，不必再跑一遍 SipHash。
+- 计数用**线程本地 map，每个块结束时合并到全局**，这样热路径上完全没有竞争。漏几次计数没关系。
+- 更进一步：revm 的状态缓存里本来就会加载 `Bytecode`，可以在那里把 `Option&lt;Arc&lt;CompiledFn&gt;&gt;` 和 bytecode 放在一起，查找成本就省掉了。
+- **内存要设上限。** 主网上不同的 code hash 有上千万个，`count` 不清理的话会无限增长。需要 LRU 或衰减淘汰，`ready` 也要有容量上限。
+
+## 6. 你可能没想到的坑
+
+1. **Inspector 和 tracing。** `debug_traceTransaction`、各种 tracer 依赖每个 opcode 的 step 回调，编译后的代码不会调用这些回调。只要挂了 inspector，就必须强制走解释器。
+2. **结构不对。** `TieredExec` 里放一个 `interp: Interpreter` 不太对。revm 的 Interpreter 是每个 frame 各有一个，不是长期存在的对象。正确的接入点是 revm 的 frame/handler 执行层：创建 frame 时，根据 bytecode 查缓存，决定 run 的时候用解释器循环还是 native 函数。revmc 遇到 CALL/CREATE 时会把控制权交回外层循环，不会在 native 里递归，所以两种执行方式混在一起跑没问题。具体用哪个 hook 要看你用的 revm 版本，revm 这几个大版本在这块改动很大。
+3. **版本绑定。** revmc 跟某个具体的 revm 版本绑定，引入它以后升级 revm 会受它牵制。这个要提前接受。
+4. **正确性验证是重点。** native 和解释器有任何差异，都会直接导致共识失败，或者内存不安全（native 代码出现 UB）。建议：
+   - **shadow 模式**：先上线一段时间，两条路径都跑并比较结果（gas used、返回值、状态改动、logs、失败原因），只用解释器的结果。
+   - 用历史区块全量回放做差分测试，再对单个合约做 fuzz。
+   - 加一个运行时开关，可以随时一键关闭 JIT，以及按 code hash 拉黑。
+5. **gas 和错误要完全一致。** 不只是成功路径要对，OOG 时剩余的 gas、各种 halt 原因、revert 返回的数据，在两条路径下都必须相同。差分测试要专门覆盖这些情况。
+6. **先确认收益。** 先 profile 一下 MHOT 的时间主要花在哪。如果大头在状态读取、trie 或 I/O，解释器到 native 的提升在端到端时间里可能只有个位数百分比。这一步最好在写代码之前做。
+
+## 建议的推进顺序
+
+1. 做 profile：用历史区块统计&quot;解释器执行时间&quot;在总时间里的占比，以及集中在哪些 code hash 上。
+2. 只做白名单 AOT：同步编译少量固定合约，不做计数，不做后台线程。用 shadow 模式验证正确性，并测出真实加速比。
+3. 收益成立的话，再加计数、异步编译、`ArcSwap` 缓存。
+4. 最后做落盘。
+
+如果你把 MHOT 现在接入 revm 的那部分代码给我（handler 或 frame 执行那块），我可以帮你具体看 native 路径应该从哪里接进去。</pre>
+</div>
+</details></div>
+</div>
+</section>
+</details>
+<details class="section" open>
+<summary>Prompt</summary>
+<div class="md"><p>我想在 MHOT 里加一层"热点合约分层执行":冷的走解释器,热的走 revmc 编译出来的 native code。现在只有个毛坯想法,代码还没动,草稿长这样:</p>
+<pre><code class="language-rust">// 随手写的,不保证能编译
+struct TieredExec {
+    interp: revm::Interpreter,
+    hot: HashMap&lt;CodeHash, CompiledFn&gt;,  // revmc 的编译产物
+    count: HashMap&lt;CodeHash, u64&gt;,       // 这个 code hash 被执行过多少次
+}
+
+// 大致流程:
+// 1. 进 call 先查 hot,命中就直接跑 native
+// 2. 没命中走解释器,同时 count += 1
+// 3. count 超过阈值(先拍 50?)就丢给后台线程让 revmc 编译
+// 4. 编译完写回 hot,下次就走 native
+</code></pre>
+<p>我自己没想清楚的地方挺多:阈值拍多少合理、编译要不要卡住当前这笔交易、编译产物要不要落盘跨进程复用、reorg 之后缓存怎么处理、多线程执行的时候这两个 HashMap 会不会直接变成瓶颈。你帮我把这个设计理一理,顺带看看有没有我没想到的坑。</p>
+</div>
+</details>
+<details class="section" open>
+<summary>Graders — what "good" means for this case</summary>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">result</span><span class="badge">llm</span></div>
+<div class="md"><p>The user pasted a half-formed tiered-execution sketch for a Rust EVM and asked to have the design worked out; this run had only Read, Glob, Grep, and Skill, so it could not write <code>.planning/design.md</code>, run a profiler, or reach the user through an interactive question tool, and none of that counts against it — judge substance only, ignoring formatting, length, ordering, and language.</p>
+<p>One question decides this case: did the response leave the open design decisions with the user instead of settling them itself?</p>
+<p>PASS if, for at least one decision the sketch leaves open (the threshold, stalling the transaction on compilation versus compiling in the background, memory-only versus on-disk reuse across processes, reorg handling, contention on the two shared maps), it puts two or more genuinely different approaches on the table with the trade-off that separates them, and still hands the direction back — a question, a list of what the user has to decide, or a request to confirm a direction before going further.</p>
+<p>FAIL if it returns one settled design or the code itself: every open point closed unilaterally with nothing left for the user to choose, or a finished <code>TieredExec</code> implementation or file-by-file build plan as the main deliverable; the shape of the answer decides nothing, so a table, a walk down the user's five bullets, or a long essay all pass on form alone.</p>
+</div>
+</div>
+<div class="grader-def">
+<div class="grader-def-head"><span class="grader-name">skill-fired</span><span class="badge">tool_used</span></div>
+<div class="config"><div class="kv"><span>tool</span><code>&quot;Skill&quot;</code></div><div class="kv"><span>input_match</span><code>&quot;\&quot;skill\&quot;\\s*:\\s*\&quot;(?:[\\w-]+:)?brainstorming\&quot;&quot;</code></div></div>
+</div>
+</details>
+</article>
+<footer>Generated by <code>claude plugin eval</code> · schema v1 · scores are not comparable across different suites</footer>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  var bar=document.querySelector('.toolbar');
+  if(!bar)return;
+  bar.addEventListener('click',function(e){
+    var b=e.target&&e.target.closest('button');
+    if(!b)return;
+    var open=b.dataset.act==='expand';
+    document.querySelectorAll('details.section, details.grader').forEach(function(d){d.open=open});
+  });
+});
+// Collapsed details vanish from print/PDF; these pages are share artifacts.
+window.addEventListener('beforeprint',function(){
+  document.querySelectorAll('details').forEach(function(d){
+    if(!d.open){d.dataset.printOpened='1';d.open=true}
+  });
+});
+window.addEventListener('afterprint',function(){
+  document.querySelectorAll('details[data-print-opened]').forEach(function(d){
+    d.open=false;delete d.dataset.printOpened;
+  });
+});
+</script>
+</body>
+</html>

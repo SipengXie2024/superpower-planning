@@ -33,7 +33,7 @@ All planning workflows share a `.planning/` directory in your project root conta
 | Skill | Description |
 |-------|-------------|
 | **planning-foundation** | Creates and manages `.planning/` directory for complex tasks. |
-| **brainstorming** | Explores intent, requirements, decomposition, and design before implementation. Ends with a plan persisted to `.planning/plan.md`. |
+| **brainstorming** | Explores intent, requirements, decomposition, and design before implementation. Reviews the design as an interactive html-plan page when that plugin is installed. Ends with a plan persisted to `.planning/plan.md`. |
 | **spec-interview** | Refines design docs through systematic deep questioning. Auto-invoked after brainstorming. |
 | **domain-glossary** | Maintains the project's shared vocabulary (ubiquitous language) in a repo-root `CONTEXT.md`: one canonical term per concept, synonyms banned. |
 | **wait-what** | User-invoked repair (`/wait-what`): re-pitch the last message with more context, in controlled plain language, using `CONTEXT.md` terms. |

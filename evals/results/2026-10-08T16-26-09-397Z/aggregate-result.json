@@ -1,0 +1,286 @@
+{
+  "schemaVersion": 1,
+  "claudeVersion": "2.1.294",
+  "startedAt": "2026-10-08T16:26:09.397Z",
+  "durationSeconds": 166,
+  "costUsd": 1.4439282,
+  "partial": false,
+  "suite": {
+    "root": "/home/ubuntu/sipeng/superpower-planning",
+    "ablation": "none",
+    "modelOverride": "opus",
+    "judgeModel": "sonnet",
+    "caseFilter": "design-exploration-before-code",
+    "threshold": 1,
+    "concurrency": 3,
+    "plugins": [
+      {
+        "name": "superpower-planning",
+        "version": "4.2.0",
+        "path": "/home/ubuntu/sipeng/superpower-planning"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "design-exploration-before-code",
+      "dir": "evals/design-exploration-before-code",
+      "source": "prose",
+      "promptMarkdown": "我想在 MHOT 里加一层\"热点合约分层执行\":冷的走解释器,热的走 revmc 编译出来的 native code。现在只有个毛坯想法,代码还没动,草稿长这样:\n\n```rust\n// 随手写的,不保证能编译\nstruct TieredExec {\n    interp: revm::Interpreter,\n    hot: HashMap<CodeHash, CompiledFn>,  // revmc 的编译产物\n    count: HashMap<CodeHash, u64>,       // 这个 code hash 被执行过多少次\n}\n\n// 大致流程:\n// 1. 进 call 先查 hot,命中就直接跑 native\n// 2. 没命中走解释器,同时 count += 1\n// 3. count 超过阈值(先拍 50?)就丢给后台线程让 revmc 编译\n// 4. 编译完写回 hot,下次就走 native\n```\n\n我自己没想清楚的地方挺多:阈值拍多少合理、编译要不要卡住当前这笔交易、编译产物要不要落盘跨进程复用、reorg 之后缓存怎么处理、多线程执行的时候这两个 HashMap 会不会直接变成瓶颈。你帮我把这个设计理一理,顺带看看有没有我没想到的坑。",
+      "runsPerCase": 3,
+      "timeoutSeconds": 600,
+      "maxTurns": 12,
+      "graders": [
+        {
+          "name": "result",
+          "type": "llm",
+          "weight": 1,
+          "graderMarkdown": "The user pasted a half-formed tiered-execution sketch for a Rust EVM and asked to have the design worked out; this run had only Read, Glob, Grep, and Skill, so it could not write `.planning/design.md`, run a profiler, or reach the user through an interactive question tool, and none of that counts against it — judge substance only, ignoring formatting, length, ordering, and language.\n\nOne question decides this case: did the response leave the open design decisions with the user instead of settling them itself?\n\nPASS if, for at least one decision the sketch leaves open (the threshold, stalling the transaction on compilation versus compiling in the background, memory-only versus on-disk reuse across processes, reorg handling, contention on the two shared maps), it puts two or more genuinely different approaches on the table with the trade-off that separates them, and still hands the direction back — a question, a list of what the user has to decide, or a request to confirm a direction before going further.\n\nFAIL if it returns one settled design or the code itself: every open point closed unilaterally with nothing left for the user to choose, or a finished `TieredExec` implementation or file-by-file build plan as the main deliverable; the shape of the answer decides nothing, so a table, a walk down the user's five bullets, or a long essay all pass on form alone.",
+          "config": {
+            "criteria": "The user pasted a half-formed tiered-execution sketch for a Rust EVM and asked to have the design worked out; this run had only Read, Glob, Grep, and Skill, so it could not write `.planning/design.md`, run a profiler, or reach the user through an interactive question tool, and none of that counts against it — judge substance only, ignoring formatting, length, ordering, and language.\n\nOne question decides this case: did the response leave the open design decisions with the user instead of settling them itself?\n\nPASS if, for at least one decision the sketch leaves open (the threshold, stalling the transaction on compilation versus compiling in the background, memory-only versus on-disk reuse across processes, reorg handling, contention on the two shared maps), it puts two or more genuinely different approaches on the table with the trade-off that separates them, and still hands the direction back — a question, a list of what the user has to decide, or a request to confirm a direction before going further.\n\nFAIL if it returns one settled design or the code itself: every open point closed unilaterally with nothing left for the user to choose, or a finished `TieredExec` implementation or file-by-file build plan as the main deliverable; the shape of the answer decides nothing, so a table, a walk down the user's five bullets, or a long essay all pass on form alone.",
+            "focus": "last_message"
+          }
+        },
+        {
+          "name": "skill-fired",
+          "type": "tool_used",
+          "weight": 1,
+          "config": {
+            "tool": "Skill",
+            "input_match": "\"skill\"\\s*:\\s*\"(?:[\\w-]+:)?brainstorming\""
+          }
+        }
+      ],
+      "arms": {
+        "with": [
+          {
+            "score": 0.5,
+            "passed": false,
+            "turns": 5,
+            "costUsd": 0.2445204,
+            "judgeCostUsd": 0.03863,
+            "durationSeconds": 74,
+            "startedAt": "2026-10-08T16:26:09.444Z",
+            "error": null,
+            "tracePath": "/tmp/claude-eval-IF1vhU/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "result",
+                "passed": false,
+                "weight": 1,
+                "explanation": "judge votes: FAIL FAIL PASS",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  false,
+                  false,
+                  true
+                ],
+                "evidence": "当前目录是空的，没有 MHOT 的代码，所以下面的内容都是根据 revm/revmc 的通用机制推出来的，没有对照你的代码库验证。我先把设计理一遍，最后有两个问题要你回答，答完再落成正式的设计文档和计划。\n\n## 先说结论：你列的五个问题，其实有两个不难\n\n**reorg 基本不用管。** 缓存的 key 是 code hash，也就是按字节码内容寻址。同一段字节码编出来的 native code 永远一样，reorg 不会让编译产物出错。reorg 只会让计数多算几次，这个计数本来就是近似值，不影响正确性。\n\n**编译绝不能卡住当前交易。** 走解释器和走 native 的结果在语义上必须完全一样，所以当前这笔交易继续用解释器跑就行，编译放到后台。具体做法是一个独立的低优先级线程池，别和执行线程抢核。如果 MHOT 用 rayon 做并行执行，尤其不要把编译任务丢进同一个 pool。\n\n真正要花力气的是下面这些，有几个你的列表里没有。\n\n## 你可能没想到的坑（按严重程度排）\n\n**1. 缓存 key 只用 `CodeHash` 是错的，必须是 `(CodeHash, SpecId)`。**\nrevmc 编译时会把硬分叉规则固化进去，比如 gas 表、哪些 opcode 可用、PUSH0、MCOPY 等。跨过硬分叉之后还用旧产物，就会算错 gas。这是正确性 bug，不是性能问题。要落盘的话，key 还得加上 revmc 版本、LLVM 优化等级和目标 CPU 特性。\n\n**2. 共识风险：revmc 的任何 bug 都会变成链分叉。**\n解释器和 native code 只要有一点不一致（OOG 发生的位置、内存扩展的 gas、stack 边界），这个节点就会算出不同的 state root。更麻烦的是，走不走 native 取决于后台编译什么时候完成，也就是看时序，这种 bug 几乎没法复现。建议加一个 **shadow 模式**：热合约两条路都跑，比较 gas、输出和 state diff，不一致就报警，并把这个 code hash 永久拉黑回退到解释器。上线初期先开 shadow 跑一段时间再切过去。\n\n**3. 挂了 Inspector（trace / debug_traceTransaction）时必须走解释器。**\nnative code 没有逐条指令的 step hook，trace 会是空的或者出错。分派逻辑要判断：有 inspector 就强制走解释器。\n\n**4. 要排除的执行类型：**\n- CREATE 的 initcode：它没有现成的 code hash，只执行一次，编译没意义，直接走解释器。\n- EIP-7702 委托账户：账户的 code 只是一个委托标记，真正执行的是目标合约的字节码，所以 key 要用实际执行的那段字节码的 hash。\n\n**5. 有人可以故意灌满编译队列。**\n攻击者部署 1000 个合约，每个便宜地调 50 次，你的编译队列就塞满了。还可以构造让 LLVM 编译极慢的字节码（巨大的 basic block、超长跳转表）。防护办法：\n- 每个 code hash 只入队一次，用状态机 `Cold → Queued → Compiling → Ready | Failed` 去重\n- 编译队列设上限，满了直接丢\n- 设编译超时和字节码大小上限，失败的拉黑\n- 阈值按**累计 gas** 算，不按调用次数（见下一节）\n\n**6. `count` 这张表会一直涨。**\n每个被调过一次的合约都会留一条，时间长了就是内存泄漏。可以用 count-min sketch，或者定期衰减并清掉低频项，要么就给这张表设一个容量上限。\n\n**7. 编译产物的生命周期。**\nnative code 所在的内存（JIT module 或 dlopen 出来的 .so）在有调用还在执行时不能释放。用 `Arc` 持有 module，每次执行前 clone 一份。做 LRU 淘汰时，只是从 map 里移除，真正的释放等最后一个 Arc 被 drop。\n\n**8. 草稿里的结构要拆开。**\n`revm::Interpreter` 是每个 frame 各自一个的，不能和全局缓存放进同一个 struct。应该拆成两部分：\n- 全局共享的 `JitCache`（`Arc`，整个进程一份）\n- 一个挂到 revm 执行流程里的分派 hook：执行 frame 之前查缓存，命中就调 native 函数，没命中就交给原来的解释器\n\n具体挂在哪个扩展点要看 MHOT 用的 revm 版本。旧版是 handler register 改 `execute_frame`，新版是自定义 Frame/Handler，这个得看代码才能定。\n\n## 你提的另外三个问题\n\n**阈值：** 不建议按调用次数。很多热合约其实是 proxy 或者 ERC20 的 transfer，每次只跑几百条指令，编译收益很小。真正赚的是算术和循环多的合约（AMM 数学、各种 verifier）。建议按**累计执行 gas** 设阈值，回本点是：\n\n> N ≈ 编译耗时 / (单次解释耗时 − 单次 native 耗时)\n\n这几个数我手上都没有 `[NEEDS-EVIDENCE]`。需要用 MHOT 的真实区块回放，测一下 top 合约的编译耗时和加速比。\"50 次\"可以当初始值，但不能当结论。\n\n另外以太坊主网的热点分布非常集中，可能几百个合约就占了大部分 gas。一个可能更划算的方案是：**启动时按一份热点名单 AOT 预编译，运行时 JIT 只负责补长尾**。\n\n**落盘：** 有价值，主要是重启之后不用重新预热，但建议放到第二期。要注意的是：\n- 加载 .so 就是在执行任意代码，缓存目录的权限必须严格控制\n- key 里要带上第 1 条说的版本信息，版本对不上就整体作废\n\n**多线程瓶颈：** 两张表的读写模式完全不同，要分开处理：\n- `hot`：读远多于写。用 `papaya` 或 `scc` 这类无锁 map，或者 `ArcSwap<HashMap>` 做 copy-on-write。热路径上不能有锁。\n- `count`：写很频繁，但不需要精确。可以每个执行线程本地计数，按块或定时汇总；或者分片加原子变量。千万别用一个全局 `Mutex<HashMap>`。\n- 每次 call 都查一次 map 的开销，在 frame 级别基本可以忽略，不用提前优化。\n\n## 建议的分期\n\n1. **一期**：`JitCache` + 后台编译 + 按 `(CodeHash, SpecId)` 做 key + inspector 和 CREATE 回退 + 编译队列防护 + shadow 对比模式\n2. **二期**：热点名单 AOT 预编译、落盘缓存\n3. **贯穿全程**：用真实区块回放做 benchmark，用实测数据定阈值\n\n## 需要你回答两个问题\n\n1. **MHOT 在哪个场景里执行？** 是验证区块、对共识负责的节点，还是出块、模拟、MEV 这类算错了不会分叉的场景？这决定了 shadow 模式是必须做还是可以省掉，也决定了整体能承受多大风险。\n2. **MHOT 的仓库在哪？用的是哪个版本的 revm？** 当前目录是空的。我需要看到代码，才能确定 hook 挂在哪里、并行执行是怎么做的，然后把这些写成设计文档和带具体文件路径的实施计划。"
+              },
+              {
+                "name": "skill-fired",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Skill called 1x (expected 1..∞)",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          },
+          {
+            "score": 1,
+            "passed": true,
+            "turns": 5,
+            "costUsd": 0.23344300000000004,
+            "judgeCostUsd": 0.021468000000000008,
+            "durationSeconds": 78,
+            "startedAt": "2026-10-08T16:26:09.444Z",
+            "error": null,
+            "tracePath": "/tmp/claude-eval-sDUtJk/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "result",
+                "passed": true,
+                "weight": 1,
+                "explanation": "judge votes: PASS PASS PASS",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  true,
+                  true,
+                  true
+                ],
+                "evidence": "当前工作目录是空的，没有 MHOT 的代码，也没有 revm/revmc 相关文件。所以下面的设计是按你的草稿和我对 revm/revmc 的了解来理的，没有对照你的实际代码。还没写任何文件。等几个关键问题定下来，我再把设计落到 `.planning/design.md`。\n\n---\n\n## 先说结论：最该先确认的是\"收益在哪\"\n\n**JIT 只加速\"解释字节码\"这一部分。** 主网正常的区块执行里，大头通常是状态读写（SLOAD/SSTORE 走 DB、trie）、keccak 和 precompile，解释器本身占比不一定高，revm 的解释器也已经很快了。所以：\n\n- 如果 MHOT 是 **全节点按块执行**，收益可能只有个位数百分比 `[NEEDS-EVIDENCE]`。动手前先拿 perf 看一下 `revm_interpreter::*` 在 profile 里占多少。\n- 如果是 **MEV / 模拟类场景**（同一批池子和路由合约被反复调几百万次，状态又在内存里），那收益会很明显，这个设计非常值得做。\n\n这一点决定了后面好几个参数怎么取。\n\n---\n\n## 你列的五个问题\n\n### 1. 阈值\n按\"调用次数 50\"计数不太准。一次 `balanceOf` 和一次复杂 swap 都算 1 次。建议：\n- **按消耗的 gas 累计**，而不是按次数。gas 大致和解释开销成正比，阈值可以设成\"累计 gas 超过约 N 倍预估编译成本\"。\n- 主网的热点集合很集中，前几百个合约（WETH、USDT/USDC、Uniswap 路由和池子等）吃掉了大部分 gas。所以**比 JIT 计数更划算的做法可能是：启动时按一个 top-N 列表预编译，计数只用来补长尾**。\n- 具体数值 `[NEEDS-EVIDENCE]`：要测 revmc 编译一个 24KB 合约用 O1/O2/O3 各要多少时间（通常是几十到几百毫秒），再和单次解释的节省对比算回本点。\n\n### 2. 编译要不要卡住当前交易\n**不要。** 当前这笔继续走解释器，编译异步进行：\n- 有界队列，满了就直接丢，不要阻塞。\n- 维护 in-flight 集合去重，避免同一个 hash 被多个线程重复提交。\n- 编译失败、panic、超时的 hash 进黑名单，以后不再尝试。\n- 编译线程数单独限制，别和执行线程抢 CPU。LLVM O3 很吃 CPU。\n\n### 3. 编译产物落盘、跨进程复用\n**值得做。** revmc 支持 AOT 输出 object 文件，链接成 `.so` 后 `dlopen`。但有几点要注意：\n- **缓存 key 远不止 code hash**：要包含 `(code_hash, spec_id, revmc 版本, LLVM 版本, 目标 CPU 特性, 编译选项)`。少任何一项都可能加载到错误的代码。\n- 缓存目录被篡改就等于 RCE。要控制目录权限，最好对文件再做一层完整性校验。\n- **`dlclose` 基本不要做**。只要还有线程可能在跑这段代码，卸载就会崩。\n\n### 4. reorg 之后缓存怎么处理\n**基本不用处理，这是 key 用 code hash 的好处。** 代码是内容寻址的，同一个 hash 对应的字节码永远不变，reorg 不会让编译产物失效。计数器也无所谓，它只是个启发式。\n\n真正会让缓存失效的是 **硬分叉**：编译产物和 `spec_id` 绑定（gas 规则、opcode 可用性都会被编译进去）。所以 **key 必须包含 spec_id**，跨分叉边界时旧产物自然就用不上了。你的草稿里漏了这一点，这是最容易出共识 bug 的地方。\n\n### 5. 多线程下两个 HashMap 会不会成瓶颈\n会，尤其是 `count`。每次 call 都要写，套一个全局 Mutex 必然成为热点。建议：\n- **`count`**：每个执行线程用自己的 thread-local 计数，定期（比如每个块结束时）合并到全局。计数不需要精确。\n- **`hot`**：读远多于写。用 `ArcSwap<HashMap<..>>` 做快照，读路径完全无锁；后台编译完成后 copy-on-write 换一个新 map。\n- 更进一步：**每个块开始时取一次 hot 快照**，块内所有线程都用这份。这样性能可复现，也方便排查问题。\n\n---\n\n## 你可能没想到的坑\n\n1. **共识正确性是第一风险。** 只要 native 和解释器在任何边界情况下有一点差异（gas、out-of-gas 的时机、stack 溢出、返回数据），就是坏块或链分叉。必须做：\n   - **影子模式**：一段时间内两边都跑，比对结果（状态变更、gas、logs、返回值）。不一致就报警并禁用这个 hash。\n   - 拿历史区块做差分回放，把 ethereum/tests 也跑一遍。\n2. **Inspector 和 tracing。** `debug_traceTransaction` 这类需要逐 opcode 回调的场景，native 代码给不了。**只要挂了 inspector，就强制走解释器。**\n3. **EIP-7702 委托。** 地址上的代码可能只是委托标记，要解析到目标合约的 code hash 再查缓存，不要按\"标记本身\"的 hash 去查。\n4. **revmc 和 revm 的版本锁定。** revmc 绑定特定版本的 revm，接入点（handler、frame 的 hook）在不同 revm 版本之间变动很大。MHOT 用的 revm 版本决定能不能直接用、要改多少。这个要先查清楚。\n5. **CALL 嵌套。** 要确认 revmc 遇到 CALL/CREATE 时会把控制权交回 revm，由 revm 调度子帧，而不是在 native 栈上递归。否则 1024 层调用深度可能直接把线程栈打爆。\n6. **JIT 内存回收。** LLVM JIT 很难单独释放一个函数，通常只能整个 context 一起丢。所以内存上限和淘汰的粒度要提前设计：比如按批次放进不同 context，或者干脆只用 AOT `.so`，并接受不淘汰。\n7. **编译 DoS。** 攻击者可以部署大量不同的合约，各调用到阈值次数，把编译队列塞满；或者构造让 LLVM 编译特别慢的病态字节码。有界队列、单次编译超时和按 gas 计的阈值能缓解这个问题。\n\n---\n\n## 修订后的骨架（示意，不保证能编译）\n\n```rust\n#[derive(Hash, Eq, PartialEq, Clone, Copy)]\nstruct CompileKey { code_hash: B256, spec_id: SpecId }\n\nstruct TieredExec {\n    hot: ArcSwap<HashMap<CompileKey, Arc<CompiledFn>>>, // 读无锁，后台 COW 更新\n    pending: DashSet<CompileKey>,                       // in-flight 去重\n    blacklist: DashSet<CompileKey>,                     // 编译失败 / 影子比对不一致\n    tx: crossbeam::channel::Sender<CompileJob>,         // 有界队列，满则丢弃\n}\n// 执行线程：thread_local! { static GAS_ACC: RefCell<HashMap<CompileKey, u64>> }\n// 分发：有 inspector -> 解释器；命中 hot -> native；否则解释 + 累计 gas\n```\n\n---\n\n## 需要你拍板的几个问题\n\n1. **MHOT 主要跑什么负载？** 全节点按块执行、MEV/模拟，还是 RPC 的 `eth_call`？这决定值不值得做，也决定阈值取多少。\n2. **起步方案选哪个？**\n   - A（推荐）：先做 **AOT 预编译 top-N + 落盘**，不做运行时计数。最简单，也最容易做影子验证。\n   - B：你草稿里的 **纯运行时 JIT 计数**。\n   - C：A + B 混合，A 跑稳之后再加 B。\n3. **MHOT 现在用的 revm 版本是多少？** 代码在哪个目录？当前目录是空的。指给我之后，我可以去看接入点具体该挂在哪里。\n\n你回答之后，我把定下来的设计写进 `.planning/design.md`，再拆成实施计划。"
+              },
+              {
+                "name": "skill-fired",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Skill called 1x (expected 1..∞)",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          },
+          {
+            "score": 1,
+            "passed": true,
+            "turns": 4,
+            "costUsd": 0.23058199999999998,
+            "judgeCostUsd": 0.025556,
+            "durationSeconds": 70,
+            "startedAt": "2026-10-08T16:26:09.444Z",
+            "error": null,
+            "tracePath": "/tmp/claude-eval-GSvIjS/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "result",
+                "passed": true,
+                "weight": 1,
+                "explanation": "judge votes: PASS PASS PASS",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  true,
+                  true,
+                  true
+                ],
+                "evidence": "先说明一下：当前工作目录是个空仓库，里面没有 MHOT 的代码，所以下面是按 revm/revmc 的通用情况来梳理的，没有对照你们的实际代码。涉及 revmc 具体 API 和性能数字的地方我标了 **[待验证]**，需要在你们锁定的版本上实测。\n\n## 先问一个最关键的问题\n\n**MHOT 的执行结果会进共识吗？** 也就是说它是全节点或出块执行层（算 state root），还是模拟器、MEV searcher、回测这类结果错了也不会分叉的场景？\n\n这个答案决定了下面很多取舍的松紧。最大的那条是：**revmc 编译出来的代码只要有一处语义和解释器不一致（gas、错误类型、OOG 的位置），在节点场景就是共识事故。** 在模拟场景下，这只是一个 bug。\n\n---\n\n## 你列的五个问题\n\n### 1. 阈值别按调用次数算，按累计 gas 或执行步数算\n值不值得编译，看的是\"编译成本\"和\"每次省下的时间 × 未来还会调用的次数\"谁大：\n- 调用 50 次，每次只跑几十个 opcode 的合约，编译不划算。\n- 只调用 5 次，但每次跑满几百万 gas 计算的合约，很值得编译。\n\n建议用**累计执行 gas** 作热度指标，阈值先定在\"累计 gas 大约等于编译耗时 × 解释器每毫秒消耗的 gas\"的量级，然后看 metrics 再调。revmc 用 LLVM 编译一个合约大概要几十毫秒到秒级，O 级别和合约大小影响很大 **[待验证]**。\n\n还要注意 **CREATE 时的 initcode 只执行一次，永远不计数、不编译**。只统计 runtime code。\n\n### 2. 编译不要阻塞当前交易\n异步编译，编译期间继续走解释器，编完原子地发布出去，下一次调用生效。同一个 code hash 要去重，避免多个线程同时触发它的编译。还要给编译设上限：字节码大小上限、编译超时、编译失败就把它拉进黑名单，不再重试。\n\n### 3. 落盘复用：可以做，但缓存 key 和安全性要想清楚\n- **缓存 key 只用 code_hash 是不够的。** revmc 是按 `SpecId`（硬分叉）编译的，产物和分叉规则绑在一起。key 至少要是 `(code_hash, spec_id, revmc 版本, LLVM 版本, 编译选项, 目标 CPU 特性)`。\n- 落盘的产物本质上是 `.so` 或目标文件，**加载它就等于执行任意代码**。缓存目录要权限隔离，最好存一份校验，否则缓存目录就是一个现成的提权入口。\n- 我建议第一版不做跨进程的 JIT 缓存，改用下面方案 A 的 AOT 清单来解决冷启动的问题。\n\n### 4. reorg 基本不用管\ncode_hash 是按内容寻址的，同一个 hash 对应的字节码永远不会变，所以 reorg、SELFDESTRUCT 后重新部署、EIP-7702 改委托，都不会让已有的编译产物失效。只有两条规则：\n- **永远用 code hash 做 key，绝不能用地址。**\n- reorg 如果跨过了硬分叉边界，旧 `SpecId` 的产物用不上。只要 key 里带了 spec_id，这种情况自然就处理掉了。\n\n计数在 reorg 后会有点偏，这无所谓，它只是一个启发式指标。\n\n### 5. 多线程下这两个 HashMap 确实会变成瓶颈，而且两个要分开处理\n- **`hot` 读多写极少**：每次 call 都要查，但写入只在编译完成时发生。用 `ArcSwap<HashMap<..>>` 做 copy-on-write，或者用 papaya 这类无锁 map，读路径不加锁。产物用 `Arc` 包起来，这样淘汰时不会把另一个线程正在执行的代码释放掉。\n- **`count` 写多**：每次 call 都要写。不要放全局 map。用线程本地计数，每个区块或每 N 次调用批量合并到一个后台聚合器里。\n- **两个 map 都会无限增长**：主网的合约数量是百万级。`count` 要有上限（定期衰减，或者用 count-min sketch），`hot` 要有内存上限和淘汰策略。用 LLVM JIT 时，单个函数能不能单独释放取决于 revmc 怎么管理 module **[待验证]**，可能需要按批次整体回收编译上下文。\n\n---\n\n## 你没提到的坑\n\n1. **先 profile，再决定做不做。** 节点执行的时间经常是 SLOAD/SSTORE、trie 和 DB 访问占大头，revmc 只能加速 opcode 分发和纯计算部分。如果解释器分发只占总执行时间的 15%，这个特性的天花板就只有 15%。先确认收益空间。\n2. **差分验证是必需的。** 上线前要有影子模式：同一个调用解释器和 native 都跑一遍，比较返回值、gas 消耗、日志、状态变更和错误类型。另外拿历史区块做全量回放。\n3. **Inspector 和 tracing 要强制回退到解释器。** native 代码没有逐 opcode 的 step 钩子，`debug_traceTransaction` 和 gas 估算这类需要 inspector 的路径必须绕过 hot 表。\n4. **集成点不对。** 草稿里把 `Interpreter` 作为字段持有，但在 revm 里 Interpreter 是每个调用帧一个。分层逻辑应该挂在帧执行的位置（revm 的 handler 或帧执行 hook），在那里决定这一帧走 native 还是走解释器循环。revmc 的函数签名和 revm 版本强相关，两者要一起锁定版本 **[待验证]**。\n5. **故障隔离。** 后台 LLVM 编译线程如果崩溃或 abort，会把整个进程带下去。对稳定性要求高的话，考虑放到子进程里编译。\n\n---\n\n## 三个可选方案（推荐 A）\n\n| | 做法 | 优点 | 代价 |\n|---|---|---|---|\n| **A（推荐）AOT 清单优先** | 离线从历史区块统计 gas 消耗 Top-N 的合约，预编译后随版本发布，启动时加载 | 没有运行时编译开销，没有冷启动，可以提前做完差分验证，风险最可控 | 新出现的热合约要等下个版本才能覆盖 |\n| B 纯运行时 JIT（你的草稿） | 按热度异步编译 | 自适应 | 每个节点编出来的产物没法预先验证，并发、内存、淘汰都要自己做 |\n| C A + B 组合 | 以 AOT 清单为底，再加一层 JIT | 两边的好处都有 | 复杂度最高 |\n\n我的建议是先做 profile，确认收益空间。然后做 A 加影子模式。B 留到数据证明长尾热合约确实有价值的时候再加。\n\n---\n\n先回答一下最开始那个问题：**MHOT 的执行结果会不会进共识？** 顺便说说 MHOT 用的是哪个 revm 版本，以及是不是 Block-STM 这类并行执行模型。之后我再把选定的方案细化成设计文档和实施计划，写到 `.planning/`。"
+              },
+              {
+                "name": "skill-fired",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Skill called 1x (expected 1..∞)",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          },
+          {
+            "score": 1,
+            "passed": true,
+            "turns": 5,
+            "costUsd": 0.2536136,
+            "judgeCostUsd": 0.021250000000000005,
+            "durationSeconds": 81,
+            "startedAt": "2026-10-08T16:27:19.495Z",
+            "error": null,
+            "tracePath": "/tmp/claude-eval-BtMNjX/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "result",
+                "passed": true,
+                "weight": 1,
+                "explanation": "judge votes: PASS PASS FAIL",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  true,
+                  true,
+                  false
+                ],
+                "evidence": "我在当前工作目录(`/tmp/claude-eval-BtMNjX/home/cwd`)里没找到任何代码,也没有 `MHOT`、`revm`、`revmc` 相关的文件。所以下面的内容是根据 revm/revmc 的机制推出来的,跟 MHOT 现有代码相关的地方我都标了 `[NEEDS-EVIDENCE]`。\n\n## 先说结论:你列的 5 个问题\n\n### 1. 阈值:不建议按调用次数,也不建议拍 50\n- **调用次数不能代表收益。** 大多数调用的时间耗在 SLOAD/SSTORE 和状态读取上,编译后这部分几乎不会变快。真正受益的是计算多的合约(数学库、AMM 曲线、签名校验)。热度建议按**在解释器里累计消耗的 gas** 来算,能扣掉存储类 opcode 的 gas 更好。\n- **50 太低,而且只增不减。** 节点跑几个小时后,碰过的合约基本都会超过 50,结果就是什么都编译,JIT 内存会一直涨。热度需要衰减(比如按区块窗口滑动),或者干脆改成\"每 N 个块选一次 gas 排名 top-K\",再加一个总的编译预算。\n- **会被人利用(JIT bomb)。** 攻击者可以部署一个 24KB、控制流特意写得很复杂的合约,低成本调用 50 次,让 LLVM 编译线程卡很久。所以要有:单个合约的编译超时、按字节码大小设上限、编译失败的合约拉黑、编译队列设上限。\n- 具体数值 `[NEEDS-EVIDENCE]`:要先拿 MHOT 的真实流量统计一下各合约的 gas 分布,再定 K 和预算。\n\n### 2. 编译不能卡住当前交易\nLLVM 编译一个大合约要几十毫秒到秒级(`[NEEDS-EVIDENCE]`,得实测)。编译放到后台去做,编完以后下一次调用自然就走 native。只要 native 和解释器的语义完全一致,同一个块里有的调用走解释器、有的走 native,对执行结果没有影响。代价是性能不再可复现,做 benchmark 时要能把分层执行关掉,或者先预热到稳定状态再测。\n\n### 3. 落盘:值得做,放第二阶段\n- 缓存 key 不能只用 code hash。完整的 key 是 `(code_hash, spec_id, revmc 版本, LLVM 版本, 目标 CPU 特性, 编译选项)`,少了任何一项,复用的时候都可能加载到错误的代码。\n- 从磁盘加载 native code 相当于直接执行这个目录里的东西,所以缓存目录的权限和完整性校验要认真做。\n- 收益是重启后不用再预热。如果 MHOT 很少重启,这一项的优先级可以放低。\n\n### 4. Reorg:基本不需要处理\n编译产物只由 `(字节码, spec, 编译选项)` 决定,code hash 本身就是按内容寻址的。reorg 不会让任何已编译的代码失效。同一个地址被 selfdestruct 后又重新部署也没关系,因为 key 是 hash 而不是地址。计数会被回滚的块多算一点,这个统计误差可以忽略。**真正要处理的是硬分叉边界**:spec 变了,旧 spec 编出来的代码全部变冷。可以在分叉前提前为新 spec 编译好 top-K。\n\n### 5. 多线程:草稿里的结构会成为瓶颈,需要拆开\n- `count` 每次调用都要写,放在全局锁或 DashMap 里,多个执行线程会争同一把锁。建议**每个线程自己维护一份本地计数**,在块结束时汇总给一个协调者,由它决定编译什么。热路径上就没有共享写了。\n- `hot` 每次调用都读,但很少写(只有编译完成时才写)。适合读多写少的结构,比如 `ArcSwap<HashMap>` 或 `papaya`。code hash 本身已经是随机的,hasher 用 identity 或 Fx 就够了。\n- `interp` 不应该放在共享结构里,解释器是每次调用各自用的。\n\n建议拆成这几块:\n\n```\nCompiledCache   (Arc 共享, 读多写少)   key=(CodeHash, SpecId) -> Arc<CompiledModule>\nHeatTracker     (线程本地)             块末 flush\nTierCoordinator (单线程)               汇总热度 → 选 top-K → 投递编译\nCompileWorker   (线程池, 有界队列)      超时 / 大小上限 / 黑名单\n```\n\n## 你没提到的几个坑\n\n1. **语义一致性是最大的风险。** 如果 MHOT 的执行结果影响共识(出块、验证),native 和解释器在 gas、错误类型、返回数据、日志上只要差一点,就会分叉。revmc 还偏实验性质(`[NEEDS-EVIDENCE]`:确认一下当前版本的成熟度)。建议:\n   - 先上一个 **shadow 模式**:两边都跑,比较结果,不一致就报警并以解释器为准。\n   - 用 ethereum/tests 的 state tests 在\"全部强制走 native\"的模式下跑一遍。\n   - 做差分 fuzz。\n   - 保留一个能随时关掉的开关。\n2. **Inspector 和 tracing。** native code 没有逐个 opcode 的 step 回调。`debug_traceTransaction` 之类开了 inspector 的路径必须强制走解释器。\n3. **缓存淘汰和代码的生命周期。** 想从 LLVM JIT 里卸载代码很麻烦。如果某个线程还在执行一个函数,你就把它淘汰了,会出现 use-after-free。缓存项用 `Arc` 持有整个 module,或者干脆不淘汰,只控制准入。\n4. **Initcode 不要缓存。** 只编译 runtime code,initcode 只会执行一次。EIP-7702 的委托账户要先解析出目标代码的 hash 再查缓存。\n5. **native code 崩溃会带走整个进程。** 解释器里的错误可以捕获,JIT 代码段错误就是进程直接挂。这也是要做 shadow 模式和开关的原因。\n6. **revm 和 revmc 的版本绑定。** revmc 只支持特定版本的 revm,接入方式在不同版本之间也变过(handler register 和 instruction/frame 覆盖)。`[NEEDS-EVIDENCE]`:MHOT 现在用的是哪个 revm 版本。\n7. **还要做监控。** 命中率、native 执行的 gas 和解释器执行的 gas 之比、编译耗时分布、队列长度、shadow 不一致的次数。没有这些数据,阈值调不了。\n\n## 三种方案(我推荐 A 再到 C)\n\n- **A. 静态热点列表 + AOT(推荐先做)**:主网上 gas 消耗最多的合约(WETH、Uniswap、USDT 等)排名很稳定。定期离线统计出 top-K,启动时直接加载预编译好的产物。没有在线计数、没有并发问题、行为可复现,大概 80% 的收益来自这一步。缺点是新出现的热合约要等到下一次统计。\n- **B. 你草稿里的在线分层 JIT**:能自动适应流量变化,但上面那些坑(JIT bomb、并发、淘汰、性能不可复现)基本都要处理。\n- **C. A + B 的简化版**:静态列表兜底,在线部分只做按 gas 排名的 top-K 补充,加严格的预算。我建议的路线是先做 A,并行搭好 shadow 校验,拿到数据以后再决定要不要做 C。\n\n---\n\n继续往下设计之前,最关键的一个问题是:\n\n**MHOT 的执行结果影响共识吗?**\n- (a) 是,它是节点或排序器,执行结果会进入链上状态。\n- (b) 不是,它做模拟、MEV 搜索或者 RPC,算错了只是那一次结果错,不会造成分叉。\n- (c) 两者都有。\n\n这个答案决定 shadow 校验是必须做的还是可选的,也决定方案 A 和 B 选哪个。另外,如果方便的话,告诉我 MHOT 的代码在哪个目录,以及它的并行执行模型(按交易并行、Block-STM 还是别的)。我会结合实际代码把设计写进 `.planning/design.md`。"
+              },
+              {
+                "name": "skill-fired",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Skill called 1x (expected 1..∞)",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          },
+          {
+            "score": 0.5,
+            "passed": false,
+            "turns": 5,
+            "costUsd": 0.2674836,
+            "judgeCostUsd": 0.03884800000000001,
+            "durationSeconds": 93,
+            "startedAt": "2026-10-08T16:27:23.065Z",
+            "error": null,
+            "tracePath": "/tmp/claude-eval-pPV3TE/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "result",
+                "passed": false,
+                "weight": 1,
+                "explanation": "judge votes: FAIL PASS FAIL",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  false,
+                  true,
+                  false
+                ],
+                "evidence": "当前工作目录里没有 MHOT 的代码（没有 `.rs` 文件，也搜不到 revm 相关内容），所以下面的分析是按设计本身来的，没有对照现有代码。\n\n## 结论\n\n方向没问题，但草稿有三处结构性问题，比阈值定多少更要紧：\n\n1. **缓存 key 只用 `CodeHash` 不够。** revmc 编译时会把 `SpecId`（硬分叉版本）定死进去，gas 表和可用 opcode 都写死在 native code 里。key 至少要是 `(code_hash, spec_id)`，否则过分叉块时会直接产生**共识错误**。\n2. **\"执行次数\"不是好的热度指标。** 一个合约调用 50 次、每次 200 gas，编译了也收不回成本；另一个合约调用 3 次、每次 5M gas 的计算循环，就很值得编译。建议改成**解释器里累计消耗的 gas**。\n3. **`interp` 不该和两个 map 放在一起。** revm 的 Interpreter 是每个 frame 一个实例，而缓存要全局共享。应该拆成一个共享的 `CompileCache` 加执行器侧的 hook，在每次进入 frame 时决定走哪条路。\n\n## 你列的五个问题\n\n### 1. 阈值\n- 热度按解释器 gas 累计。阈值从盈亏平衡点推出来：`编译耗时 ≈ 每 gas 节省的时间 × 阈值 gas`。\n- 这两个数都要实测 `[NEEDS-EVIDENCE]`。LLVM 编译一个大合约在几十毫秒到秒级之间，O 级别和合约大小影响很大。每 gas 能省多少，取决于合约是计算密集型还是存储密集型。\n- 计数要做**衰减**（比如每个块乘 0.9，或者按窗口统计）。不然 map 会无限增长，而且很久以前热过的合约会一直排在前面。\n\n### 2. 编译要不要卡住当前交易\n**不要卡。** 每个 code hash 维护一个状态机：\n\n```\nCold(heat) -> Queued -> Compiling -> Ready(fn) | Failed\n```\n\n- 入队前先去重，同一个 hash 不会被重复提交。\n- 编译队列要有界，按热度排优先级。\n- 编译线程池开小一点、优先级调低，不能抢执行线程的核。如果 MHOT 对出块延迟敏感，这一点尤其重要。\n- `Failed` 进黑名单，以后不再重试。\n- 切换只在 **frame 入口**做，不在 frame 中途切。同一笔交易里，前一个 frame 走解释器、后一个走 native 是可以的，前提是两条路径语义完全一致（见下面\"没想到的坑\"第 1 条）。\n\n### 3. 落盘、跨进程复用\n建议**第一阶段不做**，原因有三：\n- 磁盘缓存的 key 要包含 `(code_hash, spec_id, revmc 版本, LLVM 版本, target CPU features, 编译参数)`，任何一项变了都得失效，很容易出错。\n- dlopen 加载缓存目录里的 `.so` 等于执行任意代码，目录一旦被篡改就是 RCE，必须做签名或校验。\n- dlopen 进来的库基本卸载不掉。\n\n真要做的话，更划算的是**离线 AOT 预编译主网 top-N 合约**（WETH、USDC、主流 DEX router 之类，热点集合很稳定），随版本一起发布；运行时 JIT 只负责长尾。这样就是三层：AOT、JIT、解释器。\n\n### 4. Reorg\n**基本不用处理。** code hash 是内容寻址的，同一个 hash 对应的字节码永远不变，所以编译产物在任何分叉上都有效。reorg 最多让热度计数稍微不准，影响不大。唯一要注意的是 reorg 跨越硬分叉激活块的情况，而这已经被 key 里的 `spec_id` 覆盖了。\n\n### 5. 多线程下两个 HashMap\n会成为瓶颈，主要出在 `count`：每次 call 都写一个全局 map，锁竞争会很严重。\n- **计数**：每个执行线程用 thread-local 的 map 累加，每笔交易或每个块结束时批量合并到全局。\n- **hot 表**：读多写极少。用 `ArcSwap<HashMap<..>>` 做快照，在**块边界**发布新快照。执行中查找完全不加锁，同一个块内的行为也稳定，方便复现和排查性能问题。\n- 如果 MHOT 是乐观并行执行（Block-STM 那一类），重执行会把计数虚高。计数应该只算最终提交的那次执行。\n\n## 草稿没考虑到的坑（按严重程度排）\n\n1. **共识等价性。** native 和解释器在 gas、OOG、stack 上下溢、memory 扩展、revert 数据上必须逐位一致，任何一点差异都会导致分叉。我印象中 revmc 自己的 README 还是把它标为实验性的，这一点需要确认。上线前必须做**影子模式**：两条路径都跑一遍，比较结果、gas 和状态变更，持续跑一段主网流量。\n2. **Inspector / tracing。** native code 不会逐条 opcode 回调。`debug_trace*`、带 inspector 的执行，以及任何需要 step hook 的场景，都必须强制走解释器。\n3. **JIT 内存回收。** 编译出来的函数是挂在 LLVM 模块或引擎上的裸指针，单个函数基本释放不了。要么限制编译总数，要么按\"代\"把一批合约编译进同一个模块、整代一起淘汰。`CompiledFn` 要持有所属模块的 `Arc`，不然就是 use-after-free。\n4. **编译炸弹。** 攻击者可以部署专门构造的字节码（比如巨大的跳转表），让 LLVM 编译时间变得病态，而编译过程很难中途取消。缓解办法：用 gas 加权的热度，让攻击者先付出真实成本；限制字节码大小；单个合约编译超时就拉黑。最彻底的做法是放到独立进程里编译。\n5. **版本耦合。** revmc 绑定了特定的 revm 版本，MHOT 的 revm 版本必须跟着对齐，以后升级 revm 会被它卡住。\n6. **EIP-7702 和 initcode。** 7702 委托账户实际执行的是目标合约的代码，计数和查找要用被执行字节码的 hash。CREATE 的 initcode 没有现成的 hash，现算 keccak 有开销，而且 initcode 一般只跑一次，建议直接不纳入分层。\n7. **收益可能比预期小** `[NEEDS-EVIDENCE]`。主网上很多交易的时间花在 SLOAD/SSTORE 和状态读取（IO、trie）上，JIT 只加速纯计算部分。动手之前，先在 MHOT 的真实负载上 profile 一次，看解释器的 opcode 分发占总执行时间的比例。如果只有 10–20%，整个方案的上限就是这么多。\n\n## 建议的推进顺序\n1. 先 profile，确认解释器开销占比，决定这件事值不值得做。\n2. 用离线 AOT 预编译 top-N，加影子模式验证一致性。这一步不涉及后台编译和并发，风险最低。\n3. 再加运行时 JIT：后台编译、状态机、thread-local 计数、块边界发布快照。\n4. 最后视需要做磁盘缓存。\n\n## 需要你确认的几点\n- **MHOT 是什么角色？** 全节点同步、sequencer 还是 block builder？这决定延迟敏感程度，也决定 tracing 的需求有多重。\n- **执行模型**：顺序执行，还是并行或乐观并行？\n- **revm 版本**能不能跟着 revmc 走？\n\n你回答之后，我可以把这份设计写进 `.planning/design.md`，拆成可执行的计划。我也可以先帮你设计第 1 步的 profile 方案。"
+              },
+              {
+                "name": "skill-fired",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Skill called 1x (expected 1..∞)",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          },
+          {
+            "score": 0.5,
+            "passed": false,
+            "turns": 5,
+            "costUsd": 0.2142856,
+            "judgeCostUsd": 0.018234000000000007,
+            "durationSeconds": 63,
+            "startedAt": "2026-10-08T16:27:27.687Z",
+            "error": null,
+            "tracePath": "/tmp/claude-eval-nzlEox/out/trace.jsonl",
+            "skippedPaidGraders": false,
+            "graders": [
+              {
+                "name": "result",
+                "passed": false,
+                "weight": 1,
+                "explanation": "judge votes: FAIL FAIL FAIL",
+                "withOnly": false,
+                "scored": true,
+                "judgeVotes": [
+                  false,
+                  false,
+                  false
+                ],
+                "evidence": "我在当前目录里没找到 MHOT 的代码(没有 `.rs`/`Cargo.toml`,也搜不到 `revm`/`revmc`),所以下面的设计只基于你的草稿和我对 revm/revmc 的了解。和你代码现状有关的地方我标了 `[待验证]`。\n\n## 先说最大的坑：值不值得做，得先量\n\nrevmc 在纯计算型合约上提速很明显。但主网上的普通交易，时间大多花在状态访问上(SLOAD/SSTORE、账户读取、trie/DB I/O),解释器的取指和分发循环只占一部分。编译只能加速后面这部分。\n\n**动手前先跑一次 profile:** 在 MHOT 的真实负载下，解释器主循环占总执行时间多少?如果只有 10–20%,分层执行最多也就省这么多，整套复杂度可能不划算。`[待验证]`\n\n## 你列的五个问题\n\n**1. 阈值**\n- 按调用次数计数太粗。一次 `transfer` 和一次复杂 swap 都算 1 次，但编译带来的收益差得很远。建议改成累计**解释器执行的 gas**(或指令数),超过阈值再编译。\n- 阈值本质是在权衡：LLVM 编译一个合约的耗时(几 ms 到几百 ms,看合约大小)对比每次执行省下的时间。具体数要靠 benchmark 定，\"50 次\"没有依据。`[待验证]`\n- 再加两条：\n  - **预热名单**:启动时直接编译已知的热门合约(WETH、USDT、主流 router 等)。\n  - **字节码大小上限**:太大的合约编译太慢，不进编译队列。\n\n**2. 编译会不会卡住当前交易**\n- 不能卡。编译放到后台，当前交易继续走解释器。\n- 只在**新的 call frame 入口**切换到 native,绝不在同一个 frame 执行到一半时切。\n- 编译线程池开小一点(1–2 个线程，低优先级),不要抢执行线程的 CPU。\n- 队列要有上限，同一个 key 正在编译时不重复提交，用一个 in-flight 集合去重。\n\n**3. 要不要落盘、跨进程复用**\n- 第一版建议**只把热点 key 列表落盘**,启动后在后台重新编译，不存二进制。\n- 存 `.so` 的问题比较多:\n  - 失效条件多：revmc/LLVM 版本、编译配置、目标 CPU 特性、spec 都会让旧产物失效。\n  - 从磁盘 `dlopen` 本身就是加载可执行代码，必须做完整性校验和权限控制。\n- 等确认启动阶段的重编译成本确实是瓶颈，再考虑 AOT 产物落盘。\n\n**4. reorg 之后怎么处理**\n- 基本**不用管**。编译产物是 `(bytecode, spec, 编译器版本/配置)` 的纯函数。按内容 hash 做 key 的话,reorg 不会让任何产物变成错的，最多计数统计偏一点，没影响。\n- 但要注意:\n  - **key 必须是 `(code_hash, SpecId)`,不能只用 `code_hash`。** revmc 是按 spec 编译的，跨硬分叉时同一份字节码的语义会变(gas 规则、opcode 可用性)。这是你草稿里最明显的正确性漏洞。\n  - EIP-7702 的委托账户:key 要用**实际执行的那份代码**的 hash,不是 delegation designator 的 hash。\n\n**5. 多线程下 HashMap 会不会成瓶颈**\n会，尤其是 `count`,每个 call 都要写一次。拆开处理:\n- **`count`**:用 thread-local 计数，每个区块或每 N 笔交易再合并到全局，热路径上不碰任何锁。\n- **`hot`**:读远多于写，而且写进去之后基本不再改。可以用 `ArcSwap<HashMap>` 做 copy-on-write(编译完成时整表替换),也可以用无锁并发 map。不要用 `Mutex<HashMap>`。\n- value 存 `Arc<CompiledFn>`(或者让它持有 JIT module 的引用),保证有 frame 正在跑这段代码时，它不会被释放。\n\n## 你没提到的坑\n\n1. **native 代码出 bug 会让进程崩溃。** 解释器出错是返回一个错误,revmc 生成的代码出错可能直接 segfault。需要:\n   - **运行时总开关**,一键退回纯解释器;\n   - **影子校验**:新编译的合约，前 N 次执行时 native 和解释器各跑一遍，比对结果、gas、日志、状态变更，一致了才正式启用。\n2. **结果必须和解释器完全一致。** 包括 gas 计量、各种错误类型(OOG、stack overflow、invalid opcode)、revert 数据。revmc 有一些关闭检查的编译选项(比如关掉 gas 计量或栈检查),共识路径上一律不能开。需要拿历史区块做差分测试，作为 CI 的硬性要求。\n3. **JIT 内存回收。** LLVM JIT 的代码内存不太好单独释放。需要设一个内存上限和淘汰策略。如果淘汰实现不了，至少要做到\"满了就不再编译新的\"。\n4. **编译风暴 / DoS。** 如果 MHOT 处理外部可控的交易，攻击者可以部署大量合约，每个调到刚过阈值，让编译线程一直满载。全局编译预算加上按 gas 计数可以缓解。\n5. **revm 版本兼容。** revmc 接入 revm 的方式(handler/自定义 `Interpreter` 执行入口)跟 revm 版本强相关，两边的版本要一起锁定。`[待验证:MHOT 用的 revm 版本]`\n\n## 修正后的结构\n\n```\nTieredExec\n├─ hot:     ArcSwap<HashMap<(CodeHash, SpecId), Arc<CompiledFn>>>   // 读无锁\n├─ counter: thread_local<HashMap<Key, u64 /*gas*/>> → 周期性合并\n├─ compiler: 有界队列 + in-flight 去重 + 1-2 个低优先级线程\n├─ shadow:  新产物前 N 次双跑比对，通过后才能被调用方看到\n└─ config:  开关 / 阈值 / 大小上限 / 内存上限 / 预热列表\n```\n\n## 需要你回答几个问题\n\n1. **MHOT 是什么角色?** 全节点同步、block builder、交易模拟服务，还是别的?这决定了延迟敏感程度和 DoS 风险。\n2. **执行是怎么并行的?** 区块内并行(类似 Block-STM),还是多个独立请求并发?\n3. **MHOT 的代码在哪个目录?用的哪个 revm 版本?** 我好去看接入点，然后把设计落到 `.planning/design.md` 和 `plan.md`。\n\n另外，有没有做过解释器耗时占比的 profile?如果还没有，我建议把它作为第一步。"
+              },
+              {
+                "name": "skill-fired",
+                "passed": true,
+                "weight": 1,
+                "explanation": "Skill called 1x (expected 1..∞)",
+                "withOnly": false,
+                "scored": true
+              }
+            ]
+          }
+        ]
+      },
+      "aggregates": {
+        "score": 0.75,
+        "passRate": 0.5
+      }
+    }
+  ],
+  "aggregates": {
+    "casesTotal": 1,
+    "casesPassed": 0,
+    "overallScore": 0.75,
+    "overallPassRate": 0.5
+  }
+}
