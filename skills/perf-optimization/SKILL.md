@@ -7,7 +7,7 @@ description: "Profile first, fix only the #1 bottleneck, re-profile, repeat, cov
 
 ## Overview
 
-Performance optimization has exactly one correct workflow: **profile → fix the #1 bottleneck → re-profile → repeat**. Everything else — guessing which function is slow, fixing multiple things between profiles, assuming "this should help" — is wasted effort.
+Performance optimization has exactly one correct workflow: **scale scan → profile → fix the #1 bottleneck → re-profile → repeat**. The scale scan settles whether the algorithm grows faster than it should; the profile loop then removes constant factors. Everything else — guessing which function is slow, fixing multiple things between profiles, assuming "this should help" — is wasted effort.
 
 **Core principle:** Without a profile, even experienced engineers routinely misidentify the bottleneck. Measured data decides what to fix; intuition does not.
 
@@ -16,6 +16,8 @@ Performance optimization has exactly one correct workflow: **profile → fix the
 ```
 NO OPTIMIZATION WITHOUT A PROFILE FIRST
 ```
+
+The Phase 0 scale scan is the profile for an algorithm change: it is a measurement, and an algorithm fix it justifies needs no perf run first.
 
 ## When to Use
 
@@ -36,7 +38,7 @@ NO OPTIMIZATION WITHOUT A PROFILE FIRST
 
 ## When NOT to Use
 
-- **Known algorithmic complexity fix** — if the problem is O(N^2) where O(N log N) exists, just change the algorithm. No need to profile; you already know the fix.
+- **Confirmed algorithmic complexity fix** — if measurement has already shown the problem is O(N^2) where O(N log N) exists, just change the algorithm. A complexity problem that is only suspected goes through Phase 0 below first.
 - **Memory leaks** — use valgrind `--tool=massif` or heaptrack, not perf CPU profiling.
 - **I/O-bound programs** — network latency, disk wait, database queries. perf CPU profile won't show these; use `strace -T`, `perf trace`, or application-level timing.
 - **Trivial known fix** — a one-line change where the cause and fix are already clear (e.g., removing an accidental `.clone()` in a hot loop). Just fix it, measure, done.
@@ -53,6 +55,11 @@ This holds when the requester names the target himself, and it holds most of all
 ## The Cycle
 
 ```
+┌─────────────┐
+│ 0. Scale    │  Time at N, 2N, 4N: does
+│   scan      │  growth exceed expected?
+└──────┬──────┘  yes → fix the algorithm
+       ▼ no
 ┌─────────────┐
 │  1. Profile  │◀──────────────────────────┐
 └──────┬──────┘                            │
@@ -86,6 +93,30 @@ This holds when the requester names the target himself, and it holds most of all
                   │  Diminishing│
                   │  returns    │
                   └─────────────┘
+```
+
+### Phase 0: Scale Scan
+
+Before any profile, find out whether the cost grows faster than the problem requires. A complexity problem dwarfs every constant-factor fix in the later phases: making a leaf function 3× faster loses to calling it N log N times instead of N² times.
+
+1. **Derive the expected complexity and the input knob.** Read the hot path and write down, per path: its location, its complexity in terms of a named input parameter (rows, keys, distinct values, depth), the loops or calls that justify it, the best known complexity for the task, and which parameter to scale. Real inputs have several dimensions; scaling the wrong one shows linear growth and hides the quadratic term.
+   - When the call path spans many files, dispatch one read-only subagent for this. Give it the entry point and the code, not your guess about which function is slow, and ask for exactly the fields above: no optimization advice, no code. When the path is a few files, read it yourself; the handoff costs more than the reading.
+   - The derivation is a hypothesis. It is stated with the same confidence whether it is right or wrong.
+2. **Measure at three sizes.** Run the same benchmark with the chosen parameter at N, 2N, and 4N (large enough that each run takes well over the timer noise). Compute the time ratio per doubling: about 2× is linear, about 2.2× is N log N, about 4× is quadratic, about 8× is cubic.
+3. **Decide.**
+   - Measured growth exceeds the best known complexity → the algorithm is the bottleneck. Fix it at the level where the extra factor enters (data structure, repeated scan, nested loop turned into a hash lookup), A/B test as in Phase 5, then rerun this scan.
+   - Measured growth matches the expected complexity → constant factors are what is left; go to Phase 1.
+   - Derivation and measurement disagree → the measurement wins. Find out which step of the derivation was wrong (an inner loop that is short in practice, a cache that hits, a parameter that does not actually vary), because that error usually points at the real cost.
+
+At small N the constant terms dominate and an O(N²) loop can beat an O(N log N) one, so judge growth only at the input sizes the program actually sees.
+
+**Record in `.planning/findings.md`:**
+```markdown
+## Scale Scan
+- Parameter scaled: <name>, values N / 2N / 4N = ...
+- Times: ... / ... / ... (ratio per doubling: X.X)
+- Expected: O(...), best known: O(...)
+- Verdict: algorithm fix needed / proceed to profile
 ```
 
 ### Phase 1: Profile
@@ -149,6 +180,8 @@ This shows which *instructions* within the function are hottest. This tells you:
 - Is it a branch? (→ branch-free variant, likely/unlikely hints)
 - Is it a function call inside a loop? (→ inline, hoist, or batch)
 
+Then ask whether the function is expensive per call or called too often. `perf report --children` shows which caller pushes it to the top; `valgrind --tool=callgrind` gives exact call counts (perf samples, so it gives shares, never counts). If the call count grows faster than N, the fix belongs in the caller's algorithm, and speeding up the leaf only shrinks the constant.
+
 ### Phase 4: Fix ONE Thing
 
 Make the smallest change that addresses the bottleneck. Common fixes by bottleneck type:
@@ -162,6 +195,7 @@ Make the smallest change that addresses the bottleneck. Common fixes by bottlene
 | Redundant computation | Memoize, precompute, cache results |
 | Platform-gated code (`#[cfg(...)]`) | Remove unnecessary gates, enable on all platforms |
 | Lock contention | Lock-free structure, reduce critical section, partition |
+| Hot function's call count grows like N² | Change the caller's algorithm or data structure; leave the leaf alone |
 
 **CHECKPOINT:** State what you're changing and why (one sentence), linking to the profile data. If the change is > 50 lines or touches shared abstractions, confirm with the user first.
 
@@ -289,6 +323,7 @@ perf stat -e instructions,cycles -- <command>
 
 | Phase | Action | Output |
 |---|---|---|
+| **0. Scale scan** | Run at N, 2N, 4N on the parameter the derivation names | Growth ratio vs expected complexity |
 | **1. Profile** | `perf record -g --call-graph dwarf -F 997` | Top function + % |
 | **2. Identify** | Read `perf report`, find #1 by self-time | Target function |
 | **3. Drill** | `perf annotate --symbol=<func>` | Hot instructions |
