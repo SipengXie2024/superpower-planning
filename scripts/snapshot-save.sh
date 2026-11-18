@@ -3,10 +3,10 @@
 #
 # Usage: snapshot-save.sh <target-dir> [project-root]
 #
-# Copies agents/ and any older-layout files (progress.md, plan.md, design.md and
-# other top-level .md files an earlier version of this plugin wrote) from
-# .planning/ into <target-dir>. findings.md is not copied: it stays live in
-# .planning/ as project knowledge. The caller writes snapshot.md or summary.md,
+# Copies agents/ and the files earlier versions of this plugin kept
+# (progress.md, plan.md, design.md) from .planning/ into <target-dir>. Nothing
+# else is touched: findings.md stays live as project knowledge, and other files
+# the user keeps in .planning/ are not this plugin's to move. The caller writes snapshot.md or summary.md,
 # which carries the task note. The target directory must already exist.
 #
 # Shared by both stashing and archiving workflows.
@@ -29,11 +29,11 @@ if [ ! -d "$TARGET_DIR" ]; then
 fi
 
 copied=0
-for f in "${PLANNING_DIR}"/*.md; do
-    [ -f "$f" ] || continue
-    [ "$(basename "$f")" = "findings.md" ] && continue
-    cp "$f" "${TARGET_DIR}/"
-    copied=$(( copied + 1 ))
+for f in progress.md plan.md design.md; do
+    if [ -f "${PLANNING_DIR}/$f" ]; then
+        cp "${PLANNING_DIR}/$f" "${TARGET_DIR}/"
+        copied=$(( copied + 1 ))
+    fi
 done
 
 if [ -d "${PLANNING_DIR}/agents" ]; then

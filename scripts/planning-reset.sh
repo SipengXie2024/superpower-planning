@@ -3,9 +3,10 @@
 #
 # Usage: planning-reset.sh [project-root]
 #
-# Removes: agents/ and older-layout top-level files (progress.md, plan.md,
-#          design.md and any other top-level .md except findings.md)
-# Keeps:   findings.md (project knowledge outlives the task), archive/, stash/
+# Removes: agents/ and the files earlier versions of this plugin kept
+#          (progress.md, plan.md, design.md)
+# Keeps:   findings.md (project knowledge outlives the task), archive/, stash/,
+#          and any other file the user keeps in .planning/
 # Run it only after snapshot-save.sh has copied those files somewhere.
 
 set -e
@@ -19,11 +20,11 @@ if [ ! -d "$PLANNING_DIR" ]; then
     exit 0
 fi
 
-for f in "${PLANNING_DIR}"/*.md; do
-    [ -f "$f" ] || continue
-    [ "$(basename "$f")" = "findings.md" ] && continue
-    rm -f "$f"
-    echo "[planning-reset] Removed $(basename "$f")"
+for f in progress.md plan.md design.md; do
+    if [ -f "${PLANNING_DIR}/$f" ]; then
+        rm -f "${PLANNING_DIR}/$f"
+        echo "[planning-reset] Removed $f"
+    fi
 done
 
 if [ -d "${PLANNING_DIR}/agents" ]; then
