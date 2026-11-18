@@ -8,7 +8,7 @@
     {
       "name": "superpower-planning",
       "description": "Persistent file-based planning, stashing, and archiving",
-      "version": "5.0.0",
+      "version": "5.0.1",
       "source": "./"
     }
   ]

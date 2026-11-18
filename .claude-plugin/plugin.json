@@ -1,7 +1,7 @@
 {
   "name": "superpower-planning",
   "description": "Focused skill suite for persistent file-based planning, durable .planning context, stashing, and archiving.",
-  "version": "5.0.0",
+  "version": "5.0.1",
   "author": {
     "name": "sipeng"
   },
