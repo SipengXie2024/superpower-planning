@@ -28,12 +28,12 @@ fail() { echo "  FAIL: $1" >&2; exit 1; }
 
 echo "== 1. init-planning-dir =="
 bash "$PLUGIN_ROOT/scripts/init-planning-dir.sh" >/dev/null
-[[ -f .planning/progress.md ]] && pass "progress.md" || fail "progress.md missing"
 [[ -f .planning/findings.md ]] && pass "findings.md" || fail "findings.md missing"
+[[ ! -e .planning/progress.md ]] && pass "no progress.md (progress lives in the task note)" || fail "init created progress.md"
 
 echo "== 2. init emits the templates, not a copy of its own =="
 DATE="$(date +%Y-%m-%d)"
-for f in progress findings; do
+for f in findings; do
   if diff -q <(sed "s|\[DATE\]|$DATE|g" "$TEMPLATES/$f.md") ".planning/$f.md" >/dev/null; then
     pass "$f.md matches templates/$f.md"
   else
@@ -45,7 +45,6 @@ echo "== 3. init fails loudly when a template is absent =="
 FAKE="$(mktemp -d)"
 cp -r "$PLUGIN_ROOT/scripts" "$FAKE/scripts"
 mkdir -p "$FAKE/skills/planning-foundation/templates"
-cp "$TEMPLATES/findings.md" "$FAKE/skills/planning-foundation/templates/"
 mkdir -p "$WORK/probe"
 # set +e around the probe: the whole point is that this call fails, and under
 # set -e a non-zero subshell would abort the test before the assertion runs.
@@ -80,11 +79,11 @@ python3 -c "import json; json.load(open('$PLUGIN_ROOT/.claude-plugin/plugin.json
 python3 -c "import json; json.load(open('$PLUGIN_ROOT/.claude-plugin/marketplace.json'))" && pass "marketplace.json valid"
 
 echo "== 7. skill + command presence =="
-for name in archiving brainstorming debugging domain-glossary perf-optimization \
+for name in archiving debugging domain-glossary perf-optimization \
             planning-foundation releasing spec-interview stashing tdd wait-what; do
   [[ -f "$PLUGIN_ROOT/skills/$name/SKILL.md" ]] && pass "skills/$name/SKILL.md" || fail "missing skills/$name/SKILL.md"
 done
-for cmd in archive brainstorm catchup resume-stash stash; do
+for cmd in archive catchup resume-stash stash; do
   [[ -f "$PLUGIN_ROOT/commands/$cmd.md" ]] && pass "commands/$cmd.md" || fail "missing commands/$cmd.md"
 done
 
@@ -152,7 +151,31 @@ for case in sorted(p for p in root.iterdir() if p.is_dir() and p.name != "result
 print(f"  PASS: {n} eval cases, every prompt and grader frontmatter parses")
 PY2
 
-echo "== 9. skill linter (ratchet) =="
+echo "== 9. stash round trip keeps findings.md live =="
+# findings.md is project knowledge: stash and archive must never take it out of
+# .planning/. Older-layout files and agents/ move into the snapshot and come back
+# as paths for the caller to read.
+RT="$WORK/roundtrip"
+mkdir -p "$RT" && (cd "$RT" && bash "$PLUGIN_ROOT/scripts/init-planning-dir.sh" >/dev/null)
+printf '\n## 2026-11-18: probe entry\nkept across stash\n' >> "$RT/.planning/findings.md"
+printf '## Task Status Dashboard\n| Task | Status |\n|---|---|\n| a | complete |\n| b | in_progress |\n' > "$RT/.planning/progress.md"
+mkdir -p "$RT/.planning/agents/impl" && printf 'x%.0s' $(seq 1 120) > "$RT/.planning/agents/impl/findings.md"
+S="$(bash "$PLUGIN_ROOT/scripts/check-planning-state.sh" "$RT")"
+[[ "$S" == active ]] && pass "older-layout progress.md with an open task reads active" || fail "state was $S, expected active"
+SNAP="$RT/.planning/stash/probe" && mkdir -p "$SNAP"
+bash "$PLUGIN_ROOT/scripts/snapshot-save.sh" "$SNAP" "$RT" >/dev/null
+[[ -f "$SNAP/progress.md" && -d "$SNAP/agents" ]] && pass "snapshot holds progress.md and agents/" || fail "snapshot missed progress.md or agents/"
+[[ ! -e "$SNAP/findings.md" ]] && pass "snapshot leaves findings.md in place" || fail "snapshot copied findings.md"
+bash "$PLUGIN_ROOT/scripts/planning-reset.sh" "$RT" >/dev/null
+grep -q "probe entry" "$RT/.planning/findings.md" && pass "reset keeps findings.md entries" || fail "reset lost findings.md entries"
+[[ ! -e "$RT/.planning/progress.md" && ! -e "$RT/.planning/agents" ]] && pass "reset clears progress.md and agents/" || fail "reset left progress.md or agents/"
+S="$(bash "$PLUGIN_ROOT/scripts/check-planning-state.sh" "$RT")"
+[[ "$S" == empty ]] && pass "findings-only .planning reads empty" || fail "state was $S, expected empty"
+OUT="$(cd "$RT" && bash "$PLUGIN_ROOT/scripts/stash-restore.sh" probe)"
+grep -q "OLDER_FILE=.*progress.md" <<<"$OUT" && pass "restore names progress.md for the caller" || fail "restore did not name progress.md"
+[[ -d "$RT/.planning/agents/impl" && ! -e "$RT/.planning/progress.md" ]] && pass "restore brings back agents/ only" || fail "restore wrote the wrong files"
+
+echo "== 10. skill linter (ratchet) =="
 python3 "$PLUGIN_ROOT/scripts/lint_skills.py" && pass "lint_skills.py clean (no new violations)" \
   || fail "lint_skills.py reported new violations"
 

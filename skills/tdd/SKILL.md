@@ -105,7 +105,7 @@ Confirm:
 
 **Other tests fail?** Fix now.
 
-**After GREEN, if `.planning/` exists:** Append a test result row to the Test Results table in `.planning/progress.md`.
+**After GREEN:** record the result (test, command, pass) in the task note.
 
 ### REFACTOR - Clean Up
 

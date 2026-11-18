@@ -9,11 +9,11 @@ description: Snapshots a finished .planning/ directory into a dated archive, con
 
 Archive the active project in `.planning/` into a structured archive directory, consolidate and polish project memory based on current repo facts, and reset `.planning/` for the next task.
 
-**Core principle:** The target is the active project (design, plan, findings, progress), not "the session."
+**Core principle:** The target is the finished task: its task note and the findings it produced, not "the session." `findings.md` stays live in `.planning/`; the archive records what this task added to it.
 
 **Say what you are doing, in the user's terms, not the skill's name:** "Filing this finished work away and folding what it taught into project memory."
 
-**Prerequisite:** `.planning/progress.md` and `.planning/findings.md` must exist with content beyond the empty template.
+**Prerequisite:** the task note or `.planning/findings.md` holds this task's work.
 
 ## The Process
 
@@ -31,19 +31,17 @@ that you could not write it, and that `.planning/` still holds the live files.
 
 ### Step 1: Determine Archive Name
 
-1. Read `.planning/progress.md` — extract task names from the Task Status Dashboard
-2. If `.planning/plan.md` exists, derive the feature name from it
-3. Otherwise, derive a short name from the main task descriptions
+1. Derive a short name from the task note's goal
+2. With no task note, derive it from the findings entries this task added, or from an older-layout `progress.md` or `plan.md` if `.planning/` still has one
 4. Use `AskUserQuestion` to let the user confirm or modify the archive name
 
 ### Step 2: Generate Archive Summary
 
-Read all active project files:
-- `.planning/design.md` (if exists)
-- `.planning/plan.md` (if exists)
-- `.planning/progress.md`
-- `.planning/findings.md`
+Read:
+- the task note
+- `.planning/findings.md`, especially the entries this task added
 - `.planning/agents/*/findings.md` (if any exist)
+- older-layout `progress.md`, `plan.md`, `design.md` (if any exist)
 
 Generate a concise `summary.md` with this format:
 
@@ -55,16 +53,19 @@ Generate a concise `summary.md` with this format:
 <!-- 2-3 sentences: what was done, what was the outcome -->
 
 ## Key Decisions
-<!-- From findings.md Technical Decisions table — only decisions with long-term value -->
+<!-- From the findings entries this task added — only decisions with long-term value -->
 
 ## Lessons Learned
 <!-- Patterns discovered, gotchas, things to remember for similar future work -->
 
 ## Key Files Changed
 <!-- Important files that were created or significantly modified -->
+
+## Findings Written by This Task
+<!-- headings of the findings.md entries, so the archive points at them -->
 ```
 
-**Keep it concise.** The summary is a quick-reference document. Aim for 30-60 lines. The full design, plan, findings, and progress are preserved alongside it.
+**Keep it concise.** The summary is a quick-reference document. Aim for 30-60 lines. The findings themselves stay in `.planning/findings.md`.
 
 ### Step 3: Save Archive
 
@@ -73,7 +74,7 @@ Generate a concise `summary.md` with this format:
 mkdir -p .planning/archive
 ${CLAUDE_PLUGIN_ROOT}/scripts/unique-filename.sh .planning/archive "<name>" ""
 ```
-2. Create the archive directory and save all active project files:
+2. Create the archive directory and copy `agents/` and any older-layout files into it:
 ```bash
 mkdir -p "<returned-path>"
 ${CLAUDE_PLUGIN_ROOT}/scripts/snapshot-save.sh "<returned-path>"
@@ -135,7 +136,7 @@ If there are no suggestions in a category, omit that category entirely.
 
 ### Step 5: Reset .planning/
 
-This step is destructive. Before running it, use `AskUserQuestion` to get explicit confirmation, since the reset deletes the live working files. Confirm the archive from Step 3 is on disk first, and surface that the reset removes `design.md`, `plan.md`, `progress.md`, `findings.md`, and `agents/`. Do not proceed if the user declines.
+This step is destructive. Before running it, use `AskUserQuestion` to get explicit confirmation. Confirm the archive from Step 3 is on disk first, and surface that the reset removes `agents/` and any older-layout files (`progress.md`, `plan.md`, `design.md`). `findings.md` stays. Do not proceed if the user declines.
 
 Once confirmed:
 
@@ -143,7 +144,7 @@ Once confirmed:
 ${CLAUDE_PLUGIN_ROOT}/scripts/planning-reset.sh
 ```
 
-This recreates clean templates from canonical sources. `archive/` and `stash/` are preserved automatically.
+`findings.md`, `archive/` and `stash/` are preserved automatically.
 
 ### Step 6: Report Completion
 
@@ -162,7 +163,7 @@ Archive complete:
 
 **No memory changes needed:** If there are no new findings worth persisting and existing memory is already accurate, skip Step 4c-4e entirely. Report "Memory already up to date."
 
-**Multiple sessions in one .planning/:** If progress.md shows multiple session headers, include all of them in the archive summary.
+**Older-layout progress.md with several sessions:** If it shows multiple session headers, include all of them in the archive summary.
 
 **Legacy archives:** Existing single-file archives in `.planning/archive/*.md` remain valid. The archive listing and historical archive checks should handle both formats.
 
@@ -171,5 +172,5 @@ Archive complete:
 - **Fact-based:** All memory polishing grounded in current repo state, not assumptions
 - **Semi-automatic:** LLM proposes, user confirms. Never write memory without approval
 - **Non-destructive:** Archive is saved BEFORE any cleanup. Archive survives reset
-- **Complete:** Archive preserves the entire project (design, plan, findings, progress) as a unit
+- **Complete:** The archive keeps the summary, the task's findings headings and any older-layout files together; the findings stay searchable in `findings.md`
 - **Concise:** summary.md is a quick-reference doc, not a full log

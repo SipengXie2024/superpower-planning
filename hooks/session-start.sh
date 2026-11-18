@@ -32,18 +32,22 @@ planning_message=""
 if [ -d ".planning" ]; then
     # .planning/ exists — inject recovery content
     if [ "$EVENT_TYPE" = "resume" ]; then
-        dashboard_head=$(head -30 .planning/progress.md 2>/dev/null || true)
         findings_head=$(head -20 .planning/findings.md 2>/dev/null || true)
+        # Files an older version of this plugin kept; read, never deleted here.
+        older_files=$(cd .planning && ls progress.md plan.md design.md 2>/dev/null | tr '\n' ' ' || true)
 
         planning_message="${NL}${NL}<PLANNING_SESSION_RECOVERY>${NL}"
-        planning_message+="**Session interrupted — recovering .planning/ context.**${NL}${NL}"
-        planning_message+="### Dashboard (.planning/progress.md):${NL}\`\`\`${NL}${dashboard_head}${NL}\`\`\`${NL}${NL}"
+        planning_message+="**Session interrupted — recovering .planning/ context.** The task note carries the current task.${NL}${NL}"
 
         if [ -n "$findings_head" ]; then
             planning_message+="### Findings (.planning/findings.md):${NL}\`\`\`${NL}${findings_head}${NL}\`\`\`${NL}${NL}"
         fi
 
-        planning_message+="**Read full .planning/ files and run \`git diff --stat\` to fully recover context.**${NL}"
+        if [ -n "$older_files" ]; then
+            planning_message+="### Older-layout files in .planning/: ${older_files}${NL}Read them; move live status into the task note and lasting facts into findings.md.${NL}${NL}"
+        fi
+
+        planning_message+="**Read the full .planning/findings.md and run \`git diff --stat\` to recover context.**${NL}"
         planning_message+="</PLANNING_SESSION_RECOVERY>"
     fi
 else
@@ -53,7 +57,7 @@ else
     # even when the user only asked a one-line question.
     planning_message="${NL}${NL}<PLANNING_INIT_AVAILABLE>${NL}"
     planning_message+="No .planning/ directory in this project.${NL}${NL}"
-    planning_message+="For work that spans multiple steps, needs research, or will outlive this context window, initialize it before starting so the plan survives a context reset:${NL}${NL}"
+    planning_message+="Task progress goes in the task note. The first time this work learns something worth keeping (a decision, a root cause, a dead end, a measurement), create .planning/findings.md:${NL}${NL}"
     planning_message+="\`\`\`bash${NL}\${CLAUDE_PLUGIN_ROOT}/scripts/init-planning-dir.sh${NL}\`\`\`${NL}${NL}"
     planning_message+="Simple questions and single-file edits do not need it.${NL}"
     planning_message+="</PLANNING_INIT_AVAILABLE>"

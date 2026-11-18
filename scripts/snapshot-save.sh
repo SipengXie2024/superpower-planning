@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
-# Save a snapshot of the active .planning/ project to a target directory
+# Copy the files of the work being stashed or archived into a target directory
 #
 # Usage: snapshot-save.sh <target-dir> [project-root]
 #
-# Copies design.md, plan.md, findings.md, progress.md, and agents/ (if they exist)
-# from .planning/ into <target-dir>. The target directory must already exist.
+# Copies agents/ and any older-layout files (progress.md, plan.md, design.md and
+# other top-level .md files an earlier version of this plugin wrote) from
+# .planning/ into <target-dir>. findings.md is not copied: it stays live in
+# .planning/ as project knowledge. The caller writes snapshot.md or summary.md,
+# which carries the task note. The target directory must already exist.
 #
 # Shared by both stashing and archiving workflows.
-#
 # Exit 0 on success, 1 on error.
 
 set -e
@@ -27,16 +29,13 @@ if [ ! -d "$TARGET_DIR" ]; then
 fi
 
 copied=0
-
-# Copy core project files
-for f in design.md plan.md findings.md progress.md; do
-    if [ -f "${PLANNING_DIR}/$f" ]; then
-        cp "${PLANNING_DIR}/$f" "${TARGET_DIR}/"
-        copied=$(( copied + 1 ))
-    fi
+for f in "${PLANNING_DIR}"/*.md; do
+    [ -f "$f" ] || continue
+    [ "$(basename "$f")" = "findings.md" ] && continue
+    cp "$f" "${TARGET_DIR}/"
+    copied=$(( copied + 1 ))
 done
 
-# Copy agents directory if it exists and has content
 if [ -d "${PLANNING_DIR}/agents" ]; then
     cp -r "${PLANNING_DIR}/agents" "${TARGET_DIR}/"
     echo "[snapshot-save] Copied agents/"

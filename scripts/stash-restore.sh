@@ -7,8 +7,12 @@
 #   - Directory-based stashes (new format): .planning/stash/<name>/
 #   - Single-file stashes (legacy format): .planning/stash/<name>.md
 #
-# Copies files from the stash back to .planning/ root.
-# Does NOT delete the stash entry or reset .planning/ — caller handles that.
+# Restores agents/ into .planning/ and prints the paths the caller reads:
+#   SNAPSHOT_FILE=<path>   snapshot.md, whose Task Note section goes back into the task note
+#   OLDER_FILE=<path>      a progress.md / plan.md / design.md / findings.md saved by an
+#                          older version of this plugin: move live status into the task
+#                          note and any findings not yet in .planning/findings.md into it
+# Does NOT delete the stash entry or overwrite .planning/findings.md.
 #
 # Exit 0 on success, 1 on error.
 
@@ -42,20 +46,18 @@ else
 fi
 
 if [ "$FORMAT" = "directory" ]; then
-    restored=0
-    for f in design.md plan.md findings.md progress.md; do
-        if [ -f "${STASH_PATH}/$f" ]; then
-            cp "${STASH_PATH}/$f" "${PLANNING_DIR}/"
-            restored=$(( restored + 1 ))
-        fi
-    done
-
     if [ -d "${STASH_PATH}/agents" ]; then
         cp -r "${STASH_PATH}/agents" "${PLANNING_DIR}/"
         echo "[stash-restore] Restored agents/"
     fi
 
-    echo "[stash-restore] Restored ${restored} files from ${STASH_PATH} (directory format)"
+    for f in "${STASH_PATH}"/*.md; do
+        [ -f "$f" ] || continue
+        [ "$(basename "$f")" = "snapshot.md" ] && continue
+        echo "OLDER_FILE=$f"
+    done
+
+    echo "[stash-restore] Read ${STASH_PATH} (directory format)"
 
     # Output snapshot.md path if it exists (caller can read it for context)
     if [ -f "${STASH_PATH}/snapshot.md" ]; then
@@ -65,5 +67,5 @@ else
     # Legacy format: single .md file — just report it for the LLM to process
     echo "[stash-restore] Legacy stash file: ${STASH_PATH}"
     echo "LEGACY_FILE=${STASH_PATH}"
-    echo "[stash-restore] Caller should read this file and extract context into .planning/ files"
+    echo "[stash-restore] Caller should read this file: live status goes into the task note, lasting facts into .planning/findings.md"
 fi

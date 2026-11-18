@@ -7,7 +7,7 @@ description: Saves unfinished work into a dated stash under .planning/stash, cap
 
 Pause the active project in `.planning/` without claiming it is done.
 
-**Core principle:** `archive = done`, `stash = paused`. The target is the active project (design, plan, findings, progress), not "the session."
+**Core principle:** `archive = done`, `stash = paused`. The target is the task in flight: its task note, what it left in `.planning/`, and the findings it produced. `findings.md` itself stays live in `.planning/`.
 
 **Say what you are doing, in the user's terms, not the skill's name:** "Saving where this stands so a later session can pick it up."
 
@@ -46,10 +46,10 @@ Run the planning state check:
 ${CLAUDE_PLUGIN_ROOT}/scripts/check-planning-state.sh
 ```
 
-Act on the result:
-- `missing` or `empty` → warn the user there is nothing meaningful to stash. Stop.
-- `complete` → do **not** stash. Redirect to `superpower-planning:archiving`.
-- `active` → proceed to Step 2.
+Act on the result together with the task note, which the script cannot see:
+- `missing` or `empty`, and the task note is empty → warn the user there is nothing meaningful to stash. Stop.
+- `complete`, or the task note shows every step done → do **not** stash. Redirect to `superpower-planning:archiving`.
+- otherwise → proceed to Step 2.
 
 ### Step 2: Determine stash name
 
@@ -67,13 +67,13 @@ mkdir -p "<returned-path>"
 
 ### Step 3: Save active project into stash directory
 
-Save all active project files using the shared snapshot script:
+Copy `agents/` and any older-layout files with the shared snapshot script (`findings.md` stays in `.planning/`):
 
 ```bash
 ${CLAUDE_PLUGIN_ROOT}/scripts/snapshot-save.sh "<returned-path>"
 ```
 
-Then write a `snapshot.md` with metadata for quick resume context:
+Then write a `snapshot.md`. Its Task Note section is the current task note, verbatim (with no task-note tool, write the same content from context), because the note belongs to this conversation and a later session cannot read it:
 
 ```markdown
 # Stash: <name>
@@ -94,6 +94,12 @@ Then write a `snapshot.md` with metadata for quick resume context:
 
 ## Important Files / Branches
 <!-- key files, branch names -->
+
+## Findings Written by This Work
+<!-- headings of the findings.md entries this work added -->
+
+## Task Note
+<!-- the current task note, verbatim -->
 ```
 
 ### Step 4: Reset active state
@@ -101,7 +107,7 @@ Then write a `snapshot.md` with metadata for quick resume context:
 ```bash
 ${CLAUDE_PLUGIN_ROOT}/scripts/planning-reset.sh
 ```
-This removes `design.md`, `plan.md`, `progress.md`, `findings.md`, and `agents/`, then recreates clean templates. `archive/` and `stash/` are preserved.
+This removes `agents/` and any older-layout files the snapshot copied. `findings.md`, `archive/` and `stash/` stay.
 
 Report: "Stashed to .planning/stash/<name>/"
 
@@ -129,7 +135,7 @@ ${CLAUDE_PLUGIN_ROOT}/scripts/stash-list.sh
 ```bash
 ${CLAUDE_PLUGIN_ROOT}/scripts/stash-restore.sh ".planning/stash/<selected>"
 ```
-5. Read `snapshot.md` from the stash directory for resume context
+5. Read `snapshot.md` from the stash directory and write its Task Note section back as the task note (`notes_write`). For each `OLDER_FILE=` the restore printed, move live status into the task note and append findings that `.planning/findings.md` does not have yet
 6. **Perform stale-findings check** before continuing:
    - compare stash assumptions against current repo state
    - run `git diff --stat`
@@ -139,9 +145,9 @@ ${CLAUDE_PLUGIN_ROOT}/scripts/stash-restore.sh ".planning/stash/<selected>"
      - `needs refresh`
      - `obsolete`
 7. Explicitly report any stale or questionable findings before execution resumes
-8. If drift is large, recommend re-entering `superpower-planning:brainstorming` (or re-planning via plan mode) instead of blindly continuing
+8. If drift is large, recommend re-planning (`/html-plan`, or plan mode) instead of blindly continuing
 
-**Legacy stash format:** If the selected stash is a single `.md` file (old format) instead of a directory, read it and restore context into `.planning/findings.md` and `.planning/progress.md` as before.
+**Legacy stash format:** If the selected stash is a single `.md` file (old format) instead of a directory, read it: live status goes into the task note, lasting facts into `.planning/findings.md`.
 
 ## Resume Output Format
 
@@ -162,6 +168,6 @@ Recommended next step:
 ## Key Principles
 
 - `stash` is for paused unfinished work, not completed work
-- stash preserves the entire active project (design, plan, findings, progress, agents)
+- stash preserves the task in flight: the task note (in `snapshot.md`), `agents/`, and any older-layout files
 - stale-findings check is mandatory on resume
 - if resume reveals major drift, suggest re-planning instead of blindly continuing

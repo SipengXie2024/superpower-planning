@@ -164,7 +164,7 @@ You MUST complete each phase before proceeding to the next.
    - Research more
 
 **After each hypothesis test:**
-- **Append test result** (hypothesis, pass/fail, output) to `.planning/progress.md` Test Results table
+- **Record the result** (hypothesis, pass/fail, key output) in the task note
 - **Append what was learned** (confirmed/rejected hypotheses, new evidence, root cause insights) to `.planning/findings.md` under "## Debugging Findings"
 
 ### Phase 4: Implementation

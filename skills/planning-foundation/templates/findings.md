@@ -1,30 +1,8 @@
-# Findings & Decisions
+# Findings
 
-## Requirements
--
+Project knowledge that outlives a session. Append an entry after a discovery, a decision with its reason, a rejected approach and why it failed, a root cause, or a measurement. Edit an existing entry only to correct it. Task status and action logs do not go here.
 
-## Research Findings
--
+Entry format:
 
-## Technical Decisions
-| Decision | Rationale |
-|----------|-----------|
-|          |           |
-
-## Issues Encountered
-| Issue | Resolution |
-|-------|------------|
-|       |            |
-
-## Resources
--
-
-## Debugging Findings
-<!-- Added by debugging skill -->
-
-## Code Review Findings
-<!-- Added when a code review runs -->
-
----
-*Update this file after every 2 view/browser/search operations*
-*This prevents visual information from being lost*
+## YYYY-MM-DD: <topic>
+<the fact, and the evidence or reason; for a measurement, the command and input that reproduce it>

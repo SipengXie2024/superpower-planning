@@ -1,6 +1,6 @@
 ---
 name: spec-interview
-description: Interrogates a design doc or spec through successive rounds of questions until the ambiguities that would otherwise produce the wrong implementation are resolved and recorded. Use after brainstorming produces a design doc, or when a spec reads complete but an implementer would still have to guess, including "help me refine this plan", "ask me about the project", "帮我打磨这个方案", "问我点问题".
+description: Interrogates a design doc or spec through successive rounds of questions until the ambiguities that would otherwise produce the wrong implementation are resolved and recorded. Use after a design doc or plan is drafted, or when a spec reads complete but an implementer would still have to guess, including "help me refine this plan", "ask me about the project", "帮我打磨这个方案", "问我点问题".
 ---
 
 # Spec Interview
@@ -9,9 +9,9 @@ Refine draft specs and design docs into complete technical documents through dee
 
 ## When This Runs
 
-- **When another skill invokes it** (e.g. brainstorming, which has already asked whether to run the interview): proceed directly with the refinement. The caller owns the opt-in gate, so do not re-ask "run the interview now?"
+- **When another skill invokes it** (one that has already asked whether to run the interview): proceed directly with the refinement. The caller owns the opt-in gate, so do not re-ask "run the interview now?"
 - **Manually** when user says "help me refine this plan/spec" or "ask me about the project"
-- When a draft spec or plan.md is missing critical details
+- When a draft spec or plan is missing critical details
 
 ## The Process
 
@@ -23,7 +23,7 @@ Read target doc → Identify gaps → Ask deep questions (AskUserQuestion) → I
 
 The interview needs a real draft to probe. Before anything else, locate the target doc and branch:
 
-- **Doc missing or empty**: do NOT fabricate a spec to interview against. Use `AskUserQuestion` to offer: option 1 "(Recommended) Point me at the draft file", option 2 "Brainstorm first to produce one", option 3 "Paste the rough idea and I'll draft, then interview". Stop until one is chosen.
+- **Doc missing or empty**: do NOT fabricate a spec to interview against. Use `AskUserQuestion` to offer: option 1 "(Recommended) Point me at the draft file", option 2 "Plan it first with `/html-plan` or plan mode", option 3 "Paste the rough idea and I'll draft, then interview". Stop until one is chosen.
 - **Doc already complete** (no real gaps across the seven dimensions): say so plainly and exit; don't manufacture questions to justify running. Offer to proceed to implementation instead.
 - **User declines to answer / gives no useful input**: record the gap as an open question in the doc and move on rather than blocking.
 
@@ -31,7 +31,7 @@ Match the user's language (e.g. reply in Chinese to a Chinese trigger). Address 
 
 ### Step 1: Read and Analyze
 
-Read the design doc (from brainstorming) or user-specified document. Identify information gaps across these dimensions:
+Read the design doc, plan, or user-specified document. Identify information gaps across these dimensions:
 
 | Dimension | Focus Areas |
 |-----------|-------------|

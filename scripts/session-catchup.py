@@ -17,7 +17,7 @@ import os
 from pathlib import Path
 from typing import List, Dict, Optional, Tuple
 
-PLANNING_FILES = ['.planning/progress.md', '.planning/findings.md']
+PLANNING_FILES = ['.planning/findings.md']
 
 
 
@@ -204,7 +204,7 @@ def main():
 
     if not update_session:
         print(f"[superpower-planning] No catchup: scanned {len(previous_sessions)} previous session(s) and none of them wrote to a .planning/ file, so there is no sync point to measure drift from.")
-        print("  Read .planning/progress.md and .planning/findings.md directly instead.")
+        print("  Read .planning/findings.md directly instead.")
         return
 
     # Collect ALL messages from the update point forward, across all sessions
@@ -264,8 +264,8 @@ def main():
 
     print("\n--- RECOMMENDED ---")
     print("1. Run: git diff --stat")
-    print("2. Read: .planning/progress.md, .planning/findings.md")
-    print("3. Update planning files based on above context")
+    print("2. Read: .planning/findings.md")
+    print("3. Write the task note from the context above; add lasting facts to findings.md")
     print("4. Continue with task")
 
 

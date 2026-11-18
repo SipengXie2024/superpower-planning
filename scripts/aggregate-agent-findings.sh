@@ -7,8 +7,6 @@
 # "Critical for Orchestrator". Appends them to .planning/findings.md under
 # the given task heading.
 #
-# Also appends a status summary from the agent's progress.md to .planning/progress.md.
-#
 # Exit 0 on success, 1 if agent dir not found.
 
 set -e
@@ -43,19 +41,3 @@ if [ -f "$AGENT_FINDINGS" ] && [ -f "$TOP_FINDINGS" ]; then
     fi
 fi
 
-# Append agent progress summary
-AGENT_PROGRESS="${AGENT_DIR}/progress.md"
-TOP_PROGRESS="${PLANNING_DIR}/progress.md"
-
-if [ -f "$AGENT_PROGRESS" ] && [ -f "$TOP_PROGRESS" ]; then
-    # Extract the last session section (most recent work)
-    last_section=$(tail -20 "$AGENT_PROGRESS" 2>/dev/null || true)
-    if [ -n "$last_section" ]; then
-        {
-            echo ""
-            echo "### ${TASK_HEADING} (from ${ROLE})"
-            echo "$last_section"
-        } >> "$TOP_PROGRESS"
-        echo "[aggregate] Appended progress summary from ${ROLE} to progress.md"
-    fi
-fi

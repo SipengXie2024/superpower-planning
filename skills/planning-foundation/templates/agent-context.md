@@ -1,17 +1,11 @@
 # Planning Rules for Delegated Roles
 
-You have a planning directory at: `{AGENT_PLANNING_DIR}`
+Your planning directory is `{AGENT_PLANNING_DIR}`.
 
-## 6 Rules
-
-1. **Log discoveries immediately** — After finding anything unexpected or important, write it to `{AGENT_PLANNING_DIR}/findings.md`
-2. **The 2-Action Dispatch Rule** — After every 2 search/read/explore operations, save to the appropriate file by content type:
-   - **Discoveries, decisions, surprises** → `{AGENT_PLANNING_DIR}/findings.md`
-   - **Status changes, actions taken, errors, test results** → `{AGENT_PLANNING_DIR}/progress.md`
-3. **Log errors** — Every error goes in `{AGENT_PLANNING_DIR}/progress.md` Error Log table
-4. **Never repeat failures** — If an action failed, log it and escalate to the orchestrator. Do NOT independently try alternative approaches — the plan was designed intentionally, and changing direction without alignment creates workarounds
-5. **Escalate early** — After the first failed fix attempt, report to the orchestrator: what failed, what you tried, what you observed. Wait for direction before proceeding
-6. **Update progress** — After completing major steps, update Task Status Dashboard and append to `{AGENT_PLANNING_DIR}/progress.md`
+1. **Write discoveries as you make them** — anything unexpected or important goes into `{AGENT_PLANNING_DIR}/findings.md` as a dated entry: what you found and the evidence.
+2. **Record dead ends** — an approach that failed gets an entry with the reason it failed, so nobody retries it.
+3. **Work through ordinary errors** — diagnose, then retry or fix. When the same check still fails after three rounds of fixes, stop and report to the orchestrator what each round tried and what it showed.
+4. **Report status in your final message** — what was done, what was verified and how, what is left. There is no progress file.
 
 ## Critical for Orchestrator
 

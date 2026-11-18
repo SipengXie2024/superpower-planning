@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
-# Reset .planning/ to clean state while preserving archive/ and stash/
+# Clear the stashed or archived work out of .planning/, keeping findings.md
 #
 # Usage: planning-reset.sh [project-root]
 #
-# Removes: progress.md, findings.md, agents/
-# Preserves: archive/, stash/
-# Then runs init-planning-dir.sh to recreate canonical files
+# Removes: agents/ and older-layout top-level files (progress.md, plan.md,
+#          design.md and any other top-level .md except findings.md)
+# Keeps:   findings.md (project knowledge outlives the task), archive/, stash/
+# Run it only after snapshot-save.sh has copied those files somewhere.
 
 set -e
 
@@ -18,19 +19,19 @@ if [ ! -d "$PLANNING_DIR" ]; then
     exit 0
 fi
 
-# Remove active planning files
-rm -f "${PLANNING_DIR}/progress.md"
-rm -f "${PLANNING_DIR}/findings.md"
-rm -f "${PLANNING_DIR}/design.md"
-rm -f "${PLANNING_DIR}/plan.md"
+for f in "${PLANNING_DIR}"/*.md; do
+    [ -f "$f" ] || continue
+    [ "$(basename "$f")" = "findings.md" ] && continue
+    rm -f "$f"
+    echo "[planning-reset] Removed $(basename "$f")"
+done
 
-# Remove agents directory
 if [ -d "${PLANNING_DIR}/agents" ]; then
     rm -rf "${PLANNING_DIR}/agents"
     echo "[planning-reset] Removed .planning/agents/"
 fi
 
-# Recreate canonical files from templates
-"${SCRIPT_DIR}/init-planning-dir.sh" "$PROJECT_ROOT"
+# Recreates findings.md from the template only if it is absent
+"${SCRIPT_DIR}/init-planning-dir.sh" "$PROJECT_ROOT" >/dev/null
 
-echo "[planning-reset] .planning/ reset to clean state (archive/ and stash/ preserved)"
+echo "[planning-reset] .planning/ cleared (findings.md, archive/ and stash/ kept)"

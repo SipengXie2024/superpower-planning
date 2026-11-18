@@ -1,6 +1,6 @@
 # superpower-planning
 
-A focused Claude Code plugin for persistent file-based planning. It keeps long-lived project context in `.planning/` while leaving large-scale agent orchestration to Claude Code's native dynamic workflows.
+A focused Claude Code plugin for keeping a task's state across context resets and sessions. Progress inside a task lives in the session's task note (the context-memory plugin's `notes_write`); what the project learned lives in `.planning/findings.md`. Large-scale agent orchestration is left to Claude Code's native dynamic workflows.
 
 ## Installation
 
@@ -13,28 +13,26 @@ Then restart Claude Code.
 
 ## What It Does
 
-This plugin keeps the parts of planning that need durable project state:
+1. **Keep task progress in the task note** — goal, constraints, what is done, what is next; compaction carries it forward
+2. **Keep what was learned in `.planning/findings.md`** — dated entries for discoveries, decisions, dead ends, root causes and measurements
+3. **Review the spec** — refine a design doc through questions before implementation
+4. **Implement and debug with discipline** — test-first, root cause before fix, profile before optimizing
+5. **Stash, archive, and recover context** — pause unfinished work, archive completed work, and catch up after a gap
 
-1. **Brainstorm** — explore intent, constraints, and design before implementation
-2. **Review the spec** — refine design docs before planning
-3. **Persist the plan** — keep the approved implementation plan in `.planning/plan.md` across sessions
-4. **Execute deliberately** — run the plan in-session, or via Claude Code dynamic workflows for large parallel work
-5. **Stash, archive, and recover context** — pause unfinished work, archive completed work, and retain persistent working memory across sessions
+`.planning/` in your project root contains:
 
-All planning workflows share a `.planning/` directory in your project root containing:
+- `findings.md` — project knowledge that outlives every session
+- `stash/` — paused work; each `snapshot.md` carries the task note
+- `archive/` — finished work summaries and lessons learned
 
-- `progress.md` — Task Status Dashboard + session-level progress log
-- `findings.md` — research notes, discoveries, and important decisions
-- `archive/` — completed work summaries, lessons learned, and historical context for future tasks
-- `stash/` — paused unfinished work snapshots for later resume
+Plans the user reviews before work starts go through `/html-plan` (when installed) or Claude Code's plan mode.
 
-## Skills (11)
+## Skills (10)
 
 | Skill | Description |
 |-------|-------------|
-| **planning-foundation** | Creates and manages `.planning/` directory for complex tasks. |
-| **brainstorming** | Explores intent, requirements, decomposition, and design before implementation. Reviews the design as an interactive html-plan page when that plugin is installed. Ends with a plan persisted to `.planning/plan.md`. |
-| **spec-interview** | Refines design docs through systematic deep questioning. Auto-invoked after brainstorming. |
+| **planning-foundation** | Says where task state goes: progress in the task note, lasting facts in `.planning/findings.md`. |
+| **spec-interview** | Refines design docs through systematic deep questioning. |
 | **domain-glossary** | Maintains the project's shared vocabulary (ubiquitous language) in a repo-root `CONTEXT.md`: one canonical term per concept, synonyms banned. |
 | **wait-what** | User-invoked repair (`/wait-what`): re-pitch the last message with more context, in controlled plain language, using `CONTEXT.md` terms. |
 | **tdd** | Test-driven development: write tests before implementation. |
@@ -44,20 +42,18 @@ All planning workflows share a `.planning/` directory in your project root conta
 | **stashing** | Pauses unfinished work into `.planning/stash/` and supports resume with stale-findings checks. |
 | **releasing** | Bumps versions, tags, and publishes releases with changelogs. |
 
-## Commands (5)
+## Commands (4)
 
 | Command | Description |
 |---------|-------------|
-| `/brainstorm` | Start brainstorming before creative work. |
 | `/catchup` | Recover context from previous sessions. |
 | `/archive` | Archive completed work and consolidate planning memory. |
-| `/stash` | Pause unfinished work and save the current `.planning/` state for later. |
-| `/resume-stash` | Restore a paused stash back into active `.planning/` with stale-findings checks. |
+| `/stash` | Pause unfinished work, saving the task note into `.planning/stash/`. |
+| `/resume-stash` | Restore a paused stash into the task note, with stale-findings checks. |
 
 ## Hooks
 
-- **SessionStart** — Injects the plugin's planning conventions and recovers `.planning/` state on session resume.
-- **Stop** — Checks task completion status and warns about stale planning files.
+- **SessionStart** — Injects the plugin's conventions and, on resume, the head of `.planning/findings.md`.
 
 ## Optional Dependencies
 
@@ -70,7 +66,7 @@ All planning workflows share a `.planning/` directory in your project root conta
 
 `superpower-planning` supports three distinct work states:
 
-- **active** — the current task lives in `.planning/`
+- **active** — the current task lives in the task note
 - **stashed** — unfinished work is paused in `.planning/stash/` for later resume
 - **archived** — finished work is summarized in `.planning/archive/`
 
@@ -87,10 +83,9 @@ Dynamic workflows now cover the large orchestration surface that this plugin use
 
 This plugin remains useful for the durable layer around those runs:
 
-- `.planning/` is long-lived working memory, not temporary script state
+- `findings.md` is long-lived project knowledge that workflows read and write back to
 - `archive/` preserves historical context across sessions
 - `stash/` supports switching between unfinished projects safely
-- specs and plans stay as explicit files that workflows or humans can execute against
 
 ## License
 
